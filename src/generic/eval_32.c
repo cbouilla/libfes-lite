@@ -1,3 +1,4 @@
+#include <assert.h>
 #include "feslite.h"
 
 
@@ -49,9 +50,9 @@ void transpose(uint32_t * T, uint32_t * M)
 }
 
 
-size_t generic_batch_eval_32(int n, const uint32_t * const F,
+size_t generic_eval_32(int n, const uint32_t * const F,
 			    __attribute__((unused)) size_t eq_from, __attribute__((unused)) size_t eq_to,
-			    uint32_t *input,
+			    uint32_t *input, size_t n_input,
 			    uint32_t *solutions, size_t max_solutions,
 			    __attribute__((unused)) int verbose)
 {
@@ -63,11 +64,12 @@ size_t generic_batch_eval_32(int n, const uint32_t * const F,
 		uint32_t y = F[0];	
 	}*/
 
+	assert(n_input <= 32);
 	size_t n_solution = 0;
 	if (n_solution == max_solutions)
 		return n_solution;
 
-	for (size_t i = 0; i < 32; i++) {
+	for (size_t i = 0; i < n_input; i++) {
 		if (naive_evaluation(n, F, input[i]) == 0) {
 			solutions[n_solution++] = input[i];
 			if (n_solution == max_solutions)

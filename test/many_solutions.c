@@ -5,10 +5,12 @@
 #include "feslite.h"
 #include "rand.h"
 
+/** test the the kernels correctly report the expected number of solutions */
+
 int main(int argc, char **argv)
 {
-	int n = 32;
-	int n_eqs = 20;
+	int n = 22;
+	int n_eqs = 10;
 	unsigned long random_seed = 1;
 
 	size_t n_tests = 3 * kernel_num_available();
@@ -56,8 +58,10 @@ int main(int argc, char **argv)
 			}
 		}
 		if (status)
-			printf("ok %zd - [%s] %zd solutions found\n", test_idx++, name, n_solutions);
-
+			if (n_solutions > 100)
+				printf("ok %zd - [%s] %zd solutions found\n", test_idx++, name, n_solutions);
+			else
+				printf("not ok %zd - [%s] ONLY %zd solutions found\n", test_idx++, name, n_solutions);
 
 		/* get the first 10 solutions */
 		n_solutions = ENUM_KERNEL[kernel].run(n, F, solutions2, max_solutions2, 0);

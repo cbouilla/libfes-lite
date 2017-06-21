@@ -7,9 +7,9 @@
 
 int main(/* int argc, char **argv*/)
 {
-	int n = 32;
-	int n_eqs = 28;
-	unsigned long random_seed = 1;
+	int n = 26;
+	int n_eqs = 20;
+	unsigned long random_seed = 2;
 
 	srand48(random_seed);
 
@@ -32,17 +32,21 @@ int main(/* int argc, char **argv*/)
 
 	fprintf(stderr, "%zd kernels / %zd available\n", kernel_num(), kernel_num_available());
 
-	uint64_t start = Now();
-	size_t n_solutions =
-	    generic_enum_1x32(n, F, solutions, max_solutions, 1);
+	for (size_t kernel = 0; kernel < kernel_num(); kernel++) {
+		if (!kernel_available(&ENUM_KERNEL[kernel]))
+			continue;
+		const char *name = ENUM_KERNEL[kernel].name;
+		printf("# testing kernel %s\n", name);
+		uint64_t start = Now();
+		size_t n_solutions = ENUM_KERNEL[kernel].run(n, F, solutions, max_solutions, 1);
 
-	for (size_t i = 0; i < n_solutions; i++)
-		printf("solution %zd : %08x ---> %08x\n", i,
+		for (size_t i = 0; i < n_solutions; i++)
+			printf("solution %zd : %08x ---> %08x\n", i,
 		       solutions[i], naive_evaluation(n, F, solutions[i]));
 
-	fprintf(stderr, "%zu solutions\n", n_solutions);
-	fprintf(stderr, "%.2f cycles/candidate\n",
-		(Now() - start) * 1.0 / (1ll << n));
+		fprintf(stderr, "%zu solutions\n", n_solutions);
+		fprintf(stderr, "%.2f cycles/candidate\n", (Now() - start) * 1.0 / (1ll << n));
+	}
 
 	free(F);
 	free(solutions);
