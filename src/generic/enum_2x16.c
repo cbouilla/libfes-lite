@@ -17,6 +17,8 @@ struct context_t {
 	uint32_t * F;
 	struct solution_t buffer[512 + 32];
 	size_t buffer_size;
+	uint32_t candidates[32];
+	size_t n_candidates;
 	uint32_t *solutions;
 	size_t n_solution_found;
 	size_t max_solutions;
@@ -24,10 +26,32 @@ struct context_t {
 	int verbose;
 };
 
-
+/* invoked when (at least) one half is a solution. Both are pushed to the Buffer.
+   Designed to be as quick as possible. */
 static inline void CHECK_SOLUTION(struct context_t *context, uint32_t index)
 {
-	if (unlikely(((context->F[0] & 0x0000ffff) == 0) || (context->F[0] & 0xffff0000) == 0)) {
+	/*uint32_t high_x = to_gray(index);
+	uint32_t low_x = high_x ^ (1 << (context->n-1));
+
+	uint32_t high_eval = naive_evaluation(context->n, context->F_start, high_x) & 0x0000ffff;
+	uint32_t low_eval = naive_evaluation(context->n, context->F_start, low_x) & 0x0000ffff;
+
+	int bad = 0;
+	if (low_eval != (context->F[0]  & 0x0000ffff)) {
+		fprintf(stderr, "ERREUR idx=%zx low : F[%08x] == %08x, but we found %08x\n", index, low_x, low_eval, context->F[0]);
+		bad = 1;
+	}
+	if (high_eval != (context->F[0] >> 16)) {
+		fprintf(stderr, "ERREUR idx==%zx high : F[%08x] == %08x, but we found %08x\n", index, high_x, high_eval, context->F[0]);
+		bad = 1;
+	}
+	if (bad)
+		exit(1);
+	*/
+	// if (unlikely((context->F[0] - 0x00010001) & (~context->F[0]) & 0x80008000)) {
+	//printf("testing %08x or %08x --> F[0] == %08x\n", to_gray(index), to_gray(index) ^ (1 << (context->n-1)), context->F[0]);
+	if (unlikely(((context->F[0] & 0xffff0000) == 0) || ((context->F[0] & 0x0000ffff) == 0))) {
+		//printf("candidate scontext->F[0]olution %08x or %08x (mask = %08x)\n", to_gray(index), to_gray(index) ^ (1 << (context->n)), context->F[0]);
 		context->buffer[context->buffer_size].mask = context->F[0];
 		context->buffer[context->buffer_size].x = index;
 		context->buffer_size++;
@@ -51,49 +75,43 @@ static inline void STEP_2(struct context_t *context, int a, int b, uint32_t inde
 	STEP_1(context, a, index);
 }
 
-
-static inline void FLUSH_SOLUTIONS(struct context_t *context)
+/* batch-eval all the Candidates */
+static inline void FLUSH_CANDIDATES(struct context_t *context)
 {
-	if (context->buffer_size < 32)
-		return;
-	size_t start = 0; 
-	while (context->buffer_size - start >= 32) {
-		uint32_t candidates[32];
-		for (size_t i = 0; i < 32; i++)
-			if (context->buffer[start + i].mask & 0x0000ffff)
-				candidates[i] = to_gray(context->buffer[start + i].x);
-			else
-				candidates[i] = to_gray(context->buffer[start + i].x) ^ (1 << (context->n - 1));
-		size_t n_good_cand = generic_eval_32(context->n, context->F_start, 16, 32,
-			candidates, 32, context->solutions + context->n_solutions, context->max_solutions, context->verbose);
-		start += 32;
-		context->max_solutions -= n_good_cand;
-		context->n_solutions += n_good_cand;
-	}
-	/* move the remaining items of the buffer to the beginning */
-	for (size_t i = start; i < context->buffer_size; i++) {
-		context->buffer[i - start].x = context->buffer[i].x;
-		context->buffer[i - start].mask = context->buffer[i].mask;
-	}
-	context->buffer_size -= start;
-}
-
-
-static inline void FINALIZE_SOLUTIONS(struct context_t *context)
-{
-	assert(context->buffer_size < 32);
-	uint32_t candidates[32];
-	for (size_t i = 0; i < context->buffer_size; i++)
-		if (context->buffer[i].mask & 0x0000ffff)
-			candidates[i] = to_gray(context->buffer[i].x);
-		else
-			candidates[i] = to_gray(context->buffer[i].x) ^ (1 << (context->n - 1));
-	size_t n_good_cand = generic_eval_32(context->n, context->F_start, 16, 32, candidates,
-			    context->buffer_size, context->solutions + context->n_solutions, context->max_solutions,
+	size_t n_good_cand = generic_eval_32(context->n, context->F_start, 16, 32, context->candidates,
+			    context->n_candidates, context->solutions + context->n_solutions, context->max_solutions,
 			    context->verbose);
+	// fprintf(stderr, "FLUSH %zd candidates, %zd solutions\n", context->n_candidates, n_good_cand);
+	context->max_solutions -= n_good_cand;
 	context->n_solutions += n_good_cand;
+	context->n_candidates = 0;
 }
 
+
+static inline void NEW_CANDIDATE(struct context_t *context, uint32_t i)
+{
+	// printf("candidate %08x\n", i);
+	context->candidates[context->n_candidates] = i;
+	context->n_candidates += 1;
+	// printf("new candidate, now %zd candidates\n", context->n_candidates);
+	if (context->n_candidates == 32)
+		FLUSH_CANDIDATES(context);
+}
+
+/* Empty the Buffer. For each entry, check which half is correct,
+   make it a Candidate. If there are 32 Candidates, batch-evaluate them. */
+static inline void FLUSH_BUFFER(struct context_t *context)
+{
+	// printf("FLUSH BUFFER, size %zd, %zd candidates\n", context->buffer_size, context->n_candidates);
+	for (size_t i = 0; i < context->buffer_size; i++) {
+		uint32_t x = to_gray(context->buffer[i].x);
+		if ((context->buffer[i].mask & 0x0000ffff) == 0)
+			NEW_CANDIDATE(context, x + (1 << (context->n - 1)));
+		if ((context->buffer[i].mask & 0xffff0000) == 0)
+			NEW_CANDIDATE(context, x);
+	}
+	context->buffer_size = 0;
+}				
 
 // generated with L = 9
 size_t generic_enum_2x16(int n, const uint32_t * const F_,
@@ -102,7 +120,6 @@ size_t generic_enum_2x16(int n, const uint32_t * const F_,
 {
 	struct context_t context = { .F_start = F_ };
 	context.n = n;
-	// context.F_start = F_;
 	context.solutions = solutions;
 	context.n_solutions = 0;
 	context.max_solutions = max_solutions;
@@ -117,25 +134,25 @@ size_t generic_enum_2x16(int n, const uint32_t * const F_,
 	/* clone the first 16 equations in the two 16-bit halves */
 	for (size_t i = 0; i < N; i++) {
 		uint32_t low = F_[i] & 0x0000ffff;
-		F_16[2 * i] = low;
-		F_16[2 * i + 1] = low;
+		F[i] = low ^ (low << 16);
+		//F_16[2 * i] = low;
+		//F_16[2 * i + 1] = low;
 	}
 
 	/******** 2-way "specialization" : remove the (n-1)-th variable */
 	uint32_t v = 0x0000ffff;
 
 	// the constant term is affected by the [n-1] term
-	F[0] ^= F[idx_1(n-1)]  & v;
+	F[0] ^= (F[idx_1(n-1)] & v);
 	
 	// the [i] terms are affected by the [i, n-1] terms
 	for (int i = 0; i < n - 1; i++)
-		F[idx_1(i)] ^= F[idx_2(i, n-1) ]  & v;
+		F[idx_1(i)] ^= (F[idx_2(i, n-1)] & v);
 	
       
 	/******** compute "derivatives" */
 	/* degree-1 terms are affected by degree-2 terms */
-	// SIMPLIFY-ME */
-	for (int i = 1; i < n - 1; i++)
+	for (int i = 1; i < n; i++)
 		F[idx_1(i)] ^= F[idx_2(i - 1, i)];
 
 	if (verbose)
@@ -148,7 +165,7 @@ size_t generic_enum_2x16(int n, const uint32_t * const F_,
 	STEP_0(&context, 0);
 
 	// from now on, hamming weight is >= 1
-	for (int idx_0 = 0; idx_0 < (n-1); idx_0++) {
+	for (int idx_0 = 0; idx_0 < n - 1; idx_0++) {
 
 		// special case when i has hamming weight exactly 1
 		const uint64_t weight_1_start = weight_0_start + (1ll << idx_0);
@@ -181,7 +198,9 @@ size_t generic_enum_2x16(int n, const uint32_t * const F_,
 			const int k_2 = pos;
 			STEP_2(&context, idx_1(k_1), idx_2(k_1, k_2), i);
 		}
-		FLUSH_SOLUTIONS(&context);
+		
+
+		FLUSH_BUFFER(&context);
 		if (context.max_solutions == 0)
 			return context.n_solutions;
 
@@ -191,6 +210,8 @@ size_t generic_enum_2x16(int n, const uint32_t * const F_,
 		// unrolled critical section where the hamming weight is >= 2
 		for (uint64_t j = 512; j < (1ull << idx_0); j += 512) {
 			const uint64_t i = j + weight_1_start;
+			// printf("testing idx %08x : F[0] = %08x\n", i, F[0]);
+
 			int pos = 0;
 			uint64_t _i = i;
 			while ((_i & 0x0001) == 0) {
@@ -208,8 +229,8 @@ size_t generic_enum_2x16(int n, const uint32_t * const F_,
 			const int alpha = idx_1(k_1);
 			const int beta = idx_2(k_1, k_2);
 
-			STEP_2(&context, 1, 1 + alpha, i + 1);
 			STEP_2(&context, 0 + alpha, 0 + beta, i + 0);
+			STEP_2(&context, 1, 1 + alpha, i + 1);
 			STEP_2(&context, 2, 2 + alpha, i + 2);
 			STEP_2(&context, 1, 3, i + 3);
 			STEP_2(&context, 4, 3 + alpha, i + 4);
@@ -721,12 +742,12 @@ size_t generic_enum_2x16(int n, const uint32_t * const F_,
 			STEP_2(&context, 2, 6, i + 510);
 			STEP_2(&context, 1, 3, i + 511);
 
-			FLUSH_SOLUTIONS(&context);
+			FLUSH_BUFFER(&context);
 			if (context.max_solutions == 0)
 				return context.n_solutions;
 		}
 	}
-	FINALIZE_SOLUTIONS(&context);
+	FLUSH_CANDIDATES(&context);
 	uint64_t end_time = Now();
 	
 

@@ -7,8 +7,8 @@
 
 int main(/* int argc, char **argv*/)
 {
-	int n = 26;
-	int n_eqs = 20;
+	int n = 32;
+	int n_eqs = 28;
 	unsigned long random_seed = 2;
 
 	srand48(random_seed);
