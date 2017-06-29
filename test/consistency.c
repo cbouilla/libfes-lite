@@ -77,11 +77,6 @@ int main(int argc, char **argv)
 				continue;
 			}
 
-			printf("# solutions found by [%s]:\n", name);
-			for (size_t i = 0; i < n_solutions; i++)
-				printf("# %08x\n", solutions2[i]);
-
-
 			int ok = 1;
 			for (size_t i = 0; i < n_solutions; i++) {
 				int found = 0;

@@ -14,8 +14,8 @@ struct solution_t {
 struct context_t {
 	int n;
 	const uint32_t * const F_start;
-	uint32_t * F;
-	struct solution_t buffer[2*512 + 32];
+	uint64_t * F;
+	struct solution_t buffer[8*512 + 32];
 	size_t buffer_size;
 	uint32_t candidates[32];
 	size_t n_candidates;
@@ -26,33 +26,16 @@ struct context_t {
 	int verbose;
 };
 
-/* invoked when (at least) one half is a solution. Both are pushed to the Buffer.
+
+/* invoked when (at least) one lane is a solution. Both are pushed to the Buffer.
    Designed to be as quick as possible. */
 static inline void CHECK_SOLUTION(struct context_t *context, uint32_t index)
 {
-	/*uint32_t high_x = to_gray(index);
-	uint32_t low_x = high_x ^ (1 << (context->n-1));
-
-	uint32_t high_eval = naive_evaluation(context->n, context->F_start, high_x) & 0x0000ffff;
-	uint32_t low_eval = naive_evaluation(context->n, context->F_start, low_x) & 0x0000ffff;
-
-	int bad = 0;
-	if (low_eval != (context->F[0]  & 0x0000ffff)) {
-		fprintf(stderr, "ERREUR idx=%zx low : F[%08x] == %08x, but we found %08x\n", index, low_x, low_eval, context->F[0]);
-		bad = 1;
-	}
-	if (high_eval != (context->F[0] >> 16)) {
-		fprintf(stderr, "ERREUR idx==%zx high : F[%08x] == %08x, but we found %08x\n", index, high_x, high_eval, context->F[0]);
-		bad = 1;
-	}
-	if (bad)
-		exit(1);
-	*/
-	// if (unlikely((context->F[0] - 0x00010001) & (~context->F[0]) & 0x80008000)) {
-	//printf("testing %08x or %08x --> F[0] == %08x\n", to_gray(index), to_gray(index) ^ (1 << (context->n-1)), context->F[0]);
-	if (unlikely(((context->F[0] & 0xffff0000) == 0) || ((context->F[0] & 0x0000ffff) == 0))) {
-		//printf("candidate scontext->F[0]olution %08x or %08x (mask = %08x)\n", to_gray(index), to_gray(index) ^ (1 << (context->n)), context->F[0]);
-		context->buffer[context->buffer_size].mask = context->F[0];
+	__m128i zero = _mm_setzero_si128();
+	__m128i cmp = _mm_cmpeq_epi32(context->F[0], zero);
+    	int mask = _mm_movemask_epi8(cmp);
+	if (unlikely(mask)) {
+		context->buffer[context->buffer_size].mask = mask;
 		context->buffer[context->buffer_size].x = index;
 		context->buffer_size++;
 	}
@@ -65,13 +48,13 @@ static inline void STEP_0(struct context_t *context, uint32_t index)
 
 static inline void STEP_1(struct context_t *context, int a, uint32_t index)
 {
-	context->F[0] ^= context->F[a];
+	context->F[0] = _mm_xor_si128(context->F[0], context->F[a]);
 	STEP_0(context, index);
 }
 
 static inline void STEP_2(struct context_t *context, int a, int b, uint32_t index)
 {
-	context->F[a] ^= context->F[b];
+	context->F[a] = _mm_xor_si128(context->F[a], context->F[b]);
 	STEP_1(context, a, index);
 }
 
@@ -105,16 +88,28 @@ static inline void FLUSH_BUFFER(struct context_t *context)
 	// printf("FLUSH BUFFER, size %zd, %zd candidates\n", context->buffer_size, context->n_candidates);
 	for (size_t i = 0; i < context->buffer_size; i++) {
 		uint32_t x = to_gray(context->buffer[i].x);
-		if ((context->buffer[i].mask & 0x0000ffff) == 0)
-			NEW_CANDIDATE(context, x);
-		if ((context->buffer[i].mask & 0xffff0000) == 0)
-			NEW_CANDIDATE(context, x + (1 << (context->n - 1)));
+		if ((context->buffer[i].mask & 0x0003))
+			NEW_CANDIDATE(context, x + 0 * (1 << (context->n - 3)));
+		if ((context->buffer[i].mask & 0x000c))
+			NEW_CANDIDATE(context, x + 1 * (1 << (context->n - 3)));
+		if ((context->buffer[i].mask & 0x0030))
+			NEW_CANDIDATE(context, x + 2 * (1 << (context->n - 3)));
+		if ((context->buffer[i].mask & 0x00c0))
+			NEW_CANDIDATE(context, x + 3 * (1 << (context->n - 3)));
+		if ((context->buffer[i].mask & 0x0300))
+			NEW_CANDIDATE(context, x + 4 * (1 << (context->n - 3)));
+		if ((context->buffer[i].mask & 0x0c03))
+			NEW_CANDIDATE(context, x + 5 * (1 << (context->n - 3)));
+		if ((context->buffer[i].mask & 0x3000))
+			NEW_CANDIDATE(context, x + 6 * (1 << (context->n - 3)));
+		if ((context->buffer[i].mask & 0xc003))
+			NEW_CANDIDATE(context, x + 7 * (1 << (context->n - 3)));
 	}
 	context->buffer_size = 0;
 }				
 
 // generated with L = 9
-size_t generic_enum_2x16(int n, const uint32_t * const F_,
+size_t x86_64_enum_8x16(int n, const uint32_t * const F_,
 			    uint32_t * solutions, size_t max_solutions,
 			    int verbose)
 {
@@ -129,33 +124,44 @@ size_t generic_enum_2x16(int n, const uint32_t * const F_,
 
 	uint64_t init_start_time = Now();
 	size_t N = idx_1(n);
-	uint16_t F_16[2 * N];
-	uint32_t *F = (uint32_t *) F_16;
+	__m128i F[N];
 	context.F = F;
 
-	/* clone the first 16 equations in the two 16-bit halves */
-	for (size_t i = 0; i < N; i++) {
-		uint32_t low = F_[i] & 0x0000ffff;
-		//F[i] = low ^ (low << 16);
-		F_16[2 * i] = low;
-		F_16[2 * i + 1] = low;
-	}
+	for (size_t i = 0; i < N; i++)
+		F[i] = _mm_set1_epi32(F_[i]);
 
 	/******** 2-way "specialization" : remove the (n-1)-th variable */
-	uint32_t v = 0xffff0000;
+    	__m128i v0 = _mm_set_epi32(0xffffffff, 0xffffffff, 0x00000000, 0x00000000);
+	__m128i v1 = _mm_set_epi32(0xffffffff, 0x00000000, 0xffffffff, 0x00000000);
+	__m128i v2 = _mm_set_epi32(0xffff0000, 0xffff0000, 0xffff0000, 0xffff0000);
+	 
+	// the constant term is affected by [n-1]
+	F[0] ^= F[idx_1(n - 1)] & v0;
+	
+	// [i] is affected by [i, n-1]
+	for (size_t i = 0; i < n - 1; i++)
+		F[idx_1(i)] ^= F[idx_2(i, n-1)] & v0;
 
-	// the constant term is affected by the [n-1] term
-	F[0] ^= (F[idx_1(n-1)] & v);
+	// the constant term is affected by [n-2]
+	F[0] ^= F[idx_1(n - 2)] & v1;
 	
-	// the [i] terms are affected by the [i, n-1] terms
-	for (int i = 0; i < n - 1; i++)
-		F[idx_1(i)] ^= (F[idx_2(i, n-1)] & v);
+      	// [i] is affected by [i, n-2]
+	for (size_t i = 0; i < n - 2; i++)
+		F[idx_1(i)] ^= F[idx_2(i, n-2)] & v1;
 	
-      
+      	// the constant term is affected by [n-3]
+	F[0] ^= F[idx_1(n - 3)] & v2;
+	
+      	// [i] is affected by [i, n-2]
+	for (size_t i = 0; i < n - 3; i++)
+		F[idx_1(i)] ^= F[idx_2(i, n - 2)] & v2;
+	
+
 	/******** compute "derivatives" */
 	/* degree-1 terms are affected by degree-2 terms */
 	for (int i = 1; i < n; i++)
 		F[idx_1(i)] ^= F[idx_2(i - 1, i)];
+
 
 	if (verbose)
 		printf("fes: initialisation = %" PRIu64 " cycles\n",
@@ -167,7 +173,7 @@ size_t generic_enum_2x16(int n, const uint32_t * const F_,
 	STEP_0(&context, 0);
 
 	// from now on, hamming weight is >= 1
-	for (int idx_0 = 0; idx_0 < n - 1; idx_0++) {
+	for (int idx_0 = 0; idx_0 < n - 2; idx_0++) {
 
 		// special case when i has hamming weight exactly 1
 		const uint64_t weight_1_start = weight_0_start + (1ll << idx_0);

@@ -36,16 +36,15 @@ int main(/* int argc, char **argv*/)
 		if (!kernel_available(&ENUM_KERNEL[kernel]))
 			continue;
 		const char *name = ENUM_KERNEL[kernel].name;
-		printf("# testing kernel %s\n", name);
 		uint64_t start = Now();
-		size_t n_solutions = ENUM_KERNEL[kernel].run(n, F, solutions, max_solutions, 1);
+		size_t n_solutions = ENUM_KERNEL[kernel].run(n, F, solutions, max_solutions, 0);
 
-		for (size_t i = 0; i < n_solutions; i++)
+		/*for (size_t i = 0; i < n_solutions; i++)
 			printf("solution %zd : %08x ---> %08x\n", i,
 		       solutions[i], naive_evaluation(n, F, solutions[i]));
-
-		fprintf(stderr, "%zu solutions\n", n_solutions);
-		fprintf(stderr, "%.2f cycles/candidate\n", (Now() - start) * 1.0 / (1ll << n));
+	
+		fprintf(stderr, "%zu solutions\n", n_solutions);*/
+		printf("%s : %.2f cycles/candidate\n", name, (Now() - start) * 1.0 / (1ll << n));
 	}
 
 	free(F);

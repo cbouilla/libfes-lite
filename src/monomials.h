@@ -41,7 +41,7 @@ static inline size_t idx_1(int i)
 
 static inline size_t idx_2(int i, int j)
 {
-  assert(i < j);
+  // assert(i < j);
   return idx_1(j) + 1 + i;
 }
 

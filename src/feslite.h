@@ -2,8 +2,12 @@
 
 #include <stdint.h>
 #include <stddef.h>
+
 #include "generic/generic.h"
 
+#ifdef __SSE2__
+#include "x86_64/x86_64.h"
+#endif
 
 
 typedef int (*kernel_available_f)(void);
