@@ -9,8 +9,8 @@
 
 int main(int argc, char **argv)
 {
-	int n = 24;
-	int n_eqs = 21;
+	int n = 14;
+	int n_eqs = 11;
 	int n_iterations = 1;
 	unsigned long random_seed = 1;
 
@@ -81,7 +81,7 @@ int main(int argc, char **argv)
 			for (size_t i = 0; i < n_solutions; i++) {
 				int found = 0;
 				for (size_t j = 0; j < n_solutions; j++) 
-					found |= (solutions[j] == solutions2[i]);
+					found |= (solutions2[j] == solutions[i]);
 				if (!found) {
 					printf("not ok %zd - [%s] missing solution %08x\n", test_idx++, name, solutions[i]);
 					ok = 0;

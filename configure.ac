@@ -5,7 +5,7 @@ AC_CONFIG_MACRO_DIR([m4])
 AC_CONFIG_AUX_DIR([build-aux])
 
 AM_INIT_AUTOMAKE([foreign check-news subdir-objects])
-AC_CONFIG_HEADERS([config.h])
+AC_CONFIG_HEADERS([src/config.h])
 AM_MAINTAINER_MODE
 
 # Checks for programs.
@@ -29,6 +29,9 @@ AC_HEADER_STDC
 AC_TYPE_UINT16_T
 AC_TYPE_UINT32_T
 AC_TYPE_UINT64_T
+
+AX_CHECK_X86_FEATURES
+AX_CACHE_SIZE
 
 CFLAGS="$CFLAGS -Wall -Wextra"
 

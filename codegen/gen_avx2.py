@@ -25,28 +25,27 @@ def b_k(k, n):
         result += 1
     return result-1
 
-greek = [ "alpha", "beta", "gamma", "delta", "epsilon", "zeta", "eta", "iota", "kappa", "lambda", "mu", \
-          "nu", "xi", "omicron", "pi", "rho", "sigma", "tau", "upsilon", "phi", "chi", "psi", "omega" ]
+greek = [ "alpha" ]
 
 
-def gen_start_asm(d, T):
-    el = 0
+def gen_start_asm(T):
+    
     print( ".text" )
-    print( ".p2align 5" )
+    print( ".p2align 6" )
     print( '' )
-    print( ".globl x86_64_asm_enum_4x32")
-    print( '### void x86_64_asm_enum_4x32(__m128i *F, uint64_t alpha_shift, void *buf, uint64_t *num, uint32_t idx);')
+    print( ".globl avx2_asm_enum_8x32")
+    print( '### void avx2_asm_enum_8x32(__m256i *F, uint64_t alpha_shift, void *buf, uint64_t *num, uint64_t idx);')
     print( '' )
     print( '# the X86-64 ABI says that...'  )
     print( '# A) we should preserve the values of %rbx, %rbp, %r12...%r15 [callee-save registers]' )
     print( '# B) We will receive the arguments of the function in registers :' )
     print( '#       &F in %rdi' )
-    print( '#       alpha_shift in %esi' )
+    print( '#       alpha_shift in %rsi' )
     print( '#       &buf in %rdx' )
     print( '#       &num in %rcx' )
-    print( '#       idx should be in %r8d' )
+    print( '#       idx should be in %r8' )
     print( '' )
-    print( "x86_64_asm_enum_4x32:" )
+    print( "avx2_asm_enum_8x32:" )
     print( '' )
     print( '# intialize our stack frame' )
     print( "mov %rsp, %r11" )
@@ -86,7 +85,7 @@ varMap = {} # mapping from variable names to registers
 xmms_ptr = 0;
 regs_ptr = 0;
 
-xmms = [ '%xmm' + str(i) for i in range(16) ]
+xmms = [ '%ymm' + str(i) for i in range(16) ]
 
 regs = [ '%rdi', '%rsi', '%rdx', '%rcx', '%r8', '%r9', '%rax', '%r10', '%r11', '%r12', '%r13', '%r14', '%r15', '%rbx', '%rbp' ]
 regs32 = [ '%edi', '%esi', '%edx', '%ecx', '%r8d', '%r9d', '%eax', '%r10d', '%r11d', '%r12d', '%r13d', '%r14d', '%r15d', '%ebx', '%ebp' ]
@@ -115,15 +114,15 @@ def dec_reg(var, bits=64):
 
 
 ### generates the main function
-def gen_asm(degree, L, el, T):
+def gen_asm(L, T):
     
-    LUT = idx_LUT.init(128, degree)
+    LUT = idx_LUT.init(128, 2)
 
     # list of cancelled degree-d derivatives
-    cancelled_indices = get_idx_list.get_degD_idx_list(degree, L, el)  # new candidate name cancelled_indices
+    cancelled_indices = get_idx_list.get_degD_idx_list(2, L, 0)  # new candidate name cancelled_indices
 
     # list of the most used derivatives (all degrees), in order
-    mfu_indices = get_idx_list.get_mfu_idx_list(degree, L, el)  # new candidate name : mfu_indices
+    mfu_indices = get_idx_list.get_mfu_idx_list(2, L, 0)  # new candidate name : mfu_indices
 
     dec_reg('F')
     dec_reg('alpha')
@@ -148,7 +147,7 @@ def gen_asm(degree, L, el, T):
     print( '' )
     print( "# load the most-frequently used derivatives (F[0]...F[13]) into %xmm registers" )
     for i in mfu_indices:
-        print( ("movdqa {0}({1}), {2}   ## {2} = F[{3}]".format(i*16, varMap['F'], varMap['F',i], i)) )
+        print( ("vmovdqa {0}({1}), {2}   ## {2} = F[{3}]".format(i*32, varMap['F'], varMap['F',i], i)) )
 
     #print( '' )
     #print( '# loads the ''greek letters'', i.e. indices of the derivatives that do not fit into registers' )
@@ -161,7 +160,7 @@ def gen_asm(degree, L, el, T):
 
     print( '# initialize the last things that remains to be intialized...' )
     print( 'movq ({0}), {1}  ## num = *num_ptr'.format(varMap[ 'num_ptr' ], varMap[ 'num' ]) )
-    print( 'pxor {0}, {0}   ## zero = 0'.format(varMap['zero']) )
+    print( 'vpxor {0}, {0}, {0}   ## zero = 0'.format(varMap['zero']) )
 
 
 
@@ -169,14 +168,14 @@ def gen_asm(degree, L, el, T):
 
     # each time a greek letter is used, the offset is increased by one. This table stores the offsets
     # WARNING : these are initialized to one because the first step is done outside of the asm code
-    current_counter = [1] * degree
+    current_counter = [1]
 
     #this actually unrols the loop
     print( '' )
     for unroll_step in range(1, 1 << L):   
 
         
-            hw = min( degree, popcount(unroll_step) )
+            hw = min(2, popcount(unroll_step))
             print( '' )
             print( '##### step {0} [hw={1}]'.format(unroll_step, hw) )
     
@@ -193,9 +192,9 @@ def gen_asm(degree, L, el, T):
             def mem_reference( index ):
                 i, X, Y = index
                 if Y == None:
-                    return '{0}({1})'.format(i*16 , varMap[X])
+                    return '{0}({1})'.format(i*32 , varMap[X])
                 else:
-                    return '{0}({1},{2})'.format(i*16 , varMap[X], varMap[Y])
+                    return '{0}({1},{2})'.format(i*32 , varMap[X], varMap[Y])
                 
             # as mentionned earlier, the first `hw` indices can be computed
             known_ks = [ b_k(i, unroll_step) for i in range(1, hw+1) ]
@@ -203,18 +202,13 @@ def gen_asm(degree, L, el, T):
 
             # `unknown_indices` denotes F[ [int]+[greek letter] ]
             unknown_indices = []
-            for k in range(hw, degree):
+            for k in range(hw, 2):
                 unknown_indices.append( (current_counter[k-hw], 'F', greek[k-hw]) )  ## What I want
 #                unknown_indices.append( (current_counter[k-hw], greek[k-hw], None) )  ## What I have now || known to work
                 current_counter[k-hw] += 1
         
             # the list the indices of all derivatives accessed during the step, known or unknown
             indices = known_indices + unknown_indices
-
-            # now, if the degree-d derivative has been cancelled, we stop considering it.
-            if hw >= degree and indices[degree][0] in cancelled_indices:
-                print( '##### taking advantage of the fact that F[ {0} ] is known to be zero'.format( indices[degree][0] ) )
-                indices.pop()
 
             # decorate the assembly code, print( summary of the step )
             stuff = []
@@ -223,13 +217,13 @@ def gen_asm(degree, L, el, T):
                     stuff.append( '{0}[ {1} + {2} ]'.format(X, Y, offset) )
                 else:
                     stuff.append( '{0}[ {1} ]'.format(X, offset) )
-            print( '##### {0}{1}'.format( ' ^= ( '.join(stuff), ')'*(degree+1) ) )
+            print( '##### {0}{1}'.format( ' ^= ( '.join(stuff), ')'*3 ) )
 
             # know, we start worrying about the implementation of the unformal statement we just printed
 
             # We know which derivatives are needed, and here we determine where they are stored (i.e. register or memory)
             # the rule is simple: they are all stored in memory except the happy few whose index is in `mfu_indices`
-            locations = [ 'mem' ] * (degree+1)
+            locations = [ 'mem' ] * 3
             for i, (idx,X,Y) in enumerate(known_indices):
                 if idx in mfu_indices:
                     locations[ i ] = 'reg'
@@ -251,36 +245,36 @@ def gen_asm(degree, L, el, T):
 
                 # reg ^= reg
                 if locations[source] == 'reg':
-                    print( 'pxor {0}, {1}'.format(varMap['F', source_offset],  varMap['F', target_offset]) )
+                    print( 'vpxor {0}, {1}, {1}'.format(varMap['F', source_offset],  varMap['F', target_offset]) )
 
                 #reg ^= mem
                 elif locations[target] == 'reg': 
                     if first_xor:
                         # no need to fire up the `sum` machinery, because there is a single XOR from memory
-                        print( 'pxor {0}, {1}'.format(mem_reference(indices[source]), varMap['F', target_offset]) )
+                        print( 'vpxor {0}, {1}, {1}'.format(mem_reference(indices[source]), varMap['F', target_offset]) )
 
                     else:
-                        print( 'pxor {0}, {1}'.format(varMap['sum'], varMap['F', target_offset] ) )
+                        print( 'vpxor {0}, {1}, {1}'.format(varMap['sum'], varMap['F', target_offset] ) )
                         
                 # mem ^= mem
                 else: 
                     if first_xor:
                         # initialize the `sum` register
-                        print( 'movdqa {0}, {1}'.format(mem_reference(indices[source]), varMap['sum']))
+                        print( 'vmovdqa {0}, {1}'.format(mem_reference(indices[source]), varMap['sum']))
 
                     # implicitly, `sum` already contains the "source"
-                    print( 'pxor {0}, {1}'.format( mem_reference( indices[target]), varMap['sum'] ) )
-                    print( 'movdqa {0}, {1}'.format( varMap['sum'], mem_reference( indices[target] )) )
+                    print( 'vpxor {0}, {1}, {1}'.format( mem_reference( indices[target]), varMap['sum'] ) )
+                    print( 'vmovdqa {0}, {1}'.format( varMap['sum'], mem_reference( indices[target] )) )
 
 
             # after the XORs, the comparison
 
             if (T == 2):
-                print( 'pcmpeqd {0}, {1}'.format(varMap['F',0], varMap['zero']) )
+                print( 'vpcmpeqd {0}, {1}, {1}'.format(varMap['F',0], varMap['zero']) )
             elif(T == 3):
-                print( 'pcmpeqw {0}, {1}'.format(varMap['F',0], varMap['zero']) )
+                print( 'vpcmpeqw {0}, {1}, {1}'.format(varMap['F',0], varMap['zero']) )
 
-            print( 'pmovmskb {0}, {1}'.format(varMap['zero'], varMap['mask'])) ########## MODIFY MODIFY MODIFY #### 
+            print( 'vpmovmskb {0}, {1}'.format(varMap['zero'], varMap['mask'])) ########## MODIFY MODIFY MODIFY #### 
             print( 'test {0}, {0}'.format(varMap['mask']) )
             print( 'jne ._report_solution_{0}'.format(unroll_step) )
             print( '._step_{0}_end:'.format(unroll_step) )
@@ -302,7 +296,7 @@ def gen_asm(degree, L, el, T):
 
         # à améliorer : pourquoi contourner l'adressage?
         print( '._report_solution_{0}:'.format(i) )
-        print( 'pxor {0}, {0}      #zero = 0'.format(varMap['zero']))  
+        print( 'vpxor {0}, {0}, {0}      #zero = 0'.format(varMap['zero']))  
         print( 'shl $3, {0}        #num <<= 3'.format(varMap['num'])) 
         print( 'mov {0}, {1}       #tmp = idx'.format(varMap['idx'], varMap['tmp']))         
         print( 'add ${0}, {1}      #tmp += i'.format(i, varMap['tmp']))         
@@ -320,7 +314,7 @@ def gen_asm(degree, L, el, T):
     print( '' )
     print( '# copy back to memory the (most-frequently used) derivatives that were held in registers' )
     for i in mfu_indices:
-        print( 'movdqa {0}, {1}({2})'.format(varMap['F', i], i*16, varMap['F']) )
+        print( 'vmovdqa {0}, {1}({2})'.format(varMap['F', i], i*32, varMap['F']) )
 
     print( '' )
     print( '# store the number of solutions found in this chunk' )
@@ -330,11 +324,9 @@ def gen_asm(degree, L, el, T):
 
 ################### Execute ########################
 
-d = 2
-el = 0
 T = 2   # 4x32
-T = 3   # 8x16
+#T = 3   # 8x16
 
-gen_start_asm(d, T)
-gen_asm(d, 10-d//2, el, T)
+gen_start_asm(T)
+gen_asm(9, T)
 gen_end_asm()

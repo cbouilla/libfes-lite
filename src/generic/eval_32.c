@@ -70,7 +70,8 @@ size_t generic_eval_32(int n, const uint32_t * const F,
 			    __attribute__((unused)) int verbose)
 {
 	assert(n_input <= 32);
-	assert(max_solutions > 0);
+	if (max_solutions == 0)
+		return 0;
 	size_t n_solution = 0;
 	
 	uint32_t bitslice[32];

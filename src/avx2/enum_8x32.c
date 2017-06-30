@@ -2,9 +2,12 @@
 #include <inttypes.h>
 #include <stdlib.h>
 #include <getopt.h>
+#include <immintrin.h>
 
 #include "feslite.h"
 #include "monomials.h"
+
+#ifdef __AVX2__
 
 struct solution_t {
   uint32_t x;
@@ -13,12 +16,10 @@ struct solution_t {
 
 struct context_t {
 	int n;
-	const uint32_t * const F_start;
-	__m128i * F;
-	struct solution_t buffer[8*512 + 32];
+	const  uint32_t * const F_start;
+	__m256i * F;
+	struct solution_t buffer[512*8 + 32];
 	size_t buffer_size;
-	uint32_t candidates[32];
-	size_t n_candidates;
 	uint32_t *solutions;
 	size_t n_solution_found;
 	size_t max_solutions;
@@ -31,9 +32,9 @@ struct context_t {
    Designed to be as quick as possible. */
 static inline void CHECK_SOLUTION(struct context_t *context, uint32_t index)
 {
-	__m128i zero = _mm_setzero_si128();
-	__m128i cmp = _mm_cmpeq_epi16(context->F[0], zero);
-    	int mask = _mm_movemask_epi8(cmp);
+	__m256i zero = _mm256_setzero_si256();
+	__m256i cmp = _mm256_cmpeq_epi32(context->F[0], zero);
+    	uint32_t mask = _mm256_movemask_epi8(cmp);
 	if (unlikely(mask)) {
 		context->buffer[context->buffer_size].mask = mask;
 		context->buffer[context->buffer_size].x = index;
@@ -48,68 +49,69 @@ static inline void STEP_0(struct context_t *context, uint32_t index)
 
 static inline void STEP_1(struct context_t *context, int a, uint32_t index)
 {
-	context->F[0] = _mm_xor_si128(context->F[0], context->F[a]);
+	context->F[0] ^= context->F[a];
 	STEP_0(context, index);
 }
 
 static inline void STEP_2(struct context_t *context, int a, int b, uint32_t index)
 {
-	context->F[a] = _mm_xor_si128(context->F[a], context->F[b]);
+	context->F[a] ^= context->F[b];
 	STEP_1(context, a, index);
 }
 
-/* batch-eval all the Candidates */
-static inline void FLUSH_CANDIDATES(struct context_t *context)
-{
-	size_t n_good_cand = generic_eval_32(context->n, context->F_start, 16, 32, context->candidates,
-			    context->n_candidates, context->solutions + context->n_solutions, context->max_solutions,
-			    context->verbose);
-	// fprintf(stderr, "FLUSH %zd candidates, %zd solutions\n", context->n_candidates, n_good_cand);
-	context->max_solutions -= n_good_cand;
-	context->n_solutions += n_good_cand;
-	context->n_candidates = 0;
-}
-
-
-static inline void NEW_CANDIDATE(struct context_t *context, uint32_t i)
-{
-	// printf("candidate %08x\n", i);
-	context->candidates[context->n_candidates] = i;
-	context->n_candidates += 1;
-	// printf("new candidate, now %zd candidates\n", context->n_candidates);
-	if (context->n_candidates == 32)
-		FLUSH_CANDIDATES(context);
-}
-
 /* Empty the Buffer. For each entry, check which half is correct,
-   make it a Candidate. If there are 32 Candidates, batch-evaluate them. */
+   add it to the solutions. */
 static inline void FLUSH_BUFFER(struct context_t *context)
-{
-	// printf("FLUSH BUFFER, size %zd, %zd candidates\n", context->buffer_size, context->n_candidates);
+{		
 	for (size_t i = 0; i < context->buffer_size; i++) {
 		uint32_t x = to_gray(context->buffer[i].x);
-		if ((context->buffer[i].mask & 0x0003))
-			NEW_CANDIDATE(context, x + 0 * (1 << (context->n - 3)));
-		if ((context->buffer[i].mask & 0x000c))
-			NEW_CANDIDATE(context, x + 1 * (1 << (context->n - 3)));
-		if ((context->buffer[i].mask & 0x0030))
-			NEW_CANDIDATE(context, x + 2 * (1 << (context->n - 3)));
-		if ((context->buffer[i].mask & 0x00c0))
-			NEW_CANDIDATE(context, x + 3 * (1 << (context->n - 3)));
-		if ((context->buffer[i].mask & 0x0300))
-			NEW_CANDIDATE(context, x + 4 * (1 << (context->n - 3)));
-		if ((context->buffer[i].mask & 0x0c00))
-			NEW_CANDIDATE(context, x + 5 * (1 << (context->n - 3)));
-		if ((context->buffer[i].mask & 0x3000))
-			NEW_CANDIDATE(context, x + 6 * (1 << (context->n - 3)));
-		if ((context->buffer[i].mask & 0xc000))
-			NEW_CANDIDATE(context, x + 7 * (1 << (context->n - 3)));
+		printf("found: %08x with mask=%08x\n", x, context->buffer[i].mask);
+		if ((context->buffer[i].mask & 0x0000000f)) {
+			context->solutions[context->n_solutions++] = x;
+			if (context->n_solutions == context->max_solutions)
+				return;
+		}
+		if ((context->buffer[i].mask & 0x000000f0)) {
+			context->solutions[context->n_solutions++] = x + (1 << (context->n - 3));
+			if (context->n_solutions == context->max_solutions)
+				return;
+		}
+		if ((context->buffer[i].mask & 0x00000f00)) {
+			context->solutions[context->n_solutions++] = x + 2 * (1 << (context->n - 3));
+			if (context->n_solutions == context->max_solutions)
+				return;
+		}
+		if ((context->buffer[i].mask & 0x0000f000)) {
+			context->solutions[context->n_solutions++] = x + 3 * (1 << (context->n - 3));
+			if (context->n_solutions == context->max_solutions)
+				return;
+		}
+		if ((context->buffer[i].mask & 0x000f0000)) {
+			context->solutions[context->n_solutions++] = x + 4 * (1 << (context->n - 3));
+			if (context->n_solutions == context->max_solutions)
+				return;
+		}
+		if ((context->buffer[i].mask & 0x00f00000)) {
+			context->solutions[context->n_solutions++] = x + 5 * (1 << (context->n - 3));
+			if (context->n_solutions == context->max_solutions)
+				return;
+		}
+		if ((context->buffer[i].mask & 0x0f000000)) {
+			context->solutions[context->n_solutions++] = x + 6 * (1 << (context->n - 3));
+			if (context->n_solutions == context->max_solutions)
+				return;
+		}
+		if ((context->buffer[i].mask & 0xf0000000)) {
+			context->solutions[context->n_solutions++] = x + 7 * (1 << (context->n - 3));
+			if (context->n_solutions == context->max_solutions)
+				return;
+		}
 	}
 	context->buffer_size = 0;
 }				
 
 // generated with L = 9
-size_t x86_64_enum_8x16(int n, const uint32_t * const F_,
+size_t avx2_enum_8x32(int n, const uint32_t * const F_,
 			    uint32_t * solutions, size_t max_solutions,
 			    int verbose)
 {
@@ -120,47 +122,43 @@ size_t x86_64_enum_8x16(int n, const uint32_t * const F_,
 	context.max_solutions = max_solutions;
 	context.verbose = verbose;
 	context.buffer_size = 0;
-	context.n_candidates = 0;
 
 	uint64_t init_start_time = Now();
 	size_t N = idx_1(n);
-	__m128i F[N];
+	__m256i F[N];
 	context.F = F;
 
 	for (size_t i = 0; i < N; i++)
-		F[i] = _mm_set1_epi16(F_[i] & 0x0000ffff);
-	
+		F[i] = _mm256_set1_epi32(F_[i]);
 
-	/******** 2-way "specialization" : remove the (n-1)-th variable */
-    	__m128i v0 = _mm_set_epi32(0xffffffff, 0xffffffff, 0x00000000, 0x00000000);
-	__m128i v1 = _mm_set_epi32(0xffffffff, 0x00000000, 0xffffffff, 0x00000000);
-	__m128i v2 = _mm_set_epi32(0xffff0000, 0xffff0000, 0xffff0000, 0xffff0000);
+    	__m256i v0 = _mm256_set_epi32(0xffffffff, 0xffffffff, 0xffffffff, 0xffffffff, 0x00000000, 0x00000000, 0x00000000, 0x00000000);
+	__m256i v1 = _mm256_set_epi32(0xffffffff, 0xffffffff, 0x00000000, 0x00000000, 0xffffffff, 0xffffffff, 0x00000000, 0x00000000);
+	__m256i v2 = _mm256_set_epi32(0xffffffff, 0x00000000, 0xffffffff, 0x00000000, 0xffffffff, 0x00000000, 0xffffffff, 0x00000000);
 	 
 	// the constant term is affected by [n-1]
 	F[0] ^= F[idx_1(n - 1)] & v0;
 	
 	// [i] is affected by [i, n-1]
-	for (size_t i = 0; i < n - 1; i++)
+	for (int i = 0; i < n - 1; i++)
 		F[idx_1(i)] ^= F[idx_2(i, n - 1)] & v0;
-
+	
 	// the constant term is affected by [n-2]
 	F[0] ^= F[idx_1(n - 2)] & v1;
 	
       	// [i] is affected by [i, n-2]
-	for (size_t i = 0; i < n - 2; i++)
+	for (int i = 0; i < n - 2; i++)
 		F[idx_1(i)] ^= F[idx_2(i, n - 2)] & v1;
 	
-      	// the constant term is affected by [n-3]
+	// the constant term is affected by [n-3]
 	F[0] ^= F[idx_1(n - 3)] & v2;
 	
-      	// [i] is affected by [i, n-2]
-	for (size_t i = 0; i < n - 3; i++)
+      	// [i] is affected by [i, n-3]
+	for (int i = 0; i < n - 3; i++)
 		F[idx_1(i)] ^= F[idx_2(i, n - 3)] & v2;
 	
-
 	/******** compute "derivatives" */
 	/* degree-1 terms are affected by degree-2 terms */
-	for (int i = 1; i < n; i++)
+	for (int i = 1; i < n - 3; i++)
 		F[idx_1(i)] ^= F[idx_2(i - 1, i)];
 
 	if (verbose)
@@ -209,7 +207,7 @@ size_t x86_64_enum_8x16(int n, const uint32_t * const F_,
 		
 
 		FLUSH_BUFFER(&context);
-		if (context.max_solutions == 0)
+		if (context.n_solutions == context.max_solutions)
 			return context.n_solutions;
 
 		// Here, the number of iterations to perform is (supposedly) sufficiently large
@@ -217,9 +215,10 @@ size_t x86_64_enum_8x16(int n, const uint32_t * const F_,
 
 		// unrolled critical section where the hamming weight is >= 2
 		for (uint64_t j = 512; j < (1ull << idx_0); j += 512) {
+			#if 1
 			const uint64_t i = j + weight_1_start;
+			// printf("testing idx %08x : F[0] = %08x\n", i, F[0]);
 
-			// ceci prend 75-200 cycles
 			int pos = 0;
 			uint64_t _i = i;
 			while ((_i & 0x0001) == 0) {
@@ -237,18 +236,65 @@ size_t x86_64_enum_8x16(int n, const uint32_t * const F_,
 			const int alpha = idx_1(k_1);
 			const int beta = idx_2(k_1, k_2);
 
-
-			// les deux ensemble prennent 1500 cycles
 			STEP_2(&context, alpha, beta, i);
-			x86_64_asm_enum_8x16(F, alpha * sizeof(*F), context.buffer, &context.buffer_size, i);
+			printf("going for ASM\n");
+          		avx2_asm_enum_8x32(F, (uint64_t) alpha * 32, context.buffer, &context.buffer_size, (uint64_t) i);
+			#else
+			const uint64_t i = j + weight_1_start;
+			// printf("testing idx %08x : F[0] = %08x\n", i, F[0]);
 
+			int pos = 0;
+			uint64_t _i = i;
+			while ((_i & 0x0001) == 0) {
+				_i >>= 1;
+				pos++;
+			}
+			const int k_1 = pos;
+			_i >>= 1;
+			pos++;
+			while ((_i & 0x0001) == 0) {
+				_i >>= 1;
+				pos++;
+			}
+			const int k_2 = pos;
+			const int alpha = idx_1(k_1);
+			const int beta = idx_2(k_1, k_2);
+
+			STEP_2(&context, alpha, beta, i);
+
+			for (uint32_t k = 1; k < 512; k++) {
+				int pos = 0;
+				uint32_t _i = i + k;
+				while ((_i & 0x0001) == 0) {
+					_i >>= 1;
+					pos++;
+				}
+				const int k_1 = pos;
+				_i >>= 1;
+				pos++;
+				while ((_i & 0x0001) == 0) {
+					_i >>= 1;
+					pos++;
+				}
+				const int k_2 = pos;
+				STEP_2(&context, idx_1(k_1), idx_2(k_1, k_2), i + k);
+			}
+			#endif
+
+			printf("End of actual asm step\n");
+			uint32_t *G = (uint32_t *) F;
+			for (int foo = 0; foo < 16; foo++) {
+				printf("F[%2d] = ", foo);
+				for (int bar = 0; bar < 8; bar++)
+					printf("%08x ", G[8*foo+bar]);
+				printf("\n");
+			}
 
 			FLUSH_BUFFER(&context);
-			if (context.max_solutions == 0)
+			if (context.n_solutions == context.max_solutions)
 				return context.n_solutions;
 		}
 	}
-	FLUSH_CANDIDATES(&context);
 	uint64_t end_time = Now();
 	
 
@@ -259,3 +305,4 @@ size_t x86_64_enum_8x16(int n, const uint32_t * const F_,
 
 	return context.n_solutions;
 }
+#endif

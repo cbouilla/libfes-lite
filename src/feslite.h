@@ -3,12 +3,16 @@
 #include <stdint.h>
 #include <stddef.h>
 
+#include "config.h"
 #include "generic/generic.h"
 
 #ifdef __SSE2__
 #include "x86_64/x86_64.h"
 #endif
 
+#ifdef __AVX2__
+#include "avx2/avx2.h"
+#endif
 
 typedef int (*kernel_available_f)(void);
 typedef size_t (*kernel_enumeration_f)(int, const uint32_t * const, uint32_t *, size_t, int);

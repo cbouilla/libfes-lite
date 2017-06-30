@@ -218,8 +218,9 @@ size_t x86_64_enum_8x16(int n, const uint32_t * const F_,
 		// unrolled critical section where the hamming weight is >= 2
 		for (uint64_t j = 512; j < (1ull << idx_0); j += 512) {
 			const uint64_t i = j + weight_1_start;
+			// printf("testing idx %08x : F[0] = %08x\n", i, F[0]);
 
-			// ceci prend 75-200 cycles
+			uint64_t plop = Now();
 			int pos = 0;
 			uint64_t _i = i;
 			while ((_i & 0x0001) == 0) {
@@ -237,11 +238,13 @@ size_t x86_64_enum_8x16(int n, const uint32_t * const F_,
 			const int alpha = idx_1(k_1);
 			const int beta = idx_2(k_1, k_2);
 
+			uint64_t bar = Now();
 
-			// les deux ensemble prennent 1500 cycles
 			STEP_2(&context, alpha, beta, i);
 			x86_64_asm_enum_8x16(F, alpha * sizeof(*F), context.buffer, &context.buffer_size, i);
 
+			uint64_t foo = Now();
+			printf("%" PRId64 " vs %" PRId64 "\n", bar - plop, foo-bar);
 
 			FLUSH_BUFFER(&context);
 			if (context.max_solutions == 0)

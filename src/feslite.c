@@ -1,13 +1,20 @@
 #include "feslite.h"
 
 const struct enum_kernel_t ENUM_KERNEL[] = {
+#if 0
 	{ "generic 1x32 (32 bits, plain C)", NULL, generic_enum_1x32 },
 	{ "generic 2x16 (32 bits, plain C)", NULL, generic_enum_2x16 },
 	{ "generic 2x32 (64 bits, plain C)", NULL, generic_enum_2x32 },
 	{ "generic 4x16 (64 bits, plain C)", NULL, generic_enum_4x16 },
+#endif
 #ifdef __SSE2__
 	{ "x86-64 4x32 (128 bits, SSE2)", NULL, x86_64_enum_4x32 },
+	{ "x86-64 8x16 (128 bits, SSE2)", NULL, x86_64_enum_8x16 },
 #endif
+#ifdef __AVX2__
+	{ "x86-64 8x32 (256 bits, AVX2)", NULL, avx2_enum_8x32 },
+#endif
+
 	{ NULL, NULL, NULL}
 };
 
