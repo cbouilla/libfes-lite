@@ -65,7 +65,6 @@ static inline void FLUSH_BUFFER(struct context_t *context)
 {		
 	for (size_t i = 0; i < context->buffer_size; i++) {
 		uint32_t x = to_gray(context->buffer[i].x);
-		printf("found: %08x with mask=%08x\n", x, context->buffer[i].mask);
 		if ((context->buffer[i].mask & 0x0000000f)) {
 			context->solutions[context->n_solutions++] = x;
 			if (context->n_solutions == context->max_solutions)
@@ -215,7 +214,6 @@ size_t avx2_enum_8x32(int n, const uint32_t * const F_,
 
 		// unrolled critical section where the hamming weight is >= 2
 		for (uint64_t j = 512; j < (1ull << idx_0); j += 512) {
-			#if 1
 			const uint64_t i = j + weight_1_start;
 			// printf("testing idx %08x : F[0] = %08x\n", i, F[0]);
 
@@ -237,58 +235,7 @@ size_t avx2_enum_8x32(int n, const uint32_t * const F_,
 			const int beta = idx_2(k_1, k_2);
 
 			STEP_2(&context, alpha, beta, i);
-			printf("going for ASM\n");
           		avx2_asm_enum_8x32(F, (uint64_t) alpha * 32, context.buffer, &context.buffer_size, (uint64_t) i);
-			#else
-			const uint64_t i = j + weight_1_start;
-			// printf("testing idx %08x : F[0] = %08x\n", i, F[0]);
-
-			int pos = 0;
-			uint64_t _i = i;
-			while ((_i & 0x0001) == 0) {
-				_i >>= 1;
-				pos++;
-			}
-			const int k_1 = pos;
-			_i >>= 1;
-			pos++;
-			while ((_i & 0x0001) == 0) {
-				_i >>= 1;
-				pos++;
-			}
-			const int k_2 = pos;
-			const int alpha = idx_1(k_1);
-			const int beta = idx_2(k_1, k_2);
-
-			STEP_2(&context, alpha, beta, i);
-
-			for (uint32_t k = 1; k < 512; k++) {
-				int pos = 0;
-				uint32_t _i = i + k;
-				while ((_i & 0x0001) == 0) {
-					_i >>= 1;
-					pos++;
-				}
-				const int k_1 = pos;
-				_i >>= 1;
-				pos++;
-				while ((_i & 0x0001) == 0) {
-					_i >>= 1;
-					pos++;
-				}
-				const int k_2 = pos;
-				STEP_2(&context, idx_1(k_1), idx_2(k_1, k_2), i + k);
-			}
-			#endif
-
-			printf("End of actual asm step\n");
-			uint32_t *G = (uint32_t *) F;
-			for (int foo = 0; foo < 16; foo++) {
-				printf("F[%2d] = ", foo);
-				for (int bar = 0; bar < 8; bar++)
-					printf("%08x ", G[8*foo+bar]);
-				printf("\n");
-			}
 
 			FLUSH_BUFFER(&context);
 			if (context.n_solutions == context.max_solutions)

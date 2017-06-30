@@ -325,7 +325,7 @@ def gen_asm(L, T):
 ################### Execute ########################
 
 T = 2   # 4x32
-#T = 3   # 8x16
+T = 3   # 8x16
 
 gen_start_asm(T)
 gen_asm(9, T)

@@ -45,8 +45,8 @@ static inline size_t idx_2(int i, int j)
   return idx_1(j) + 1 + i;
 }
 
-static inline uint64_t to_gray(uint64_t i)
+static inline uint32_t to_gray(uint32_t i)
 {
-  return (i ^ (i >> 1ll));
+  return (i ^ (i >> 1));
 }
 

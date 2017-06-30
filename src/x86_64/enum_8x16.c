@@ -33,7 +33,7 @@ static inline void CHECK_SOLUTION(struct context_t *context, uint32_t index)
 {
 	__m128i zero = _mm_setzero_si128();
 	__m128i cmp = _mm_cmpeq_epi16(context->F[0], zero);
-    	int mask = _mm_movemask_epi8(cmp);
+    	uint32_t mask = _mm_movemask_epi8(cmp);
 	if (unlikely(mask)) {
 		context->buffer[context->buffer_size].mask = mask;
 		context->buffer[context->buffer_size].x = index;
@@ -48,13 +48,13 @@ static inline void STEP_0(struct context_t *context, uint32_t index)
 
 static inline void STEP_1(struct context_t *context, int a, uint32_t index)
 {
-	context->F[0] = _mm_xor_si128(context->F[0], context->F[a]);
+	context->F[0] ^= context->F[a];
 	STEP_0(context, index);
 }
 
 static inline void STEP_2(struct context_t *context, int a, int b, uint32_t index)
 {
-	context->F[a] = _mm_xor_si128(context->F[a], context->F[b]);
+	context->F[a] ^= context->F[b];
 	STEP_1(context, a, index);
 }
 
@@ -130,8 +130,6 @@ size_t x86_64_enum_8x16(int n, const uint32_t * const F_,
 	for (size_t i = 0; i < N; i++)
 		F[i] = _mm_set1_epi16(F_[i] & 0x0000ffff);
 	
-
-	/******** 2-way "specialization" : remove the (n-1)-th variable */
     	__m128i v0 = _mm_set_epi32(0xffffffff, 0xffffffff, 0x00000000, 0x00000000);
 	__m128i v1 = _mm_set_epi32(0xffffffff, 0x00000000, 0xffffffff, 0x00000000);
 	__m128i v2 = _mm_set_epi32(0xffff0000, 0xffff0000, 0xffff0000, 0xffff0000);
@@ -140,43 +138,43 @@ size_t x86_64_enum_8x16(int n, const uint32_t * const F_,
 	F[0] ^= F[idx_1(n - 1)] & v0;
 	
 	// [i] is affected by [i, n-1]
-	for (size_t i = 0; i < n - 1; i++)
+	for (int i = 0; i < n - 1; i++)
 		F[idx_1(i)] ^= F[idx_2(i, n - 1)] & v0;
 
 	// the constant term is affected by [n-2]
 	F[0] ^= F[idx_1(n - 2)] & v1;
 	
       	// [i] is affected by [i, n-2]
-	for (size_t i = 0; i < n - 2; i++)
+	for (int i = 0; i < n - 2; i++)
 		F[idx_1(i)] ^= F[idx_2(i, n - 2)] & v1;
 	
       	// the constant term is affected by [n-3]
 	F[0] ^= F[idx_1(n - 3)] & v2;
 	
-      	// [i] is affected by [i, n-2]
-	for (size_t i = 0; i < n - 3; i++)
+      	// [i] is affected by [i, n-3]
+	for (int i = 0; i < n - 3; i++)
 		F[idx_1(i)] ^= F[idx_2(i, n - 3)] & v2;
 	
 
 	/******** compute "derivatives" */
 	/* degree-1 terms are affected by degree-2 terms */
-	for (int i = 1; i < n; i++)
+	for (int i = 1; i < n - 3; i++)
 		F[idx_1(i)] ^= F[idx_2(i - 1, i)];
 
 	if (verbose)
 		printf("fes: initialisation = %" PRIu64 " cycles\n",
 		       Now() - init_start_time);
-	uint64_t enumeration_start_time = Now();
+	uint32_t enumeration_start_time = Now();
 
 	// special case for i=0
-	const uint64_t weight_0_start = 0;
+	const uint32_t weight_0_start = 0;
 	STEP_0(&context, 0);
 
 	// from now on, hamming weight is >= 1
 	for (int idx_0 = 0; idx_0 < n - 3; idx_0++) {
 
 		// special case when i has hamming weight exactly 1
-		const uint64_t weight_1_start = weight_0_start + (1ll << idx_0);
+		const uint32_t weight_1_start = weight_0_start + (1ll << idx_0);
 		STEP_1(&context, idx_1(idx_0), weight_1_start);
 
 		// we are now inside the critical part where the hamming weight is known to be >= 2
@@ -185,12 +183,12 @@ size_t x86_64_enum_8x16(int n, const uint32_t * const F_,
 		// Because of the last step, the current iteration counter is a multiple of 512 plus one
 		// This loop sets it to `rolled_end`, which is a multiple of 512, if possible
 
-		const uint64_t rolled_end =
+		const uint32_t rolled_end =
 		    weight_1_start + (1ll << min(9, idx_0));
-		for (uint64_t i = 1 + weight_1_start; i < rolled_end; i++) {
+		for (uint32_t i = 1 + weight_1_start; i < rolled_end; i++) {
 			int pos = 0;
 			/* k1 == rightmost 1 bit */
-			uint64_t _i = i;
+			uint32_t _i = i;
 			while ((_i & 0x0001) == 0) {
 				_i >>= 1;
 				pos++;
@@ -216,12 +214,12 @@ size_t x86_64_enum_8x16(int n, const uint32_t * const F_,
 		// We will therefore unroll the loop 512 times
 
 		// unrolled critical section where the hamming weight is >= 2
-		for (uint64_t j = 512; j < (1ull << idx_0); j += 512) {
-			const uint64_t i = j + weight_1_start;
+		for (uint32_t j = 512; j < (1ull << idx_0); j += 512) {
+			const uint32_t i = j + weight_1_start;
 
 			// ceci prend 75-200 cycles
 			int pos = 0;
-			uint64_t _i = i;
+			uint32_t _i = i;
 			while ((_i & 0x0001) == 0) {
 				_i >>= 1;
 				pos++;

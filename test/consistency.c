@@ -9,8 +9,8 @@
 
 int main(int argc, char **argv)
 {
-	int n = 14;
-	int n_eqs = 11;
+	int n = 24;
+	int n_eqs = 21;
 	int n_iterations = 1;
 	unsigned long random_seed = 1;
 
