@@ -18,4 +18,6 @@ build-aux/*
 /missing
 .deps
 .libs
-
+build
+/src/config.h.in
+*.pyc
