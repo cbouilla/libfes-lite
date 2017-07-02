@@ -12,6 +12,7 @@
 // before : 0.38 cycles / candidates
 // more unrolling : 0.38
 // knuth trick in rolled : 0.38/0.39
+// full treatment : 0.38...
 
 struct solution_t {
   uint32_t x;
@@ -38,6 +39,14 @@ struct context_t {
 	int k2;
 };
 
+static void RESET_COUNTER(struct context_t *context)
+{
+	context->sp = 1;
+	context->stack[0] = -1;
+	for (int j = 0; j <= context->n; j++)
+		context->focus[j] = j;
+
+}
 
 static inline void UPDATE_COUNTER(struct context_t *context)
 {
@@ -113,6 +122,7 @@ static inline void FLUSH_BUFFER(struct context_t *context)
 	context->buffer_size = 0;
 }				
 
+
 // generated with L = 9
 size_t x86_64_enum_4x32(int n, const uint32_t * const F_,
 			    uint32_t * solutions, size_t max_solutions,
@@ -132,10 +142,7 @@ size_t x86_64_enum_4x32(int n, const uint32_t * const F_,
 	__m128i F[N];
 	context.F = F;
 
-	context.sp = 1;
-	context.stack[0] = -1;
-	for (int j = 0; j <= n; j++)
-		context.focus[j] = j;
+	RESET_COUNTER(&context);
 
 	for (size_t i = 0; i < N; i++)
 		F[i] = _mm_set1_epi32(F_[i]);
@@ -187,11 +194,7 @@ size_t x86_64_enum_4x32(int n, const uint32_t * const F_,
 			return context.n_solutions;
 	}
 
-	/* reset the lowest bit identification mecanism */
-	context.sp = 1;
-	context.stack[0] = -1;
-	for (int j = 0; j <= n; j++)
-		context.focus[j] = j;
+	RESET_COUNTER(&context);
 
 	for (int idx_0 = L; idx_0 < n - 2; idx_0++) {
 		const uint32_t w1 = (1 << idx_0);
@@ -205,23 +208,10 @@ size_t x86_64_enum_4x32(int n, const uint32_t * const F_,
 			return context.n_solutions;
 
 		for (uint32_t j = 1 << L; j < w1; j += 1 << L) {
-			const uint32_t i = j + w1;
-			int pos = 0;
-			uint32_t _i = i;
-			while ((_i & 0x0001) == 0) {
-				_i >>= 1;
-				pos++;
-			}
-			const int k_1 = pos;
-			_i >>= 1;
-			pos++;
-			while ((_i & 0x0001) == 0) {
-				_i >>= 1;
-				pos++;
-			}
-			const int k_2 = pos;
-			const int alpha = idx_1(k_1);
-			const int beta = idx_2(k_1, k_2);
+			uint32_t i = w1 + j;
+			UPDATE_COUNTER(&context);
+			int alpha = idx_1(context.k1 + L);
+			int beta = idx_2(context.k1 + L, context.k2 + L);
 
 			STEP_2(&context, alpha, beta, i);
           		x86_64_asm_enum_4x32(F, alpha * sizeof(*F), context.buffer, &context.buffer_size, i);

@@ -69,6 +69,16 @@ static inline void FLUSH_BUFFER(struct context_t *context)
 	context->buffer_size = 0;
 }				
 
+
+static void RESET_COUNTER(struct context_t *context)
+{
+	context->sp = 1;
+	context->stack[0] = -1;
+	for (int j = 0; j <= context->n; j++)
+		context->focus[j] = j;
+
+}
+
 static inline void UPDATE_COUNTER(struct context_t *context)
 {
 	size_t j = context->focus[0];
@@ -229,10 +239,7 @@ size_t generic_enum_1x32(int n, const uint32_t * const F_,
 	context.verbose = verbose;
 	context.buffer_size = 0;
 
-	context.sp = 1;
-	context.stack[0] = -1;
-	for (int j = 0; j <= n; j++)
-		context.focus[j] = j;
+	RESET_COUNTER(&context);
 
 	size_t N = idx_1(n);
 	uint32_t F[N];
@@ -266,11 +273,7 @@ size_t generic_enum_1x32(int n, const uint32_t * const F_,
 			return context.n_solutions;
 	}
 
-	/* reset the lowest bit identification mecanism */
-	context.sp = 1;
-	context.stack[0] = -1;
-	for (int j = 0; j <= n; j++)
-		context.focus[j] = j;
+	RESET_COUNTER(&context);
 
 	for (int idx_0 = L; idx_0 < n; idx_0++) {	
 		uint32_t w1 = (1 << idx_0);
