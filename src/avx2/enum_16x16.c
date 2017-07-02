@@ -7,6 +7,8 @@
 #include "monomials.h"
 
 #ifdef __AVX2__
+#include <immintrin.h>
+#include <bmiintrin.h>
 
 #define L 9
 
@@ -30,9 +32,6 @@ struct context_t {
 	int verbose;
 };
 
-
-/* invoked when (at least) one lane is a solution. Both are pushed to the Buffer.
-   Designed to be as quick as possible. */
 static inline void CHECK_SOLUTION(struct context_t *context, uint32_t index)
 {
 	__m256i zero = _mm256_setzero_si256();
@@ -175,60 +174,43 @@ size_t avx2_enum_16x16(int n, const uint32_t * const F_,
 	uint64_t enumeration_start_time = Now();
 	STEP_0(&context, 0);
 
-	for (int idx_0 = 0; idx_0 < n - 4; idx_0++) {
-		uint32_t w1 = (1 << idx_0);
+	for (int idx_0 = 0; idx_0 < min(L, n - 4); idx_0++) {
+		uint32_t w1 = 1 << idx_0;
 		STEP_1(&context, idx_1(idx_0), w1);
-
-		const uint32_t rolled_end =
-		    w1 + (1ll << min(9, idx_0));
-		for (uint32_t i = w1 + 1; i < rolled_end; i++) {
-			int pos = 0;
-			/* k1 == rightmost 1 bit */
-			uint64_t _i = i;
-			while ((_i & 0x0001) == 0) {
-				_i >>= 1;
-				pos++;
-			}
-			const int k_1 = pos;
-			/* k2 == second rightmost 1 bit */
-			_i >>= 1;
-			pos++;
-			while ((_i & 0x0001) == 0) {
-				_i >>= 1;
-				pos++;
-			}
-			const int k_2 = pos;
-			STEP_2(&context, idx_1(k_1), idx_2(k_1, k_2), i);
+		for (uint32_t i = w1 + 1; i < 2 * w1; i++) {
+			int k1 = _tzcnt_u32(i);
+			int alpha = idx_1(k1);
+			int k2 = _tzcnt_u32(_blsr_u32(i));
+			int beta = idx_2(k1, k2);
+			STEP_2(&context, alpha, beta, i);
 		}
-		
+		FLUSH_BUFFER(&context);
+		if (context.max_solutions == 0)
+			return context.n_solutions;
+	}
+
+	if (verbose)
+		printf("fes: enumeration[rolled] = %" PRIu64 " cycles\n",
+		       Now() - enumeration_start_time);
+
+	for (int idx_0 = L; idx_0 < n - 4; idx_0++) {
+		uint32_t w1 = (1 << idx_0);
+		int alpha = idx_1(idx_0);
+		STEP_1(&context, alpha, w1);
+		avx2_asm_enum_16x16(F, (uint64_t) alpha * sizeof(*F), context.buffer, &context.buffer_size, (uint64_t) w1);
+
 		FLUSH_BUFFER(&context);
 		if (context.max_solutions == 0)
 			return context.n_solutions;
 
-
 		for (uint32_t j = 1 << L; j < w1; j += 1 << L) {
 			uint32_t i = w1 + j;
-
-			int pos = 0;
-			uint64_t _i = i;
-			while ((_i & 0x0001) == 0) {
-				_i >>= 1;
-				pos++;
-			}
-			const int k_1 = pos;
-			_i >>= 1;
-			pos++;
-			while ((_i & 0x0001) == 0) {
-				_i >>= 1;
-				pos++;
-			}
-			const int k_2 = pos;
-			const int alpha = idx_1(k_1);
-			const int beta = idx_2(k_1, k_2);
-
+			int k1 = _tzcnt_u32(i);
+			int alpha = idx_1(k1);
+			int k2 = _tzcnt_u32(_blsr_u32(i));
+			int beta = idx_2(k1, k2);
 			STEP_2(&context, alpha, beta, i);
 	    		avx2_asm_enum_16x16(F, (uint64_t) alpha * sizeof(*F), context.buffer, &context.buffer_size, (uint64_t) i);
-
 			FLUSH_BUFFER(&context);
 			if (context.max_solutions == 0)
 				return context.n_solutions;

@@ -28,37 +28,7 @@ struct context_t {
 	size_t max_solutions;
 	size_t n_solutions;
 	int verbose;
-
-	size_t focus[33];
-	size_t stack[32];
-	size_t sp;
-
-	int k1;
-	int k2;
 };
-
-static void RESET_COUNTER(struct context_t *context)
-{
-	context->sp = 1;
-	context->stack[0] = -1;
-	for (int j = 0; j <= context->n; j++)
-		context->focus[j] = j;
-
-}
-
-static inline void UPDATE_COUNTER(struct context_t *context)
-{
-	size_t j = context->focus[0];
-	context->focus[0] = 0;
-	context->focus[j] = context->focus[j + 1];
-	context->focus[j + 1] = j + 1;
-	context->k1 = j;
-
-	context->sp -= j;
-	context->k2 = context->stack[context->sp - 1];
-	context->stack[context->sp++] = j;
-}
-
 
 /* invoked when (at least) one lane is a solution. Both are pushed to the Buffer.
    Designed to be as quick as possible. */
@@ -155,23 +125,23 @@ size_t avx2_enum_8x32(int n, const uint32_t * const F_,
 
 	for (int idx_0 = 0; idx_0 < min(L, n - 3); idx_0++) {
 		uint32_t w1 = (1 << idx_0);
-		UPDATE_COUNTER(&context);
-		STEP_1(&context, idx_1(context.k1), w1);
+		STEP_1(&context, idx_1(idx_0), w1);
 		for (uint32_t i = w1 + 1; i < 2 * w1; i++) {
-			UPDATE_COUNTER(&context);
-			STEP_2(&context, idx_1(context.k1), idx_2(context.k1, context.k2), i);
+			int k1 = _tzcnt_u32(i);
+			int alpha = idx_1(k1);
+			int k2 = _tzcnt_u32(_blsr_u32(i));
+			int beta = idx_2(k1, k2);
+			STEP_2(&context, alpha, beta, i);
 		}
 		FLUSH_BUFFER(&context);
 		if (context.n_solutions == context.max_solutions)
 			return context.n_solutions;
 	}
 
-	RESET_COUNTER(&context);
 
 	for (int idx_0 = L; idx_0 < n - 3; idx_0++) {
 		uint32_t w1 = (1 << idx_0);
-		UPDATE_COUNTER(&context);
-		int alpha = idx_1(context.k1 + L);
+		int alpha = idx_1(idx_0);
 		STEP_1(&context, alpha, w1);
 		avx2_asm_enum_8x32(F, (uint64_t) alpha * 32, context.buffer, &context.buffer_size, (uint64_t) w1);
 		FLUSH_BUFFER(&context);
@@ -180,9 +150,10 @@ size_t avx2_enum_8x32(int n, const uint32_t * const F_,
 		
 		for (uint32_t j = 1 << L; j < w1; j += 1 << L) {
 			uint32_t i = w1 + j;
-			UPDATE_COUNTER(&context);
-			int alpha = idx_1(context.k1 + L);
-			int beta = idx_2(context.k1 + L, context.k2 + L);
+			int k1 = _tzcnt_u32(i);
+			int alpha = idx_1(k1);
+			int k2 = _tzcnt_u32(_blsr_u32(i));
+			int beta = idx_2(k1, k2);
 			STEP_2(&context, alpha, beta, i);
           		avx2_asm_enum_8x32(F, (uint64_t) alpha * 32, context.buffer, &context.buffer_size, (uint64_t) i);
 			FLUSH_BUFFER(&context);
@@ -190,14 +161,11 @@ size_t avx2_enum_8x32(int n, const uint32_t * const F_,
 				return context.n_solutions;
 		}
 	}
-	uint64_t end_time = Now();
-	
 
+	uint64_t end_time = Now();
 	if (verbose)
 		printf("fes: enumeration+check = %" PRIu64 " cycles\n",
 		       end_time - enumeration_start_time);
-
-
 	return context.n_solutions;
 }
 #endif
