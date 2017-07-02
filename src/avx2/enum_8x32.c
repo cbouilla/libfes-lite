@@ -119,6 +119,7 @@ size_t avx2_enum_8x32(int n, const uint32_t * const F_,
 	context.max_solutions = max_solutions;
 	context.verbose = verbose;
 	context.buffer_size = 0;
+	RESET_COUNTER(&context);
 
 	uint64_t init_start_time = Now();
 	size_t N = idx_1(n);
@@ -132,29 +133,16 @@ size_t avx2_enum_8x32(int n, const uint32_t * const F_,
 	__m256i v1 = _mm256_set_epi32(0xffffffff, 0xffffffff, 0x00000000, 0x00000000, 0xffffffff, 0xffffffff, 0x00000000, 0x00000000);
 	__m256i v2 = _mm256_set_epi32(0xffffffff, 0x00000000, 0xffffffff, 0x00000000, 0xffffffff, 0x00000000, 0xffffffff, 0x00000000);
 	 
-	// the constant term is affected by [n-1]
 	F[0] ^= F[idx_1(n - 1)] & v0;
-	
-	// [i] is affected by [i, n-1]
 	for (int i = 0; i < n - 1; i++)
 		F[idx_1(i)] ^= F[idx_2(i, n - 1)] & v0;
-	
-	// the constant term is affected by [n-2]
 	F[0] ^= F[idx_1(n - 2)] & v1;
-	
-      	// [i] is affected by [i, n-2]
 	for (int i = 0; i < n - 2; i++)
 		F[idx_1(i)] ^= F[idx_2(i, n - 2)] & v1;
-	
-	// the constant term is affected by [n-3]
 	F[0] ^= F[idx_1(n - 3)] & v2;
-	
-      	// [i] is affected by [i, n-3]
 	for (int i = 0; i < n - 3; i++)
 		F[idx_1(i)] ^= F[idx_2(i, n - 3)] & v2;
 	
-	/******** compute "derivatives" */
-	/* degree-1 terms are affected by degree-2 terms */
 	for (int i = 1; i < n - 3; i++)
 		F[idx_1(i)] ^= F[idx_2(i - 1, i)];
 
@@ -167,67 +155,36 @@ size_t avx2_enum_8x32(int n, const uint32_t * const F_,
 
 	for (int idx_0 = 0; idx_0 < min(L, n - 3); idx_0++) {
 		uint32_t w1 = (1 << idx_0);
-		STEP_1(&context, idx_1(idx_0), w1);
-
+		UPDATE_COUNTER(&context);
+		STEP_1(&context, idx_1(context.k1), w1);
 		for (uint32_t i = w1 + 1; i < 2 * w1; i++) {
-			int pos = 0;
-			/* k1 == rightmost 1 bit */
-			uint64_t _i = i;
-			while ((_i & 0x0001) == 0) {
-				_i >>= 1;
-				pos++;
-			}
-			const int k_1 = pos;
-			/* k2 == second rightmost 1 bit */
-			_i >>= 1;
-			pos++;
-			while ((_i & 0x0001) == 0) {
-				_i >>= 1;
-				pos++;
-			}
-			const int k_2 = pos;
-			STEP_2(&context, idx_1(k_1), idx_2(k_1, k_2), i);
+			UPDATE_COUNTER(&context);
+			STEP_2(&context, idx_1(context.k1), idx_2(context.k1, context.k2), i);
 		}
-		
-
 		FLUSH_BUFFER(&context);
 		if (context.n_solutions == context.max_solutions)
 			return context.n_solutions;
 	}
 
+	RESET_COUNTER(&context);
+
 	for (int idx_0 = L; idx_0 < n - 3; idx_0++) {
-		const uint64_t w1 = (1 << idx_0);
-		int alpha = idx_1(idx_0);
+		uint32_t w1 = (1 << idx_0);
+		UPDATE_COUNTER(&context);
+		int alpha = idx_1(context.k1 + L);
 		STEP_1(&context, alpha, w1);
 		avx2_asm_enum_8x32(F, (uint64_t) alpha * 32, context.buffer, &context.buffer_size, (uint64_t) w1);
-
 		FLUSH_BUFFER(&context);
 		if (context.n_solutions == context.max_solutions)
 			return context.n_solutions;
 		
 		for (uint32_t j = 1 << L; j < w1; j += 1 << L) {
-			const uint32_t i = w1 + j;
-
-			int pos = 0;
-			uint64_t _i = i;
-			while ((_i & 0x0001) == 0) {
-				_i >>= 1;
-				pos++;
-			}
-			const int k_1 = pos;
-			_i >>= 1;
-			pos++;
-			while ((_i & 0x0001) == 0) {
-				_i >>= 1;
-				pos++;
-			}
-			const int k_2 = pos;
-			const int alpha = idx_1(k_1);
-			const int beta = idx_2(k_1, k_2);
-
+			uint32_t i = w1 + j;
+			UPDATE_COUNTER(&context);
+			int alpha = idx_1(context.k1 + L);
+			int beta = idx_2(context.k1 + L, context.k2 + L);
 			STEP_2(&context, alpha, beta, i);
           		avx2_asm_enum_8x32(F, (uint64_t) alpha * 32, context.buffer, &context.buffer_size, (uint64_t) i);
-
 			FLUSH_BUFFER(&context);
 			if (context.n_solutions == context.max_solutions)
 				return context.n_solutions;

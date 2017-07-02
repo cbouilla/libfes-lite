@@ -8,6 +8,8 @@
 
 #ifdef __AVX2__
 
+#define L 9
+
 struct solution_t {
   uint32_t x;
   uint32_t mask;
@@ -150,65 +152,36 @@ size_t avx2_enum_16x16(int n, const uint32_t * const F_,
 	__m256i v3 = _mm256_set_epi32(0xffff0000, 0xffff0000, 0xffff0000, 0xffff0000, 0xffff0000, 0xffff0000, 0xffff0000, 0xffff0000);
 
 	 
-	// the constant term is affected by [n-1]
 	F[0] ^= F[idx_1(n - 1)] & v0;
-	
-	// [i] is affected by [i, n-1]
 	for (int i = 0; i < n - 1; i++)
 		F[idx_1(i)] ^= F[idx_2(i, n - 1)] & v0;
-	
-	// the constant term is affected by [n-2]
 	F[0] ^= F[idx_1(n - 2)] & v1;
-	
-      	// [i] is affected by [i, n-2]
 	for (int i = 0; i < n - 2; i++)
 		F[idx_1(i)] ^= F[idx_2(i, n - 2)] & v1;
-	
-	// the constant term is affected by [n-3]
 	F[0] ^= F[idx_1(n - 3)] & v2;
-	
-      	// [i] is affected by [i, n-3]
 	for (int i = 0; i < n - 3; i++)
 		F[idx_1(i)] ^= F[idx_2(i, n - 3)] & v2;
-	
-	// the constant term is affected by [n-4]
 	F[0] ^= F[idx_1(n - 4)] & v3;
-	
-      	// [i] is affected by [i, n-4]
 	for (int i = 0; i < n - 4; i++)
 		F[idx_1(i)] ^= F[idx_2(i, n - 4)] & v3;
 	
-
-	/******** compute "derivatives" */
-	/* degree-1 terms are affected by degree-2 terms */
 	for (int i = 1; i < n - 4; i++)
 		F[idx_1(i)] ^= F[idx_2(i - 1, i)];
 
 	if (verbose)
 		printf("fes: initialisation = %" PRIu64 " cycles\n",
 		       Now() - init_start_time);
-	uint64_t enumeration_start_time = Now();
 
-	// special case for i=0
-	const uint32_t weight_0_start = 0;
+	uint64_t enumeration_start_time = Now();
 	STEP_0(&context, 0);
 
-	// from now on, hamming weight is >= 1
 	for (int idx_0 = 0; idx_0 < n - 4; idx_0++) {
-
-		// special case when i has hamming weight exactly 1
-		const uint32_t weight_1_start = weight_0_start + (1ll << idx_0);
-		STEP_1(&context, idx_1(idx_0), weight_1_start);
-
-		// we are now inside the critical part where the hamming weight is known to be >= 2
-		// Thus, there are no special cases from now on
-
-		// Because of the last step, the current iteration counter is a multiple of 512 plus one
-		// This loop sets it to `rolled_end`, which is a multiple of 512, if possible
+		uint32_t w1 = (1 << idx_0);
+		STEP_1(&context, idx_1(idx_0), w1);
 
 		const uint32_t rolled_end =
-		    weight_1_start + (1ll << min(9, idx_0));
-		for (uint32_t i = 1 + weight_1_start; i < rolled_end; i++) {
+		    w1 + (1ll << min(9, idx_0));
+		for (uint32_t i = w1 + 1; i < rolled_end; i++) {
 			int pos = 0;
 			/* k1 == rightmost 1 bit */
 			uint64_t _i = i;
@@ -228,19 +201,13 @@ size_t avx2_enum_16x16(int n, const uint32_t * const F_,
 			STEP_2(&context, idx_1(k_1), idx_2(k_1, k_2), i);
 		}
 		
-
 		FLUSH_BUFFER(&context);
 		if (context.max_solutions == 0)
 			return context.n_solutions;
 
 
-		// Here, the number of iterations to perform is (supposedly) sufficiently large
-		// We will therefore unroll the loop 512 times
-
-		// unrolled critical section where the hamming weight is >= 2
-		for (uint32_t j = 512; j < (1ull << idx_0); j += 512) {
-			const uint32_t i = j + weight_1_start;
-			// printf("testing idx %08x : F[0] = %08x\n", i, F[0]);
+		for (uint32_t j = 1 << L; j < w1; j += 1 << L) {
+			uint32_t i = w1 + j;
 
 			int pos = 0;
 			uint64_t _i = i;
