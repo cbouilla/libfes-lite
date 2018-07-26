@@ -89,7 +89,7 @@ size_t avx2_enum_8x32(int n, const uint32_t * const F_,
 	context.max_solutions = max_solutions;
 	context.verbose = verbose;
 	context.buffer_size = 0;
-	RESET_COUNTER(&context);
+	// RESET_COUNTER(&context);
 
 	uint64_t init_start_time = Now();
 	size_t N = idx_1(n);
