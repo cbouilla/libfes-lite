@@ -1,7 +1,7 @@
 .text
 .p2align 6
 
-.globl avx2_asm_enum_16x16
+.globl feslite_avx2_asm_enum_16x16
 ### void avx2_asm_enum_16x16(__m256i *F, uint64_t alpha_shift, void *buf, uint64_t *num, uint64_t idx);
 
 # the X86-64 ABI says that...
@@ -13,7 +13,7 @@
 #       &num in %rcx
 #       idx should be in %r8
 
-avx2_asm_enum_16x16:
+feslite_avx2_asm_enum_16x16:
 
 # no need to save the callee-save registers (not used)
 # variable F maps to %rdi

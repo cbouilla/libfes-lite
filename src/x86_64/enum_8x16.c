@@ -23,7 +23,7 @@ struct context_t {
 	size_t n_solution_found;
 	size_t max_solutions;
 	size_t n_solutions;
-	int verbose;
+	bool verbose;
 };
 
 
@@ -61,7 +61,7 @@ static inline void STEP_2(struct context_t *context, int a, int b, uint32_t inde
 /* batch-eval all the Candidates */
 static inline void FLUSH_CANDIDATES(struct context_t *context)
 {
-	size_t n_good_cand = generic_eval_32(context->n, context->F_start, 16, 32, context->candidates,
+	size_t n_good_cand = feslite_generic_eval_32(context->n, context->F_start, 16, 32, context->candidates,
 			    context->n_candidates, context->solutions + context->n_solutions, context->max_solutions,
 			    context->verbose);
 	// fprintf(stderr, "FLUSH %zd candidates, %zd solutions\n", context->n_candidates, n_good_cand);
@@ -109,9 +109,9 @@ static inline void FLUSH_BUFFER(struct context_t *context)
 }				
 
 // generated with L = 9
-size_t x86_64_enum_8x16(int n, const uint32_t * const F_,
+size_t feslite_x86_64_enum_8x16(size_t n, const uint32_t * const F_,
 			    uint32_t * solutions, size_t max_solutions,
-			    int verbose)
+			    bool verbose)
 {
 	struct context_t context = { .F_start = F_ };
 	context.n = n;
@@ -138,27 +138,27 @@ size_t x86_64_enum_8x16(int n, const uint32_t * const F_,
 	F[0] ^= F[idx_1(n - 1)] & v0;
 	
 	// [i] is affected by [i, n-1]
-	for (int i = 0; i < n - 1; i++)
+	for (size_t i = 0; i < n - 1; i++)
 		F[idx_1(i)] ^= F[idx_2(i, n - 1)] & v0;
 
 	// the constant term is affected by [n-2]
 	F[0] ^= F[idx_1(n - 2)] & v1;
 	
       	// [i] is affected by [i, n-2]
-	for (int i = 0; i < n - 2; i++)
+	for (size_t i = 0; i < n - 2; i++)
 		F[idx_1(i)] ^= F[idx_2(i, n - 2)] & v1;
 	
       	// the constant term is affected by [n-3]
 	F[0] ^= F[idx_1(n - 3)] & v2;
 	
       	// [i] is affected by [i, n-3]
-	for (int i = 0; i < n - 3; i++)
+	for (size_t i = 0; i < n - 3; i++)
 		F[idx_1(i)] ^= F[idx_2(i, n - 3)] & v2;
 	
 
 	/******** compute "derivatives" */
 	/* degree-1 terms are affected by degree-2 terms */
-	for (int i = 1; i < n - 3; i++)
+	for (size_t i = 1; i < n - 3; i++)
 		F[idx_1(i)] ^= F[idx_2(i - 1, i)];
 
 	if (verbose)
@@ -171,7 +171,7 @@ size_t x86_64_enum_8x16(int n, const uint32_t * const F_,
 	STEP_0(&context, 0);
 
 	// from now on, hamming weight is >= 1
-	for (int idx_0 = 0; idx_0 < n - 3; idx_0++) {
+	for (size_t idx_0 = 0; idx_0 < n - 3; idx_0++) {
 
 		// special case when i has hamming weight exactly 1
 		const uint32_t weight_1_start = weight_0_start + (1ll << idx_0);
@@ -238,7 +238,7 @@ size_t x86_64_enum_8x16(int n, const uint32_t * const F_,
 
 			// les deux ensemble prennent 1500 cycles
 			STEP_2(&context, alpha, beta, i);
-			x86_64_asm_enum_8x16(F, alpha * sizeof(*F), context.buffer, &context.buffer_size, i);
+			feslite_x86_64_asm_enum_8x16(F, alpha * sizeof(*F), context.buffer, &context.buffer_size, i);
 
 
 			FLUSH_BUFFER(&context);

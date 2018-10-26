@@ -1,8 +1,8 @@
 #include <stdio.h>
 #include <inttypes.h>
 #include <stdlib.h>
-#include <getopt.h>
 
+#include "feslite.h"
 #include "monomials.h"
 
 #define L 7
@@ -225,9 +225,9 @@ static inline void UNROLLED_CHUNK(struct context_t *context, int alpha, uint32_t
 }
 
 // generated with L = 9
-size_t generic_enum_1x32(int n, const uint32_t * const F_,
+size_t feslite_generic_enum_1x32(size_t n, const uint32_t * const F_,
 			    uint32_t * solutions, size_t max_solutions,
-			    int verbose)
+			    bool verbose)
 {
 	uint64_t init_start_time = Now();
 
@@ -249,7 +249,7 @@ size_t generic_enum_1x32(int n, const uint32_t * const F_,
 
 	/* compute "derivatives" */
 	/* degree-1 terms are affected by degree-2 terms */
-	for (int i = 1; i < n; i++)
+	for (size_t i = 1; i < n; i++)
 		F[idx_1(i)] ^= F[idx_2(i - 1, i)];
 
 	if (verbose)
@@ -259,7 +259,7 @@ size_t generic_enum_1x32(int n, const uint32_t * const F_,
 	uint64_t enumeration_start_time = Now();
 	STEP_0(&context, 0);
 
-	for (int idx_0 = 0; idx_0 < min(n, L); idx_0++) {
+	for (size_t idx_0 = 0; idx_0 < min(n, L); idx_0++) {
 		uint32_t w1 = (1 << idx_0);
 
 		UPDATE_COUNTER(&context);
@@ -275,7 +275,7 @@ size_t generic_enum_1x32(int n, const uint32_t * const F_,
 
 	RESET_COUNTER(&context);
 
-	for (int idx_0 = L; idx_0 < n; idx_0++) {	
+	for (size_t idx_0 = L; idx_0 < n; idx_0++) {	
 		uint32_t w1 = (1 << idx_0);
 		
 		UPDATE_COUNTER(&context);

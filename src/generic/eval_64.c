@@ -83,7 +83,7 @@ static void transpose_64(uint64_t * T, uint64_t * M)
 
 /* the input is 64x32 */
 
-size_t generic_eval_64(int n, const uint32_t * const F,
+size_t generic_eval_64(size_t n, const uint32_t * const F,
 			    __attribute__((unused)) size_t eq_from, __attribute__((unused)) size_t eq_to,
 			    uint32_t *input, size_t n_input,
 			    uint32_t *solutions, size_t max_solutions,

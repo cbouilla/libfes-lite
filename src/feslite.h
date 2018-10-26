@@ -2,6 +2,7 @@
 
 #include <stdint.h>
 #include <stddef.h>
+#include <stdbool.h>
 
 #include "config.h"
 #include "generic/generic.h"
@@ -14,8 +15,19 @@
 #include "avx2/avx2.h"
 #endif
 
-typedef int (*kernel_available_f)(void);
-typedef size_t (*kernel_enumeration_f)(int, const uint32_t * const, uint32_t *, size_t, int);
+typedef bool (*kernel_available_f)(void);
+
+/* arguments:
+   - #variables
+   - coefficients of the polynomial
+   - pointer to solution buffer (preallocated)
+   - size of the solution buffer
+   - verbose flag
+
+   return value:
+   - number of solutions found
+*/
+typedef size_t (*kernel_enumeration_f)(size_t, const uint32_t * const, uint32_t *, size_t, bool);
 
 
 struct enum_kernel_t {
@@ -34,7 +46,8 @@ struct eval_kernel_t {
 
 extern const struct enum_kernel_t ENUM_KERNEL[];
 
-size_t kernel_num();
-int kernel_available(const struct enum_kernel_t *kernel);
-size_t kernel_num_available();
-uint32_t naive_evaluation(int n, const uint32_t * const F, uint32_t x);
+
+size_t feslite_kernel_num();
+int feslite_kernel_available(const struct enum_kernel_t *kernel);
+size_t feslite_kernel_num_available();
+uint32_t feslite_naive_evaluation(size_t n, const uint32_t * const F, uint32_t x);

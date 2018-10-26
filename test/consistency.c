@@ -7,14 +7,14 @@
 
 /** test that all the kernels find the same solutions */
 
-int main(int argc, char **argv)
+int main()
 {
-	int n = 24;
-	int n_eqs = 21;
-	int n_iterations = 1;
+	size_t n = 24;
+	size_t n_eqs = 21;
+	size_t n_iterations = 1;
 	unsigned long random_seed = 1;
 
-	size_t n_tests = n_iterations * (kernel_num_available() - 1);
+	size_t n_tests = n_iterations * (feslite_kernel_num_available() - 1);
 	printf("1..%zd\n", n_tests);
 
 	const size_t N = 1 + n + n * (n - 1) / 2;
@@ -34,12 +34,12 @@ int main(int argc, char **argv)
 	size_t test_idx = 1;
 	for (size_t it = 0; it < n_iterations; it++) {
 
-		printf("# initalizing random system with seed=0x%x\n", random_seed);
+		printf("# initalizing random system with seed=0x%lx\n", random_seed);
 		mysrand(random_seed++);
 
 		size_t kernel = 0;
 		while (1) {
-			if (kernel_available(&ENUM_KERNEL[kernel])) {
+			if (feslite_kernel_available(&ENUM_KERNEL[kernel])) {
 				printf("# using [%s] to get a first set of solutions\n", ENUM_KERNEL[kernel].name);
 				n_solutions = ENUM_KERNEL[kernel].run(n, F, solutions, max_solutions, 0);
 				break;
@@ -49,7 +49,7 @@ int main(int argc, char **argv)
 
 		printf("# %zd solutions found by [%s] :\n", n_solutions, ENUM_KERNEL[kernel].name);
 		for (size_t i = 0; i < n_solutions; i++) {
-			uint32_t y = naive_evaluation(n, F, solutions[i]);
+			uint32_t y = feslite_naive_evaluation(n, F, solutions[i]);
 			if (y) {
 				printf("bail out! - F[%08x] = %08x\n", solutions[i], y);
 				exit(0);
@@ -58,14 +58,13 @@ int main(int argc, char **argv)
 		}
 
 		/* go */
-		for (kernel++; kernel < kernel_num(); kernel++) {
-			if (!kernel_available(&ENUM_KERNEL[kernel]))
+		for (kernel++; kernel < feslite_kernel_num(); kernel++) {
+			if (!feslite_kernel_available(&ENUM_KERNEL[kernel]))
 				continue;
 			const char *name = ENUM_KERNEL[kernel].name;
 			printf("# testing kernel %s\n", name);
 		
 			/* get all solutions */
-			int status = 1;
 			size_t n_solutions2 = ENUM_KERNEL[kernel].run(n, F, solutions2, max_solutions, 0);
 
 			printf("# solutions found by [%s]:\n", name);

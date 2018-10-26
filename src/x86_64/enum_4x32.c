@@ -29,7 +29,7 @@ struct context_t {
 	size_t n_solution_found;
 	size_t max_solutions;
 	size_t n_solutions;
-	int verbose;
+	bool verbose;
 
 	size_t focus[33];
 	size_t stack[32];
@@ -45,9 +45,11 @@ static void RESET_COUNTER(struct context_t *context)
 	context->stack[0] = -1;
 	for (int j = 0; j <= context->n; j++)
 		context->focus[j] = j;
-
 }
 
+/* this code implements constant-time computation of the number of 
+   trailing zeroes (cf. TAOCP, vol 4) + constant-time evaluation of
+   the position of the second rightmost set bit. */
 static inline void UPDATE_COUNTER(struct context_t *context)
 {
 	size_t j = context->focus[0];
@@ -124,9 +126,9 @@ static inline void FLUSH_BUFFER(struct context_t *context)
 
 
 // generated with L = 9
-size_t x86_64_enum_4x32(int n, const uint32_t * const F_,
+size_t feslite_x86_64_enum_4x32(size_t n, const uint32_t * const F_,
 			    uint32_t * solutions, size_t max_solutions,
-			    int verbose)
+			    bool verbose)
 {
 	uint64_t init_start_time = Now();
 
@@ -169,7 +171,7 @@ size_t x86_64_enum_4x32(int n, const uint32_t * const F_,
       
 	/******** compute "derivatives" */
 	/* degree-1 terms are affected by degree-2 terms */
-	for (int i = 1; i < n; i++)
+	for (size_t i = 1; i < n; i++)
 		F[idx_1(i)] ^= F[idx_2(i - 1, i)];
 
 	if (verbose)
@@ -179,7 +181,7 @@ size_t x86_64_enum_4x32(int n, const uint32_t * const F_,
 	uint64_t enumeration_start_time = Now();
 	STEP_0(&context, 0);
 
-	for (int idx_0 = 0; idx_0 < min(L, n - 2); idx_0++) {
+	for (size_t idx_0 = 0; idx_0 < min(L, n - 2); idx_0++) {
 		const uint32_t w1 = (1 << idx_0);
 
 		UPDATE_COUNTER(&context);
@@ -196,13 +198,13 @@ size_t x86_64_enum_4x32(int n, const uint32_t * const F_,
 
 	RESET_COUNTER(&context);
 
-	for (int idx_0 = L; idx_0 < n - 2; idx_0++) {
+	for (size_t idx_0 = L; idx_0 < n - 2; idx_0++) {
 		const uint32_t w1 = (1 << idx_0);
 
 		UPDATE_COUNTER(&context);
 		int alpha = idx_1(idx_0);
 		STEP_1(&context, alpha, w1);
-		x86_64_asm_enum_4x32(F, alpha * sizeof(*F), context.buffer, &context.buffer_size, w1);
+		feslite_x86_64_asm_enum_4x32(F, alpha * sizeof(*F), context.buffer, &context.buffer_size, w1);
 		FLUSH_BUFFER(&context);
 		if (context.n_solutions == context.max_solutions)
 			return context.n_solutions;
@@ -214,7 +216,7 @@ size_t x86_64_enum_4x32(int n, const uint32_t * const F_,
 			int beta = idx_2(context.k1 + L, context.k2 + L);
 
 			STEP_2(&context, alpha, beta, i);
-          		x86_64_asm_enum_4x32(F, alpha * sizeof(*F), context.buffer, &context.buffer_size, i);
+          		feslite_x86_64_asm_enum_4x32(F, alpha * sizeof(*F), context.buffer, &context.buffer_size, i);
 
 			FLUSH_BUFFER(&context);
 			if (context.n_solutions == context.max_solutions)

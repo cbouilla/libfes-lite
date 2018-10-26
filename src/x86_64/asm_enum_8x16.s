@@ -1,7 +1,7 @@
 .text
 .p2align 5
 
-.globl x86_64_asm_enum_8x16
+.globl feslite_x86_64_asm_enum_8x16
 ### void x86_64_asm_enum_4x32(__m128i *F, uint64_t alpha_shift, void *buf, uint64_t *num, uint32_t idx);
 
 # the X86-64 ABI says that...
@@ -13,7 +13,7 @@
 #       &num in %rcx
 #       idx should be in %r8d
 
-x86_64_asm_enum_8x16:
+feslite_x86_64_asm_enum_8x16:
 
 # intialize our stack frame
 mov %rsp, %r11

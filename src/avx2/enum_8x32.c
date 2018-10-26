@@ -78,9 +78,9 @@ static inline void FLUSH_BUFFER(struct context_t *context)
 }				
 
 // generated with L = 9
-size_t avx2_enum_8x32(int n, const uint32_t * const F_,
+size_t feslite_avx2_enum_8x32(size_t n, const uint32_t * const F_,
 			    uint32_t * solutions, size_t max_solutions,
-			    int verbose)
+			    bool verbose)
 {
 	struct context_t context = { .F_start = F_ };
 	context.n = n;
@@ -104,16 +104,16 @@ size_t avx2_enum_8x32(int n, const uint32_t * const F_,
 	__m256i v2 = _mm256_set_epi32(0xffffffff, 0x00000000, 0xffffffff, 0x00000000, 0xffffffff, 0x00000000, 0xffffffff, 0x00000000);
 	 
 	F[0] ^= F[idx_1(n - 1)] & v0;
-	for (int i = 0; i < n - 1; i++)
+	for (size_t i = 0; i < n - 1; i++)
 		F[idx_1(i)] ^= F[idx_2(i, n - 1)] & v0;
 	F[0] ^= F[idx_1(n - 2)] & v1;
-	for (int i = 0; i < n - 2; i++)
+	for (size_t i = 0; i < n - 2; i++)
 		F[idx_1(i)] ^= F[idx_2(i, n - 2)] & v1;
 	F[0] ^= F[idx_1(n - 3)] & v2;
-	for (int i = 0; i < n - 3; i++)
+	for (size_t i = 0; i < n - 3; i++)
 		F[idx_1(i)] ^= F[idx_2(i, n - 3)] & v2;
 	
-	for (int i = 1; i < n - 3; i++)
+	for (size_t i = 1; i < n - 3; i++)
 		F[idx_1(i)] ^= F[idx_2(i - 1, i)];
 
 	if (verbose)
@@ -123,7 +123,7 @@ size_t avx2_enum_8x32(int n, const uint32_t * const F_,
 	uint64_t enumeration_start_time = Now();
 	STEP_0(&context, 0);
 
-	for (int idx_0 = 0; idx_0 < min(L, n - 3); idx_0++) {
+	for (size_t idx_0 = 0; idx_0 < min(L, n - 3); idx_0++) {
 		uint32_t w1 = (1 << idx_0);
 		STEP_1(&context, idx_1(idx_0), w1);
 		for (uint32_t i = w1 + 1; i < 2 * w1; i++) {
@@ -139,11 +139,11 @@ size_t avx2_enum_8x32(int n, const uint32_t * const F_,
 	}
 
 
-	for (int idx_0 = L; idx_0 < n - 3; idx_0++) {
+	for (size_t idx_0 = L; idx_0 < n - 3; idx_0++) {
 		uint32_t w1 = (1 << idx_0);
 		int alpha = idx_1(idx_0);
 		STEP_1(&context, alpha, w1);
-		avx2_asm_enum_8x32(F, (uint64_t) alpha * 32, context.buffer, &context.buffer_size, (uint64_t) w1);
+		feslite_avx2_asm_enum_8x32(F, (uint64_t) alpha * 32, context.buffer, &context.buffer_size, (uint64_t) w1);
 		FLUSH_BUFFER(&context);
 		if (context.n_solutions == context.max_solutions)
 			return context.n_solutions;
@@ -155,7 +155,7 @@ size_t avx2_enum_8x32(int n, const uint32_t * const F_,
 			int k2 = _tzcnt_u32(_blsr_u32(i));
 			int beta = idx_2(k1, k2);
 			STEP_2(&context, alpha, beta, i);
-          		avx2_asm_enum_8x32(F, (uint64_t) alpha * 32, context.buffer, &context.buffer_size, (uint64_t) i);
+          		feslite_avx2_asm_enum_8x32(F, (uint64_t) alpha * 32, context.buffer, &context.buffer_size, (uint64_t) i);
 			FLUSH_BUFFER(&context);
 			if (context.n_solutions == context.max_solutions)
 				return context.n_solutions;

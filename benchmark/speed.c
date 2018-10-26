@@ -7,8 +7,8 @@
 
 int main(/* int argc, char **argv*/)
 {
-	int n = 32;
-	int n_eqs = 28;
+	size_t n = 32;
+	size_t n_eqs = 28;
 	unsigned long random_seed = 2;
 
 	srand48(random_seed);
@@ -30,15 +30,16 @@ int main(/* int argc, char **argv*/)
 	for (size_t i = 0; i < N; i++)
 		F[i] = lrand48() & ((1ll << n_eqs) - 1);
 
-	fprintf(stderr, "%zd kernels / %zd available\n", kernel_num(), kernel_num_available());
+	fprintf(stderr, "%zd kernels / %zd available\n", feslite_kernel_num(), feslite_kernel_num_available());
 
-	for (size_t kernel = 0; kernel < kernel_num(); kernel++) {
-		if (!kernel_available(&ENUM_KERNEL[kernel]))
+	for (size_t kernel = 0; kernel < feslite_kernel_num(); kernel++) {
+		if (!feslite_kernel_available(&ENUM_KERNEL[kernel]))
 			continue;
 		const char *name = ENUM_KERNEL[kernel].name;
 		uint64_t start = Now();
 		size_t n_solutions = ENUM_KERNEL[kernel].run(n, F, solutions, max_solutions, 0);
 
+		(void) n_solutions;
 		/*for (size_t i = 0; i < n_solutions; i++)
 			printf("solution %zd : %08x ---> %08x\n", i,
 		       solutions[i], naive_evaluation(n, F, solutions[i]));

@@ -63,11 +63,11 @@ static void transpose_32(uint32_t * T, uint32_t * M)
 }
 
 
-size_t generic_eval_32(int n, const uint32_t * const F,
+size_t feslite_generic_eval_32(size_t n, const uint32_t * const F,
 			    __attribute__((unused)) size_t eq_from, __attribute__((unused)) size_t eq_to,
 			    uint32_t *input, size_t n_input,
 			    uint32_t *solutions, size_t max_solutions,
-			    __attribute__((unused)) int verbose)
+			    __attribute__((unused)) bool verbose)
 {
 	assert(n_input <= 32);
 	if (max_solutions == 0)
