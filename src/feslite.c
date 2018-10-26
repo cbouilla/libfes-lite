@@ -50,3 +50,18 @@ size_t feslite_kernel_num_available()
 	return n;
 }
 
+size_t feslite_solve(size_t n, const uint32_t * const F, uint32_t * solutions, size_t max_solutions, bool verbose)
+{
+	for (size_t i = 0; i < feslite_kernel_num(); i++)
+		if (feslite_kernel_available(&ENUM_KERNEL[i]))
+			return ENUM_KERNEL[i].run(n, F, solutions, max_solutions, verbose);
+	return 0;
+}
+
+char const * feslite_solver_name()
+{
+	for (size_t i = 0; i < feslite_kernel_num(); i++)
+		if (feslite_kernel_available(&ENUM_KERNEL[i]))
+			return ENUM_KERNEL[i].name;
+	return NULL;
+}

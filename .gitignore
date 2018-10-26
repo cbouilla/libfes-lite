@@ -44,3 +44,4 @@ build
 /test/many_solutions.log
 /test/many_solutions.trs
 /test/test-suite.log
+/benchmark/correct_use
