@@ -12,4 +12,4 @@ libfeslite_la_SOURCES = naive_eval.c feslite.c\
 	
 #generic/enum_2x16.c generic/enum_2x32.c generic/enum_4x16.c generic/eval_64.c
 
-include_HEADERS = feslite.h generic/generic.h x86_64/x86_64.h avx2/avx2.h
+include_HEADERS = feslite.h feslite-config.h #generic/generic.h x86_64/x86_64.h avx2/avx2.h

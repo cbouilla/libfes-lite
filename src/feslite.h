@@ -4,7 +4,7 @@
 #include <stddef.h>
 #include <stdbool.h>
 
-#include "config.h"
+#include "feslite-config.h"
 #include "generic/generic.h"
 
 #ifdef __SSE2__

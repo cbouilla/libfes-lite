@@ -45,3 +45,5 @@ build
 /test/many_solutions.trs
 /test/test-suite.log
 /benchmark/correct_use
+/src/feslite-config.h
+/src/feslite-config.h.in

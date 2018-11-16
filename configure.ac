@@ -1,8 +1,8 @@
-AC_INIT([libfes-lite],[0.1],[charles.bouillaguet@univ-lille1.fr])
+AC_INIT([libfes-lite],[0.1],[charles.bouillaguet@univ-lille.fr])
 AC_PREREQ([2.69])
 AC_CONFIG_AUX_DIR([build-aux])
 AC_CONFIG_MACRO_DIR([m4])
-AC_CONFIG_HEADERS([src/config.h])
+AC_CONFIG_HEADERS([src/feslite-config.h])
 
 AM_INIT_AUTOMAKE([foreign check-news subdir-objects])
 #AM_MAINTAINER_MODE
