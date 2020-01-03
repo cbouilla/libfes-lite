@@ -1,10 +1,6 @@
 #include <stdio.h>
-#include <inttypes.h>
-#include <stdlib.h>
-#include <getopt.h>
-#include <emmintrin.h>
 
-#include "feslite.h"
+#include "fes.h"
 #include "monomials.h"
 
 #define L 9

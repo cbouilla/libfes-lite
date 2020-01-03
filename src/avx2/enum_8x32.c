@@ -1,10 +1,7 @@
 #include <stdio.h>
-#include <inttypes.h>
-#include <stdlib.h>
-#include <getopt.h>
 #include <immintrin.h>
 
-#include "feslite.h"
+#include "fes.h"
 #include "monomials.h"
 
 #ifdef __AVX2__

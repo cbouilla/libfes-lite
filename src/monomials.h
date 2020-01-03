@@ -1,6 +1,6 @@
-#include <assert.h>
-#include "cycleclock.h"
-
+#include <stdint.h>
+#include <stddef.h>
+#include <stdbool.h>
 /*
  0 : []
  1 : [0]

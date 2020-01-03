@@ -1,7 +1,6 @@
 #include <stdio.h>
 #include <inttypes.h>
 #include <stdlib.h>
-#include <getopt.h>
 
 #include "feslite.h"
 #include "monomials.h"

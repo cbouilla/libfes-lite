@@ -1,4 +1,8 @@
-#include "feslite.h"
+#include <stdint.h>
+#include <stddef.h>
+#include <stdbool.h>
+
+#include "fes.h"
 
 const struct enum_kernel_t ENUM_KERNEL[] = {
 #ifdef __AVX2__

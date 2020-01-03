@@ -1,7 +1,7 @@
 AM_TESTS_ENVIRONMENT = env AM_TAP_AWK='$(AWK)'
 LOG_DRIVER = $(SHELL) $(top_srcdir)/build-aux/tap-driver.sh
 
-AM_CFLAGS = -I$(top_srcdir)/src
+AM_CPPFLAGS = -I$(top_srcdir)/src -I$(top_srcdir)/include
 AM_LDFLAGS = -lm
 LDADD = $(top_builddir)/src/libfeslite.la rand.o
 

@@ -2,7 +2,7 @@
 #include <err.h>
 #include <stdlib.h>
 
-#include "feslite.h"
+#include "fes.h"
 #include "rand.h"
 
 /** create a random system with a known solution,

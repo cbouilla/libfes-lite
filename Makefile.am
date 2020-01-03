@@ -3,4 +3,4 @@ ACLOCAL_AMFLAGS = -I m4
 
 
 EXTRA_DIST = configfsf.guess configfsf.sub
-SUBDIRS = src . test benchmark
+SUBDIRS = src . test benchmark include

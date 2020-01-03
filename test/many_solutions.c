@@ -2,7 +2,7 @@
 #include <err.h>
 #include <stdlib.h>
 
-#include "feslite.h"
+#include "fes.h"
 #include "rand.h"
 
 /** test the the kernels correctly report the expected number of solutions */

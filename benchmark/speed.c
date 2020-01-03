@@ -1,9 +1,8 @@
-#include "feslite.h"
-
 #include <stdio.h>
 #include <stdlib.h>
 
-#include "cycleclock.h"
+#include "fes.h"
+
 
 int main(/* int argc, char **argv*/)
 {

@@ -1,8 +1,8 @@
 #include <stdio.h>
 #include <inttypes.h>
-#include <stdlib.h>
+#include <stdbool.h>
 
-#include "feslite.h"
+#include "fes.h"
 #include "monomials.h"
 
 #define L 7
