@@ -47,3 +47,6 @@ build
 /benchmark/correct_use
 /src/feslite-config.h
 /src/feslite-config.h.in
+/test/special_solutions
+/test/special_solutions.log
+/test/special_solutions.trs

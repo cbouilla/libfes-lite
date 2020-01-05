@@ -1,6 +1,7 @@
 #include <stdint.h>
 #include <stddef.h>
 #include <stdbool.h>
+#include <assert.h>
 
 #include "fes.h"
 
@@ -26,46 +27,39 @@ const struct enum_kernel_t ENUM_KERNEL[] = {
 };
 
 
-size_t feslite_kernel_num()
+int feslite_num_kernels()
 {
-	size_t n = 0;
-	while (1) {
-		if (ENUM_KERNEL[n].name == NULL && ENUM_KERNEL[n].run == NULL)
-			break;
+	int n = 0;
+	while (ENUM_KERNEL[n].name != NULL || ENUM_KERNEL[n].run != NULL)
 		n++;
-	}
 	return n;
 }
 
-int feslite_kernel_available(const struct enum_kernel_t *kernel)
+bool feslite_kernel_is_available(int i)
 {
-	return (kernel->available == NULL) || kernel->available();
+	return (ENUM_KERNEL[i].available == NULL) || ENUM_KERNEL[i].available();
 }
 
-size_t feslite_kernel_num_available()
+char const * feslite_kernel_name(int i)
 {
-	size_t n = 0;
-	while (1) {
-		if (ENUM_KERNEL[n].name == NULL && ENUM_KERNEL[n].run == NULL)
-			break;
-		if (feslite_kernel_available(&ENUM_KERNEL[n]))
-			n++;
-	}
-	return n;
+	return ENUM_KERNEL[i].name;
 }
 
-size_t feslite_solve(size_t n, const uint32_t * const F, uint32_t * solutions, size_t max_solutions, bool verbose)
+int feslite_kernel_solve(int i, int n, const uint32_t * const F, uint32_t * solutions, int max_solutions, bool verbose)
 {
-	for (size_t i = 0; i < feslite_kernel_num(); i++)
-		if (feslite_kernel_available(&ENUM_KERNEL[i]))
-			return ENUM_KERNEL[i].run(n, F, solutions, max_solutions, verbose);
-	return 0;
+	assert(feslite_kernel_is_available(i));
+	return ENUM_KERNEL[i].run(n, F, solutions, max_solutions, verbose);
 }
 
-char const * feslite_solver_name()
+int feslite_default_kernel()
 {
-	for (size_t i = 0; i < feslite_kernel_num(); i++)
-		if (feslite_kernel_available(&ENUM_KERNEL[i]))
-			return ENUM_KERNEL[i].name;
-	return NULL;
+	for (int i = 0; i < feslite_num_kernels(); i++)
+		if (feslite_kernel_is_available(i))
+			return i;
+	return -1;
+}
+
+int feslite_solve(int n, const uint32_t * const F, uint32_t * solutions, int max_solutions, bool verbose)
+{
+	return feslite_kernel_solve(feslite_default_kernel(), n, F, solutions, max_solutions, verbose);
 }

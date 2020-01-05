@@ -13,13 +13,13 @@ struct context_t {
 	const uint32_t * const F_start;
 	__m128i * F;
 	struct solution_t buffer[8*512 + 32];
-	size_t buffer_size;
+	int64_t buffer_size;
 	uint32_t candidates[32];
-	size_t n_candidates;
+	int n_candidates;
 	uint32_t *solutions;
-	size_t n_solution_found;
-	size_t max_solutions;
-	size_t n_solutions;
+	int n_solution_found;
+	int max_solutions;
+	int n_solutions;
 	bool verbose;
 };
 
@@ -58,7 +58,7 @@ static inline void STEP_2(struct context_t *context, int a, int b, uint32_t inde
 /* batch-eval all the Candidates */
 static inline void FLUSH_CANDIDATES(struct context_t *context)
 {
-	size_t n_good_cand = feslite_generic_eval_32(context->n, context->F_start, 16, 32, context->candidates,
+	int n_good_cand = feslite_generic_eval_32(context->n, context->F_start, 16, 32, context->candidates,
 			    context->n_candidates, context->solutions + context->n_solutions, context->max_solutions,
 			    context->verbose);
 	// fprintf(stderr, "FLUSH %zd candidates, %zd solutions\n", context->n_candidates, n_good_cand);
@@ -83,7 +83,7 @@ static inline void NEW_CANDIDATE(struct context_t *context, uint32_t i)
 static inline void FLUSH_BUFFER(struct context_t *context)
 {
 	// printf("FLUSH BUFFER, size %zd, %zd candidates\n", context->buffer_size, context->n_candidates);
-	for (size_t i = 0; i < context->buffer_size; i++) {
+	for (int i = 0; i < context->buffer_size; i++) {
 		uint32_t x = to_gray(context->buffer[i].x);
 		if ((context->buffer[i].mask & 0x0003))
 			NEW_CANDIDATE(context, x + 0 * (1 << (context->n - 3)));
@@ -106,8 +106,8 @@ static inline void FLUSH_BUFFER(struct context_t *context)
 }				
 
 // generated with L = 9
-size_t feslite_x86_64_enum_8x16(size_t n, const uint32_t * const F_,
-			    uint32_t * solutions, size_t max_solutions,
+int feslite_x86_64_enum_8x16(int n, const uint32_t * const F_,
+			    uint32_t * solutions, int max_solutions,
 			    bool verbose)
 {
 	struct context_t context = { .F_start = F_ };
@@ -120,11 +120,11 @@ size_t feslite_x86_64_enum_8x16(size_t n, const uint32_t * const F_,
 	context.n_candidates = 0;
 
 	uint64_t init_start_time = Now();
-	size_t N = idx_1(n);
+	int N = idx_1(n);
 	__m128i F[N];
 	context.F = F;
 
-	for (size_t i = 0; i < N; i++)
+	for (int i = 0; i < N; i++)
 		F[i] = _mm_set1_epi16(F_[i] & 0x0000ffff);
 	
     	__m128i v0 = _mm_set_epi32(0xffffffff, 0xffffffff, 0x00000000, 0x00000000);
@@ -135,27 +135,27 @@ size_t feslite_x86_64_enum_8x16(size_t n, const uint32_t * const F_,
 	F[0] ^= F[idx_1(n - 1)] & v0;
 	
 	// [i] is affected by [i, n-1]
-	for (size_t i = 0; i < n - 1; i++)
+	for (int i = 0; i < n - 1; i++)
 		F[idx_1(i)] ^= F[idx_2(i, n - 1)] & v0;
 
 	// the constant term is affected by [n-2]
 	F[0] ^= F[idx_1(n - 2)] & v1;
 	
       	// [i] is affected by [i, n-2]
-	for (size_t i = 0; i < n - 2; i++)
+	for (int i = 0; i < n - 2; i++)
 		F[idx_1(i)] ^= F[idx_2(i, n - 2)] & v1;
 	
       	// the constant term is affected by [n-3]
 	F[0] ^= F[idx_1(n - 3)] & v2;
 	
       	// [i] is affected by [i, n-3]
-	for (size_t i = 0; i < n - 3; i++)
+	for (int i = 0; i < n - 3; i++)
 		F[idx_1(i)] ^= F[idx_2(i, n - 3)] & v2;
 	
 
 	/******** compute "derivatives" */
 	/* degree-1 terms are affected by degree-2 terms */
-	for (size_t i = 1; i < n - 3; i++)
+	for (int i = 1; i < n - 3; i++)
 		F[idx_1(i)] ^= F[idx_2(i - 1, i)];
 
 	if (verbose)
@@ -168,7 +168,7 @@ size_t feslite_x86_64_enum_8x16(size_t n, const uint32_t * const F_,
 	STEP_0(&context, 0);
 
 	// from now on, hamming weight is >= 1
-	for (size_t idx_0 = 0; idx_0 < n - 3; idx_0++) {
+	for (int idx_0 = 0; idx_0 < n - 3; idx_0++) {
 
 		// special case when i has hamming weight exactly 1
 		const uint32_t weight_1_start = weight_0_start + (1ll << idx_0);

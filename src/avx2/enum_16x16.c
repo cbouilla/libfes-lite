@@ -19,13 +19,13 @@ struct context_t {
 	const  uint32_t * const F_start;
 	__m256i * F;
 	struct solution_t buffer[16*512 + 32];
-	size_t buffer_size;
+	int64_t buffer_size;
 	uint32_t candidates[32];
-	size_t n_candidates;
+	int n_candidates;
 	uint32_t *solutions;
-	size_t n_solution_found;
-	size_t max_solutions;
-	size_t n_solutions;
+	int n_solution_found;
+	int max_solutions;
+	int n_solutions;
 	int verbose;
 };
 
@@ -61,7 +61,7 @@ static inline void STEP_2(struct context_t *context, int a, int b, uint32_t inde
 /* batch-eval all the Candidates */
 static inline void FLUSH_CANDIDATES(struct context_t *context)
 {
-	size_t n_good_cand = feslite_generic_eval_32(context->n, context->F_start, 16, 32, context->candidates,
+	int n_good_cand = feslite_generic_eval_32(context->n, context->F_start, 16, 32, context->candidates,
 			    context->n_candidates, context->solutions + context->n_solutions, context->max_solutions,
 			    context->verbose);
 	context->max_solutions -= n_good_cand;
@@ -82,7 +82,7 @@ static inline void NEW_CANDIDATE(struct context_t *context, uint32_t i)
    add it to the solutions. */
 static inline void FLUSH_BUFFER(struct context_t *context)
 {		
-	for (size_t i = 0; i < context->buffer_size; i++) {
+	for (int i = 0; i < context->buffer_size; i++) {
 		uint32_t x = to_gray(context->buffer[i].x);
 		if ((context->buffer[i].mask & 0x00000003))
 			NEW_CANDIDATE(context, x + 0 * (1 << (context->n - 4)));
@@ -121,8 +121,8 @@ static inline void FLUSH_BUFFER(struct context_t *context)
 }				
 
 // generated with L = 9
-size_t feslite_avx2_enum_16x16(size_t n, const uint32_t * const F_,
-			    uint32_t * solutions, size_t max_solutions,
+int feslite_avx2_enum_16x16(int n, const uint32_t * const F_,
+			    uint32_t * solutions, int max_solutions,
 			    bool verbose)
 {
 	struct context_t context = { .F_start = F_ };
@@ -135,11 +135,11 @@ size_t feslite_avx2_enum_16x16(size_t n, const uint32_t * const F_,
 	context.n_candidates = 0;
 
 	uint64_t init_start_time = Now();
-	size_t N = idx_1(n);
+	int N = idx_1(n);
 	__m256i F[N];
 	context.F = F;
 
-	for (size_t i = 0; i < N; i++)
+	for (int i = 0; i < N; i++)
 		F[i] = _mm256_set1_epi16(F_[i] & 0x0000ffff);
 
     	__m256i v0 = _mm256_set_epi32(0xffffffff, 0xffffffff, 0xffffffff, 0xffffffff, 0x00000000, 0x00000000, 0x00000000, 0x00000000);
@@ -149,19 +149,19 @@ size_t feslite_avx2_enum_16x16(size_t n, const uint32_t * const F_,
 
 	 
 	F[0] ^= F[idx_1(n - 1)] & v0;
-	for (size_t i = 0; i < n - 1; i++)
+	for (int i = 0; i < n - 1; i++)
 		F[idx_1(i)] ^= F[idx_2(i, n - 1)] & v0;
 	F[0] ^= F[idx_1(n - 2)] & v1;
-	for (size_t i = 0; i < n - 2; i++)
+	for (int i = 0; i < n - 2; i++)
 		F[idx_1(i)] ^= F[idx_2(i, n - 2)] & v1;
 	F[0] ^= F[idx_1(n - 3)] & v2;
-	for (size_t i = 0; i < n - 3; i++)
+	for (int i = 0; i < n - 3; i++)
 		F[idx_1(i)] ^= F[idx_2(i, n - 3)] & v2;
 	F[0] ^= F[idx_1(n - 4)] & v3;
-	for (size_t i = 0; i < n - 4; i++)
+	for (int i = 0; i < n - 4; i++)
 		F[idx_1(i)] ^= F[idx_2(i, n - 4)] & v3;
 	
-	for (size_t i = 1; i < n - 4; i++)
+	for (int i = 1; i < n - 4; i++)
 		F[idx_1(i)] ^= F[idx_2(i - 1, i)];
 
 	if (verbose)
@@ -171,7 +171,7 @@ size_t feslite_avx2_enum_16x16(size_t n, const uint32_t * const F_,
 	uint64_t enumeration_start_time = Now();
 	STEP_0(&context, 0);
 
-	for (size_t idx_0 = 0; idx_0 < min(L, n - 4); idx_0++) {
+	for (int idx_0 = 0; idx_0 < min(L, n - 4); idx_0++) {
 		uint32_t w1 = 1 << idx_0;
 		STEP_1(&context, idx_1(idx_0), w1);
 		for (uint32_t i = w1 + 1; i < 2 * w1; i++) {
@@ -190,7 +190,7 @@ size_t feslite_avx2_enum_16x16(size_t n, const uint32_t * const F_,
 		printf("fes: enumeration[rolled] = %" PRIu64 " cycles\n",
 		       Now() - enumeration_start_time);
 
-	for (size_t idx_0 = L; idx_0 < n - 4; idx_0++) {
+	for (int idx_0 = L; idx_0 < n - 4; idx_0++) {
 		uint32_t w1 = (1 << idx_0);
 		int alpha = idx_1(idx_0);
 		STEP_1(&context, alpha, w1);

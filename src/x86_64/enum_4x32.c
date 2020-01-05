@@ -20,16 +20,16 @@ struct context_t {
 	const  uint32_t * const F_start;
 	__m128i * F;
 	struct solution_t buffer[512*4 + 32];
-	size_t buffer_size;
+	int64_t buffer_size;
 	uint32_t *solutions;
-	size_t n_solution_found;
-	size_t max_solutions;
-	size_t n_solutions;
+	int n_solution_found;
+	int max_solutions;
+	int n_solutions;
 	bool verbose;
 
-	size_t focus[33];
-	size_t stack[32];
-	size_t sp;
+	int focus[33];
+	int stack[32];
+	int sp;
 
 	int k1;
 	int k2;
@@ -48,7 +48,7 @@ static void RESET_COUNTER(struct context_t *context)
    the position of the second rightmost set bit. */
 static inline void UPDATE_COUNTER(struct context_t *context)
 {
-	size_t j = context->focus[0];
+	int j = context->focus[0];
 	context->focus[0] = 0;
 	context->focus[j] = context->focus[j + 1];
 	context->focus[j + 1] = j + 1;
@@ -94,7 +94,7 @@ static inline void STEP_2(struct context_t *context, int a, int b, uint32_t inde
    add it to the solutions. */
 static inline void FLUSH_BUFFER(struct context_t *context)
 {		
-	for (size_t i = 0; i < context->buffer_size; i++) {
+	for (int i = 0; i < context->buffer_size; i++) {
 		uint32_t x = to_gray(context->buffer[i].x);
 		if ((context->buffer[i].mask & 0x000f)) {
 			context->solutions[context->n_solutions++] = x;
@@ -122,8 +122,8 @@ static inline void FLUSH_BUFFER(struct context_t *context)
 
 
 // generated with L = 9
-size_t feslite_x86_64_enum_4x32(size_t n, const uint32_t * const F_,
-			    uint32_t * solutions, size_t max_solutions,
+int feslite_x86_64_enum_4x32(int n, const uint32_t * const F_,
+			    uint32_t * solutions, int max_solutions,
 			    bool verbose)
 {
 	uint64_t init_start_time = Now();
@@ -136,13 +136,13 @@ size_t feslite_x86_64_enum_4x32(size_t n, const uint32_t * const F_,
 	context.verbose = verbose;
 	context.buffer_size = 0;
 
-	size_t N = idx_1(n);
+	int N = idx_1(n);
 	__m128i F[N];
 	context.F = F;
 
 	RESET_COUNTER(&context);
 
-	for (size_t i = 0; i < N; i++)
+	for (int i = 0; i < N; i++)
 		F[i] = _mm_set1_epi32(F_[i]);
 
 	/******** 2-way "specialization" : remove the (n-1)-th variable */
@@ -154,20 +154,20 @@ size_t feslite_x86_64_enum_4x32(size_t n, const uint32_t * const F_,
 	
 
 	// [i] is affected by [i, n-1]
-	for (size_t i = 0; i < n - 1; i++)
+	for (int i = 0; i < n - 1; i++)
 		F[idx_1(i)] ^= F[idx_2(i, n-1)] & v0;
 	
 	// the constant term is affected by [n-2]
 	F[0] ^= F[idx_1(n-2)] & v1;
 	
       	// [i] is affected by [i, n-2]
-	for (size_t i = 0; i < n - 2; i++)
+	for (int i = 0; i < n - 2; i++)
 		F[idx_1(i)] ^= F[idx_2(i, n-2)] & v1;
 	
       
 	/******** compute "derivatives" */
 	/* degree-1 terms are affected by degree-2 terms */
-	for (size_t i = 1; i < n; i++)
+	for (int i = 1; i < n; i++)
 		F[idx_1(i)] ^= F[idx_2(i - 1, i)];
 
 	if (verbose)
@@ -177,7 +177,7 @@ size_t feslite_x86_64_enum_4x32(size_t n, const uint32_t * const F_,
 	uint64_t enumeration_start_time = Now();
 	STEP_0(&context, 0);
 
-	for (size_t idx_0 = 0; idx_0 < min(L, n - 2); idx_0++) {
+	for (int idx_0 = 0; idx_0 < min(L, n - 2); idx_0++) {
 		const uint32_t w1 = (1 << idx_0);
 
 		UPDATE_COUNTER(&context);
@@ -194,7 +194,7 @@ size_t feslite_x86_64_enum_4x32(size_t n, const uint32_t * const F_,
 
 	RESET_COUNTER(&context);
 
-	for (size_t idx_0 = L; idx_0 < n - 2; idx_0++) {
+	for (int idx_0 = L; idx_0 < n - 2; idx_0++) {
 		const uint32_t w1 = (1 << idx_0);
 
 		UPDATE_COUNTER(&context);

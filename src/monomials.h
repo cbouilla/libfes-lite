@@ -34,12 +34,12 @@
 #define min(x,y) (((x) > (y)) ? (y) : (x)) 
 
 
-static inline size_t idx_1(int i)
+static inline int idx_1(int i)
 {
   return i * (i + 1) / 2 + 1;
 }
 
-static inline size_t idx_2(int i, int j)
+static inline int idx_2(int i, int j)
 {
   // assert(i < j);
   return idx_1(j) + 1 + i;

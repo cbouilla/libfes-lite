@@ -16,9 +16,14 @@ return value:
 
    The enumeration stops if it fills the solution buffer.
 */
-size_t feslite_solve(size_t n, const uint32_t * const F_, uint32_t * solutions, size_t max_solutions, bool verbose);
+int feslite_solve(int n, const uint32_t * const F, uint32_t * solutions, int max_solutions, bool verbose);
 
 
-/* returns the name of the kernel actually used */
-char const * feslite_solver_name();
+/* for experts, probing the state of the library is possible */
+int feslite_num_kernels();
+bool feslite_kernel_is_available(int i);
+char const * feslite_kernel_name(int i);
+int feslite_default_kernel();
 
+/* solve using a specified kernel */
+int feslite_kernel_solve(int i, int n, const uint32_t * const F, uint32_t * solutions, int max_solutions, bool verbose);

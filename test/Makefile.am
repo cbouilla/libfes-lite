@@ -5,7 +5,7 @@ AM_CPPFLAGS = -I$(top_srcdir)/src -I$(top_srcdir)/include
 AM_LDFLAGS = -lm
 LDADD = $(top_builddir)/src/libfeslite.la rand.o
 
-TESTS = many_solutions designated_solution consistency
+TESTS = many_solutions designated_solution consistency special_solutions
 EXTRA_DIST = $(TESTS)
 
-check_PROGRAMS = designated_solution many_solutions consistency
+check_PROGRAMS = designated_solution many_solutions consistency special_solutions

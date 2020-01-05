@@ -21,7 +21,7 @@
 
 
 typedef bool (*kernel_available_f)(void);
-typedef size_t (*kernel_enumeration_f)(size_t, const uint32_t * const, uint32_t *, size_t, bool);
+typedef int (*kernel_enumeration_f)(int, const uint32_t * const, uint32_t *, int, bool);
 
 
 struct enum_kernel_t {
@@ -37,12 +37,6 @@ struct eval_kernel_t {
    const kernel_enumeration_f run;
 };
 
-
 extern const struct enum_kernel_t ENUM_KERNEL[];
 
-
-size_t feslite_kernel_num();
-int feslite_kernel_available(const struct enum_kernel_t *kernel);
-size_t feslite_kernel_num_available();
-uint32_t feslite_naive_evaluation(size_t n, const uint32_t * const F, uint32_t x);
-
+uint32_t feslite_naive_evaluation(int n, const uint32_t * const F, uint32_t x);
