@@ -21,14 +21,17 @@
 };*/
 
 static uint32_t test_cases[N] = {
-	0x00000000, 0xffffffff, 0xffff0000, 0x0000ffff, 
-        0xff00ff00, 0x00ff00ff, 0x0f0f0f0f, 0xf0f0f0f0, 
-        0x55555555, 0xcccccccc
+	//0x00000000, 0xffffffff, 0xffff0000, 0x0000ffff, 
+        //0xff00ff00, 0x00ff00ff, 0x0f0f0f0f, 0xf0f0f0f0, 
+        //0x55555555, 0xcccccccc
+        0x00000000, 0x0fffffff, 0x0fff0000, 0x0000ffff, 
+	0x0f00ff00, 0x00ff00ff, 0x0f0f0f0f, 0x00f0f0f0, 
+	0x05555555, 0x0ccccccc
 };
 
 int main()
 {
-	int n = 32;
+	int n = 28; // fast version
 	unsigned long random_seed = 1337;
 	printf("# initalizing random systems with seed=0x%lx\n", random_seed);
 	mysrand(random_seed);

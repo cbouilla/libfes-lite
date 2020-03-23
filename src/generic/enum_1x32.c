@@ -1,8 +1,10 @@
 #include <stdio.h>
 #include <inttypes.h>
 #include <stdbool.h>
+#include <assert.h>
 
 #include "fes.h"
+#include "ffs.h"
 #include "monomials.h"
 
 #define L 7
@@ -21,12 +23,7 @@ struct context_t {
 	int max_solutions;
 	int n_solutions;
 
-	int focus[33];
-	int stack[32];
-	int sp;
-
-	int k1;
-	int k2;
+	struct ffs_t ffs;
 
 	int verbose;
 };
@@ -69,28 +66,6 @@ static inline void FLUSH_BUFFER(struct context_t *context)
 	context->buffer_size = 0;
 }				
 
-
-static void RESET_COUNTER(struct context_t *context)
-{
-	context->sp = 1;
-	context->stack[0] = -1;
-	for (int j = 0; j <= context->n; j++)
-		context->focus[j] = j;
-
-}
-
-static inline void UPDATE_COUNTER(struct context_t *context)
-{
-	int j = context->focus[0];
-	context->focus[0] = 0;
-	context->focus[j] = context->focus[j + 1];
-	context->focus[j + 1] = j + 1;
-	context->k1 = j;
-
-	context->sp -= j;
-	context->k2 = context->stack[context->sp - 1];
-	context->stack[context->sp++] = j;
-}
 
 
 static inline void UNROLLED_CHUNK(struct context_t *context, int alpha, uint32_t i)
@@ -239,7 +214,7 @@ int feslite_generic_enum_1x32(int n, const uint32_t * const F_,
 	context.verbose = verbose;
 	context.buffer_size = 0;
 
-	RESET_COUNTER(&context);
+	ffs_reset(&context.ffs);
 
 	int N = idx_1(n);
 	uint32_t F[N];
@@ -249,8 +224,8 @@ int feslite_generic_enum_1x32(int n, const uint32_t * const F_,
 
 	/* compute "derivatives" */
 	/* degree-1 terms are affected by degree-2 terms */
-	for (int i = 1; i < n; i++)
-		F[idx_1(i)] ^= F[idx_2(i - 1, i)];
+	// for (int i = 1; i < n; i++)
+	// 	F[idx_1(i)] ^= F[idx_2(i - 1, i)];
 
 	if (verbose)
 		printf("fes: initialisation = %" PRIu64 " cycles\n",
@@ -262,25 +237,36 @@ int feslite_generic_enum_1x32(int n, const uint32_t * const F_,
 	for (int idx_0 = 0; idx_0 < min(n, L); idx_0++) {
 		uint32_t w1 = (1 << idx_0);
 
-		UPDATE_COUNTER(&context);
-		STEP_1(&context, idx_1(context.k1), w1);
+		ffs_step(&context.ffs);
+		// STEP_1(&context, idx_1(context.k1), w1);
+		// assert(context.k1 > 0);
+		if (context.ffs.k1 > 0)
+			STEP_2(&context, idx_1(context.ffs.k1), idx_2(context.ffs.k1 - 1, context.ffs.k1), w1);
+		else
+			STEP_1(&context, idx_1(context.ffs.k1), w1);
+
 		for (uint32_t i = 1 + w1; i < 2 * w1; i++) {
-			UPDATE_COUNTER(&context);
-			STEP_2(&context, idx_1(context.k1), idx_2(context.k1, context.k2), i);
+			ffs_step(&context.ffs);
+			STEP_2(&context, idx_1(context.ffs.k1), idx_2(context.ffs.k1, context.ffs.k2), i);
 		}
 		FLUSH_BUFFER(&context);
 		if (context.n_solutions == context.max_solutions)
 			return context.n_solutions;
 	}
 
-	RESET_COUNTER(&context);
+	/* starting from now, the counter counts the upper bits */
+	ffs_reset(&context.ffs);
+
 
 	for (int idx_0 = L; idx_0 < n; idx_0++) {	
 		uint32_t w1 = (1 << idx_0);
 		
-		UPDATE_COUNTER(&context);
-		int alpha = idx_1(context.k1 + L);
-		STEP_1(&context, alpha, w1);
+		ffs_step(&context.ffs);
+		int alpha = idx_1(context.ffs.k1 + L);
+		// STEP_1(&context, alpha, w1);
+		// STEP_1(&context, idx_1(context.k1 + L), w1);
+		STEP_2(&context, idx_1(context.ffs.k1 + L), idx_2(context.ffs.k1 + L - 1, context.ffs.k1 + L), w1);
+
 		UNROLLED_CHUNK(&context, alpha, w1);
 		FLUSH_BUFFER(&context);
 		if (context.n_solutions == context.max_solutions)
@@ -289,9 +275,9 @@ int feslite_generic_enum_1x32(int n, const uint32_t * const F_,
 		for (uint32_t j = (1 << L); j < (1ull << idx_0); j += (1 << L)) {
 			uint32_t i = j + w1;
 
-			UPDATE_COUNTER(&context);
-			int alpha = idx_1(context.k1 + L);
-			int beta = idx_2(context.k1 + L, context.k2 + L);
+			ffs_step(&context.ffs);
+			int alpha = idx_1(context.ffs.k1 + L);
+			int beta = idx_2(context.ffs.k1 + L, context.ffs.k2 + L);
 			STEP_2(&context, alpha, beta, i);
 			UNROLLED_CHUNK(&context, alpha, i);
 			FLUSH_BUFFER(&context);
