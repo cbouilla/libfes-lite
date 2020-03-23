@@ -25,7 +25,7 @@ int main()
 			continue;
 		const char *name = feslite_kernel_name(kernel);
 		uint64_t start = Now();
-		feslite_kernel_solve(kernel, n, F, solutions, max_solutions, false);
+		feslite_kernel_solve(kernel, n, F, solutions, max_solutions);
 		printf("%s : %.2f cycles/candidate\n", name, (Now() - start) * 1.0 / (1ll << n));
 	}
 	return EXIT_SUCCESS;

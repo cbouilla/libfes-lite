@@ -37,7 +37,7 @@ int main()
 		for (kernel = 0; kernel < feslite_num_kernels(); kernel++) {
 			if (feslite_kernel_is_available(kernel)) {
 				printf("# using [%s] to get a first set of solutions\n", ENUM_KERNEL[kernel].name);
-				n_solutions = feslite_kernel_solve(kernel, n, F, solutions, max_solutions, 0);
+				n_solutions = feslite_kernel_solve(kernel, n, F, solutions, max_solutions);
 				break;
 			}
 		}
@@ -60,7 +60,7 @@ int main()
 			printf("# testing kernel %s\n", name);
 		
 			/* get all solutions */
-			int n_solutions2 = feslite_kernel_solve(kernel, n, F, solutions2, max_solutions, 0);
+			int n_solutions2 = feslite_kernel_solve(kernel, n, F, solutions2, max_solutions);
 
 			printf("# solutions found by [%s]:\n", name);
 			for (int i = 0; i < n_solutions2; i++)

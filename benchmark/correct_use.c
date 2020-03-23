@@ -13,7 +13,7 @@ int main()
 	unsigned long random_seed = 2;
 	srand48(random_seed);
 
-	// initalize a random system
+	/* initalize a random system */	
 	const int N = 1 + n + n * (n - 1) / 2;
 	uint32_t F[N];
 	int max_solutions = 256;
@@ -24,7 +24,7 @@ int main()
 
 	/* solve */
 	uint64_t start = Now();
-	int n_solutions = feslite_solve(n, F, solutions, max_solutions, true);
+	int n_solutions = feslite_solve(n, F, solutions, max_solutions);
 	
 	/* report */
 	int kernel = feslite_default_kernel();

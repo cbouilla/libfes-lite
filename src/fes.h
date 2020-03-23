@@ -21,7 +21,7 @@
 
 
 typedef bool (*kernel_available_f)(void);
-typedef int (*kernel_enumeration_f)(int, const uint32_t * const, uint32_t *, int, bool);
+typedef int (*kernel_enumeration_f)(int, const uint32_t * const, uint32_t *, int);
 
 
 struct enum_kernel_t {

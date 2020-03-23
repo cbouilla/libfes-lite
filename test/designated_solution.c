@@ -51,7 +51,7 @@ int main()
 
 		/* get all solutions */
 		bool status = false;
-		int n_solutions =  feslite_kernel_solve(kernel, n, F, solutions, max_solutions, false);
+		int n_solutions =  feslite_kernel_solve(kernel, n, F, solutions, max_solutions);
 		for (int i = 0; i < n_solutions; i++) {
 			printf("# reporting solution %08x\n", solutions[i]);
 			if (solutions[i] == X) {

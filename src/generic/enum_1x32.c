@@ -8,6 +8,7 @@
 #include "monomials.h"
 
 #define L 7
+#define VERBOSE 1
 
 struct solution_t {
   uint32_t x;
@@ -199,10 +200,8 @@ static inline void UNROLLED_CHUNK(struct context_t *context, int alpha, uint32_t
 	STEP_2(context, 1, 3, i + 127);
 }
 
-// generated with L = 9
-int feslite_generic_enum_1x32(int n, const uint32_t * const F_,
-			    uint32_t * solutions, int max_solutions,
-			    bool verbose)
+// generated with L = 7
+int feslite_generic_enum_1x32(int n, const uint32_t * F_, uint32_t * solutions, int max_solutions)
 {
 	uint64_t init_start_time = Now();
 
@@ -211,7 +210,6 @@ int feslite_generic_enum_1x32(int n, const uint32_t * const F_,
 	context.solutions = solutions;
 	context.n_solutions = 0;
 	context.max_solutions = max_solutions;
-	context.verbose = verbose;
 	context.buffer_size = 0;
 
 	ffs_reset(&context.ffs);
@@ -227,7 +225,7 @@ int feslite_generic_enum_1x32(int n, const uint32_t * const F_,
 	// for (int i = 1; i < n; i++)
 	// 	F[idx_1(i)] ^= F[idx_2(i - 1, i)];
 
-	if (verbose)
+	if (VERBOSE)
 		printf("fes: initialisation = %" PRIu64 " cycles\n",
 		       Now() - init_start_time);
 
@@ -287,7 +285,7 @@ int feslite_generic_enum_1x32(int n, const uint32_t * const F_,
 	}
 
 	uint64_t end_time = Now();
-	if (verbose)
+	if (VERBOSE)
 		printf("fes: enumeration+check = %" PRIu64 " cycles\n",
 		       end_time - enumeration_start_time);
 

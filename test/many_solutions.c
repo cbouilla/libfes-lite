@@ -40,7 +40,7 @@ int main()
 	
 		/* get all solutions */
 		int status = true;
-		n_solutions =  feslite_kernel_solve(kernel, n, F, solutions, max_solutions, 0);
+		n_solutions =  feslite_kernel_solve(kernel, n, F, solutions, max_solutions);
 		for (int i = 0; i < n_solutions; i++) {
 			uint32_t y = feslite_naive_evaluation(n, F, solutions[i]);
 			if (y) {
@@ -57,7 +57,7 @@ int main()
 		}
 
 		/* get the first 10 solutions */
-		n_solutions = feslite_kernel_solve(kernel, n, F, solutions2, max_solutions2, 0);
+		n_solutions = feslite_kernel_solve(kernel, n, F, solutions2, max_solutions2);
 		
 		if (n_solutions != max_solutions2)
 			printf("not ok %d - [%s] only %d solutions found, %d expected\n", test_idx++, name, n_solutions, max_solutions2);

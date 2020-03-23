@@ -45,10 +45,10 @@ char const * feslite_kernel_name(int i)
 	return ENUM_KERNEL[i].name;
 }
 
-int feslite_kernel_solve(int i, int n, const uint32_t * const F, uint32_t * solutions, int max_solutions, bool verbose)
+int feslite_kernel_solve(int i, int n, const uint32_t * const F, uint32_t * solutions, int max_solutions)
 {
 	assert(feslite_kernel_is_available(i));
-	return ENUM_KERNEL[i].run(n, F, solutions, max_solutions, verbose);
+	return ENUM_KERNEL[i].run(n, F, solutions, max_solutions);
 }
 
 int feslite_default_kernel()
@@ -59,7 +59,7 @@ int feslite_default_kernel()
 	return -1;
 }
 
-int feslite_solve(int n, const uint32_t * const F, uint32_t * solutions, int max_solutions, bool verbose)
+int feslite_solve(int n, const uint32_t * const F, uint32_t * solutions, int max_solutions)
 {
-	return feslite_kernel_solve(feslite_default_kernel(), n, F, solutions, max_solutions, verbose);
+	return feslite_kernel_solve(feslite_default_kernel(), n, F, solutions, max_solutions);
 }
