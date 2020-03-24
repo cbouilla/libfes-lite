@@ -1,4 +1,5 @@
 #include <stdint.h>
+#include <assert.h>
 #include <stddef.h>
 #include <stdbool.h>
 
@@ -46,13 +47,16 @@
 12  : [2,  5]
 13  : [3,  5]
 14  : [4,  5]
-      .......           [0, i] is at i * (i + 1) / 2
-496 : [0, 31]
+      .......           [0, i] is at i * (i - 1) / 2
+495 : [0, 31]
+496 : end of input data / [0, 32]
       ....... 
-528 : [0, 32]
-      ....... 
-560 :  stop
+582 : SENTINEL [32, 32]
+529 : stop
 */
+
+#define NQUAD 529
+#define NLIN  33
 
 // the C code uses indices up to 529 (excluded : this is [33])
 
@@ -60,16 +64,25 @@
 #define min(x,y) (((x) > (y)) ? (y) : (x)) 
 
 
-static inline int idx_1(int i)
+static inline int idx1(int i)
 {
+  assert(false);
   return i * (i + 1) / 2 + 1;
 }
 
-static inline int idx_2(int i, int j)
+static inline int idx2(int i, int j)
 {
   // assert(i < j);
-  return idx_1(j) + 1 + i;
+  assert(false);
+  return idx1(j) + 1 + i;
 }
+
+static inline int idxq(int i, int j)
+{
+  // assert(i < j);
+  return j * (j - 1) / 2 + i;
+}
+
 
 static inline uint32_t to_gray(uint32_t i)
 {

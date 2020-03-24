@@ -1,26 +1,28 @@
-#include "feslite.h"
+#include "fes.h"
 #include "monomials.h"
 
-uint32_t feslite_naive_evaluation(int n, const uint32_t * const F, uint32_t x)
+u32 feslite_naive_evaluation(int n, const u32 * Fq, const u32 * Fl, u32 x)
 {
 	// first expand the values of the variables from `x`
-	uint32_t v[n];
+	u32 v[32];
 	for (int k = 0; k < n; k++) {
 		v[k] = (x & 0x0001) ? 0xffffffff : 0x00000000;
 		x >>= 1;
 	}
 
-	uint32_t y = F[0];
+	u32 y = Fl[0];
 
 	for (int idx_0 = 0; idx_0 < n; idx_0++) {
 		// computes the contribution of degree-1 terms
-		const uint32_t v_0 = v[idx_0];
-		y ^= F[idx_1(idx_0)] & v_0;
+		u32 v_0 = v[idx_0];
+		u32 l = Fl[1 + idx_0];
+		y ^= l & v_0;
 
 		for (int idx_1 = 0; idx_1 < idx_0; idx_1++) {
 			// computes the contribution of degree-2 terms
-			const uint32_t v_1 = v_0 & v[idx_1];
-			y ^= F[idx_2(idx_1, idx_0)] & v_1;
+			u32 v_1 = v_0 & v[idx_1];
+			u32 q = Fq[idxq(idx_1, idx_0)];
+			y ^= q & v_1;
 		}
 	}
 	return y;

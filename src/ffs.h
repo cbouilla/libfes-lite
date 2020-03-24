@@ -4,14 +4,15 @@
 
 /* 
  * Constant-time algorithm to compute the position of the first and second bits
- * set in successive values of an n-bit counter initialized at zero. Uses O(n log n) memory. 
+ * set in successive values of an n-bit counter initialized at zero. Uses O(n^2) memory. 
  *
- * ffs_reset()  sets the counter to zero (and initializes the data structure).
- * ffs_step()   increments the counter   (and updates the data structure).
+ * ffs_reset(&ffs, bot)  sets the counter to zero (and initializes the data structure).
+ * ffs_step(&ffs)        increments the counter   (and updates the data structure).
  *
  * At all times, k1 and k2 contains the position of the first and second bits set in the counter.
  *
- * When the counter is zero, k1 == k2 == -1. When the counter has only one bit set, k2 == -1.
+ * When the counter is zero, k1 == k2 == bot. When the counter has only one bit set, k2 == bot.
+ * (bot is the value supplied to ffs_reset).
  *
  * This is not always the fastest possible solution (in particular if hardware instructions are available).
  * It is also not always faster than two successive "while" loops.
@@ -27,15 +28,14 @@ struct ffs_t {
 };
 
 
-static void ffs_reset(struct ffs_t *context)
+static void ffs_reset(struct ffs_t *context, int bot)
 {
-	context->k1 = -1;
-	context->k2 = -1;
+	context->k1 = bot;
+	context->k2 = bot;
 	context->sp = 1;
-	context->stack[0] = -1;
+	context->stack[0] = bot;
 	for (int j = 0; j <= 32; j++)
 		context->focus[j] = j;
-
 }
 
 static inline void ffs_step(struct ffs_t *context)
@@ -53,3 +53,18 @@ static inline void ffs_step(struct ffs_t *context)
 	context->stack[context->sp] = j;
 	context->sp += 1;
 }
+
+#if 0
+#include "ffs.h"
+#include <stdio.h>
+
+void main()
+{
+	struct ffs_t ffs;
+	ffs_reset(&ffs);
+	for (int i = 0; i < 32; i++) {
+		printf("%d\t%d\t%d\n", i, ffs.k1, ffs.k2);
+		ffs_step(&ffs);
+	}
+}
+#endif

@@ -7,8 +7,8 @@
 #include "ffs.h"
 #include "monomials.h"
 
-#define L 7
-#define VERBOSE 1
+#define L 4
+#define VERBOSE 0
 
 struct solution_t {
   uint32_t x;
@@ -16,278 +16,134 @@ struct solution_t {
 
 struct context_t {
 	int n;
-	const uint32_t * const F_start;
-	uint32_t * F;
-	struct solution_t buffer[(1 << L) + 32];
-	int buffer_size;
-	uint32_t *solutions;
-	int max_solutions;
-	int n_solutions;
+	int m;
+	const u32 * Fq;
+	u32 * Fl;
+	int count;
 
+	u32 *output_buffer;
+	int output_size;
+
+	/* local solution buffer */
+	int local_size;
+	struct solution_t local_buffer[(1 << L) + 32];
+	
+	/* counter */
 	struct ffs_t ffs;
-
-	int verbose;
 };
 
 
-
-static inline void CHECK_SOLUTION(struct context_t *context, uint32_t index)
+// tests the current value (corresponding to index), then step to the next one using a/b.
+static inline void STEP_2(struct context_t *context, int a, int b, u32 index)
 {
-	if (unlikely((context->F[0] == 0))) {
-		context->buffer[context->buffer_size].x = index;
-		context->buffer_size++;
+	if (unlikely((context->Fl[0] == 0))) {
+		context->local_buffer[context->local_size].x = index;
+		context->local_size++;
 	}
+	context->Fl[a] ^= context->Fq[b];
+	context->Fl[0] ^= context->Fl[a];
 }
 
-static inline void STEP_0(struct context_t *context, uint32_t index)
-{
-	CHECK_SOLUTION(context, index);
-}
-
-static inline void STEP_1(struct context_t *context, int a, uint32_t index)
-{
-	context->F[0] ^= context->F[a];
-	STEP_0(context, index);
-}
-
-static inline void STEP_2(struct context_t *context, int a, int b, uint32_t index)
-{
-	context->F[a] ^= context->F[b];
-	STEP_1(context, a, index);
-}
 
 static inline void FLUSH_BUFFER(struct context_t *context)
 {		
-	for (int i = 0; i < context->buffer_size; i++) {
-		uint32_t x = to_gray(context->buffer[i].x);
-		context->solutions[context->n_solutions++] = x;
-		if (context->n_solutions == context->max_solutions)
+	for (int i = 0; i < context->local_size; i++) {
+		u32 x = to_gray(context->local_buffer[i].x);
+		context->output_buffer[context->output_size] = x;
+		context->output_size++;
+		if (context->output_size == context->count)
 			return;
 	}
-	context->buffer_size = 0;
+	context->local_size = 0;
 }				
 
 
-
-static inline void UNROLLED_CHUNK(struct context_t *context, int alpha, uint32_t i)
+/* 
+ * k1,  k2  computed from i   --> alpha == idxq(0, k1). 
+ * k1', k2' computed from i+1 --> beta == 1 + k1', gamma = idxq(k1', k2')
+ */
+static inline void UNROLLED_CHUNK(struct context_t *context, int alpha, int beta, int gamma, u32 i)
 {
-	STEP_2(context, 1, 1 + alpha, i + 1);
-	STEP_2(context, 2, 2 + alpha, i + 2);
-	STEP_2(context, 1, 3, i + 3);
-	STEP_2(context, 4, 3 + alpha, i + 4);
-	STEP_2(context, 1, 5, i + 5);
-	STEP_2(context, 2, 6, i + 6);
-	STEP_2(context, 1, 3, i + 7);
-	STEP_2(context, 7, 4 + alpha, i + 8);
-	STEP_2(context, 1, 8, i + 9);
-	STEP_2(context, 2, 9, i + 10);
-	STEP_2(context, 1, 3, i + 11);
-	STEP_2(context, 4, 10, i + 12);
-	STEP_2(context, 1, 5, i + 13);
-	STEP_2(context, 2, 6, i + 14);
-	STEP_2(context, 1, 3, i + 15);
-	STEP_2(context, 11, 5 + alpha, i + 16);
-	STEP_2(context, 1, 12, i + 17);
-	STEP_2(context, 2, 13, i + 18);
-	STEP_2(context, 1, 3, i + 19);
-	STEP_2(context, 4, 14, i + 20);
-	STEP_2(context, 1, 5, i + 21);
-	STEP_2(context, 2, 6, i + 22);
-	STEP_2(context, 1, 3, i + 23);
-	STEP_2(context, 7, 15, i + 24);
-	STEP_2(context, 1, 8, i + 25);
-	STEP_2(context, 2, 9, i + 26);
-	STEP_2(context, 1, 3, i + 27);
-	STEP_2(context, 4, 10, i + 28);
-	STEP_2(context, 1, 5, i + 29);
-	STEP_2(context, 2, 6, i + 30);
-	STEP_2(context, 1, 3, i + 31);
-	STEP_2(context, 16, 6 + alpha, i + 32);
-	STEP_2(context, 1, 17, i + 33);
-	STEP_2(context, 2, 18, i + 34);
-	STEP_2(context, 1, 3, i + 35);
-	STEP_2(context, 4, 19, i + 36);
-	STEP_2(context, 1, 5, i + 37);
-	STEP_2(context, 2, 6, i + 38);
-	STEP_2(context, 1, 3, i + 39);
-	STEP_2(context, 7, 20, i + 40);
-	STEP_2(context, 1, 8, i + 41);
-	STEP_2(context, 2, 9, i + 42);
-	STEP_2(context, 1, 3, i + 43);
-	STEP_2(context, 4, 10, i + 44);
-	STEP_2(context, 1, 5, i + 45);
-	STEP_2(context, 2, 6, i + 46);
-	STEP_2(context, 1, 3, i + 47);
-	STEP_2(context, 11, 21, i + 48);
-	STEP_2(context, 1, 12, i + 49);
-	STEP_2(context, 2, 13, i + 50);
-	STEP_2(context, 1, 3, i + 51);
-	STEP_2(context, 4, 14, i + 52);
-	STEP_2(context, 1, 5, i + 53);
-	STEP_2(context, 2, 6, i + 54);
-	STEP_2(context, 1, 3, i + 55);
-	STEP_2(context, 7, 15, i + 56);
-	STEP_2(context, 1, 8, i + 57);
-	STEP_2(context, 2, 9, i + 58);
-	STEP_2(context, 1, 3, i + 59);
-	STEP_2(context, 4, 10, i + 60);
-	STEP_2(context, 1, 5, i + 61);
-	STEP_2(context, 2, 6, i + 62);
-	STEP_2(context, 1, 3, i + 63);
-	STEP_2(context, 22, 7 + alpha, i + 64);
-	STEP_2(context, 1, 23, i + 65);
-	STEP_2(context, 2, 24, i + 66);
-	STEP_2(context, 1, 3, i + 67);
-	STEP_2(context, 4, 25, i + 68);
-	STEP_2(context, 1, 5, i + 69);
-	STEP_2(context, 2, 6, i + 70);
-	STEP_2(context, 1, 3, i + 71);
-	STEP_2(context, 7, 26, i + 72);
-	STEP_2(context, 1, 8, i + 73);
-	STEP_2(context, 2, 9, i + 74);
-	STEP_2(context, 1, 3, i + 75);
-	STEP_2(context, 4, 10, i + 76);
-	STEP_2(context, 1, 5, i + 77);
-	STEP_2(context, 2, 6, i + 78);
-	STEP_2(context, 1, 3, i + 79);
-	STEP_2(context, 11, 27, i + 80);
-	STEP_2(context, 1, 12, i + 81);
-	STEP_2(context, 2, 13, i + 82);
-	STEP_2(context, 1, 3, i + 83);
-	STEP_2(context, 4, 14, i + 84);
-	STEP_2(context, 1, 5, i + 85);
-	STEP_2(context, 2, 6, i + 86);
-	STEP_2(context, 1, 3, i + 87);
-	STEP_2(context, 7, 15, i + 88);
-	STEP_2(context, 1, 8, i + 89);
-	STEP_2(context, 2, 9, i + 90);
-	STEP_2(context, 1, 3, i + 91);
-	STEP_2(context, 4, 10, i + 92);
-	STEP_2(context, 1, 5, i + 93);
-	STEP_2(context, 2, 6, i + 94);
-	STEP_2(context, 1, 3, i + 95);
-	STEP_2(context, 16, 28, i + 96);
-	STEP_2(context, 1, 17, i + 97);
-	STEP_2(context, 2, 18, i + 98);
-	STEP_2(context, 1, 3, i + 99);
-	STEP_2(context, 4, 19, i + 100);
-	STEP_2(context, 1, 5, i + 101);
-	STEP_2(context, 2, 6, i + 102);
-	STEP_2(context, 1, 3, i + 103);
-	STEP_2(context, 7, 20, i + 104);
-	STEP_2(context, 1, 8, i + 105);
-	STEP_2(context, 2, 9, i + 106);
-	STEP_2(context, 1, 3, i + 107);
-	STEP_2(context, 4, 10, i + 108);
-	STEP_2(context, 1, 5, i + 109);
-	STEP_2(context, 2, 6, i + 110);
-	STEP_2(context, 1, 3, i + 111);
-	STEP_2(context, 11, 21, i + 112);
-	STEP_2(context, 1, 12, i + 113);
-	STEP_2(context, 2, 13, i + 114);
-	STEP_2(context, 1, 3, i + 115);
-	STEP_2(context, 4, 14, i + 116);
-	STEP_2(context, 1, 5, i + 117);
-	STEP_2(context, 2, 6, i + 118);
-	STEP_2(context, 1, 3, i + 119);
-	STEP_2(context, 7, 15, i + 120);
-	STEP_2(context, 1, 8, i + 121);
-	STEP_2(context, 2, 9, i + 122);
-	STEP_2(context, 1, 3, i + 123);
-	STEP_2(context, 4, 10, i + 124);
-	STEP_2(context, 1, 5, i + 125);
-	STEP_2(context, 2, 6, i + 126);
-	STEP_2(context, 1, 3, i + 127);
+	// printf("CHUNK with i = %x, alpha=%d, beta=%d, gamma=%d\n", i, alpha, beta, gamma);
+	STEP_2(context, 1, alpha + 0, i + 0);
+	STEP_2(context, 2, alpha + 1, i + 1);
+	STEP_2(context, 1, 0, i + 2);
+	STEP_2(context, 3, alpha + 2, i + 3);
+	STEP_2(context, 1, 1, i + 4);
+	STEP_2(context, 2, 2, i + 5);
+	STEP_2(context, 1, 0, i + 6);
+	STEP_2(context, 4, alpha + 3, i + 7);
+	STEP_2(context, 1, 3, i + 8);
+	STEP_2(context, 2, 4, i + 9);
+	STEP_2(context, 1, 0, i + 10);
+	STEP_2(context, 3, 5, i + 11);
+	STEP_2(context, 1, 1, i + 12);
+	STEP_2(context, 2, 2, i + 13);
+	STEP_2(context, 1, 0, i + 14);
+	STEP_2(context, beta, gamma, i + 15);
 }
 
-// generated with L = 7
-int feslite_generic_enum_1x32(int n, const uint32_t * F_, uint32_t * solutions, int max_solutions)
+
+void feslite_generic_enum_1x32(int n, int m, const u32 * Fq, const u32 * Fl, int count, u32 * buffer, int *size)
 {
+	/* verify input parameters */
+	if (count <= 0 || n < L || n > 32 || m <= 0) {
+		*size = -1;
+		return;
+	}
+	assert(m == 1);
+
 	uint64_t init_start_time = Now();
 
 	struct context_t context;
 	context.n = n;
-	context.solutions = solutions;
-	context.n_solutions = 0;
-	context.max_solutions = max_solutions;
-	context.buffer_size = 0;
+	context.m = m;
+	context.count = count;
+	context.output_buffer = buffer;
+	
+	context.output_size = 0;
+	context.local_size = 0;
 
-	ffs_reset(&context.ffs);
-
-	int N = idx_1(n);
-	uint32_t F[N];
+	u32 Fq_[NQUAD];
+	u32 Fl_[NLIN];
+	int N = idxq(0, n);
 	for (int i = 0; i < N; i++)
-		F[i] = F_[i];
-	context.F = F;
-
-	/* compute "derivatives" */
-	/* degree-1 terms are affected by degree-2 terms */
-	// for (int i = 1; i < n; i++)
-	// 	F[idx_1(i)] ^= F[idx_2(i - 1, i)];
+		Fq_[i] = Fq[i];
+	Fq_[idxq(0, n)] = 0;
+	for (int i = 1; i < n; i++)
+		Fq_[idxq(i, n)] = Fq[idxq(i-1, i)];
+	Fq_[idxq(n, n)] = 0;
+	for (int i = 0; i < n + 1; i++)
+		Fl_[i] = Fl[i];
+	context.Fq = Fq_;
+	context.Fl = Fl_;
 
 	if (VERBOSE)
-		printf("fes: initialisation = %" PRIu64 " cycles\n",
-		       Now() - init_start_time);
+		printf("fes: initialisation = %" PRIu64 " cycles\n", Now() - init_start_time);
 
-	uint64_t enumeration_start_time = Now();
-	STEP_0(&context, 0);
+	u64 enumeration_start_time = Now();
 
-	for (int idx_0 = 0; idx_0 < min(n, L); idx_0++) {
-		uint32_t w1 = (1 << idx_0);
+	ffs_reset(&context.ffs, n-L);
+	int k1 = context.ffs.k1 + L;
+	int k2 = context.ffs.k2 + L;
 
-		ffs_step(&context.ffs);
-		// STEP_1(&context, idx_1(context.k1), w1);
-		// assert(context.k1 > 0);
-		if (context.ffs.k1 > 0)
-			STEP_2(&context, idx_1(context.ffs.k1), idx_2(context.ffs.k1 - 1, context.ffs.k1), w1);
-		else
-			STEP_1(&context, idx_1(context.ffs.k1), w1);
-
-		for (uint32_t i = 1 + w1; i < 2 * w1; i++) {
-			ffs_step(&context.ffs);
-			STEP_2(&context, idx_1(context.ffs.k1), idx_2(context.ffs.k1, context.ffs.k2), i);
-		}
+	u32 iterations = 1ul << (n - L);
+	for (u32 j = 0; j < iterations; j++) {
+		u32 i = j << L;
+		int alpha = idxq(0, k1);
+		ffs_step(&context.ffs);	
+		k1 = context.ffs.k1 + L;
+		k2 = context.ffs.k2 + L;
+		int beta = 1 + k1;
+		int gamma = idxq(k1, k2);
+		UNROLLED_CHUNK(&context, alpha, beta, gamma, i);
 		FLUSH_BUFFER(&context);
-		if (context.n_solutions == context.max_solutions)
-			return context.n_solutions;
+		if (context.output_size == count)
+			break;
 	}
 
-	/* starting from now, the counter counts the upper bits */
-	ffs_reset(&context.ffs);
-
-
-	for (int idx_0 = L; idx_0 < n; idx_0++) {	
-		uint32_t w1 = (1 << idx_0);
-		
-		ffs_step(&context.ffs);
-		int alpha = idx_1(context.ffs.k1 + L);
-		// STEP_1(&context, alpha, w1);
-		// STEP_1(&context, idx_1(context.k1 + L), w1);
-		STEP_2(&context, idx_1(context.ffs.k1 + L), idx_2(context.ffs.k1 + L - 1, context.ffs.k1 + L), w1);
-
-		UNROLLED_CHUNK(&context, alpha, w1);
-		FLUSH_BUFFER(&context);
-		if (context.n_solutions == context.max_solutions)
-			return context.n_solutions;
-
-		for (uint32_t j = (1 << L); j < (1ull << idx_0); j += (1 << L)) {
-			uint32_t i = j + w1;
-
-			ffs_step(&context.ffs);
-			int alpha = idx_1(context.ffs.k1 + L);
-			int beta = idx_2(context.ffs.k1 + L, context.ffs.k2 + L);
-			STEP_2(&context, alpha, beta, i);
-			UNROLLED_CHUNK(&context, alpha, i);
-			FLUSH_BUFFER(&context);
-			if (context.n_solutions == context.max_solutions)
-				return context.n_solutions;
-		}
-	}
-
-	uint64_t end_time = Now();
+	u64 enumeration_end_time = Now();
 	if (VERBOSE)
-		printf("fes: enumeration+check = %" PRIu64 " cycles\n",
-		       end_time - enumeration_start_time);
-
-	return context.n_solutions;
+		printf("fes: enumeration+check = %" PRIu64 " cycles\n", enumeration_end_time - enumeration_start_time);
+	*size = context.output_size;
 }

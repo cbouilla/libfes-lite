@@ -19,13 +19,14 @@
 #include "feslite.h"
 #include "cycleclock.h"
 
+typedef uint64_t u64;
 
 typedef bool (*kernel_available_f)(void);
-typedef int (*kernel_enumeration_f)(int, const uint32_t * const, uint32_t *, int);
-
+typedef void (*kernel_enumeration_f)(int, int, const u32 *, const uint32_t *, int, u32 *, int *);
 
 struct enum_kernel_t {
    const char *name;
+   const int preferred_batch_size;
    const kernel_available_f available;
    const kernel_enumeration_f run;
 };
@@ -39,4 +40,4 @@ struct eval_kernel_t {
 
 extern const struct enum_kernel_t ENUM_KERNEL[];
 
-uint32_t feslite_naive_evaluation(int n, const uint32_t * const F, uint32_t x);
+u32 feslite_naive_evaluation(int n, const u32 * Fq, const u32 * Fl, u32 x);
