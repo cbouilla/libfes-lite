@@ -12,11 +12,11 @@ bool check_correctness(int test, const char *name, int n, u32 *Fq, u32 *Fl, int 
 	for (int i = 0; i < size; i++) {
 		u32 y = feslite_naive_evaluation(n, Fq, Fl, buffer[i]);
 		if (y != 0) {
-			printf("not ok %d - %s gave false positive : F[%08x] = %08x\n", test, name, buffer[i], y);
+			printf("not ok %d - kernel [%s] gave false positive : F[%08x] = %08x\n", test, name, buffer[i], y);
 			return false;
 		}
 	}
-	printf("ok %d - %s returned %d valid solutions\n", test, name, size);
+	printf("ok %d - kernel [%s] returned %d valid solutions\n", test, name, size);
 	return true;
 }
 
@@ -27,11 +27,11 @@ bool check_uniqueness(int test, const char *name, int size, u32 *buffer)
 	for (int i = 0; i < size; i++) 
 		for (int j = i + 1; j < size; j++) {
 			if (buffer[i] == buffer[j]) {
-				printf("not ok %d - %s returned buffer[%d] = buffer[%d]\n", test, name, i, j);
+				printf("not ok %d - kernel [%s] returned buffer[%d] = buffer[%d]\n", test, name, i, j);
 				return false;
 			}
 		}
-	printf("ok %d - %s returned %d distinct solutions\n", test, name, size);
+	printf("ok %d - kernel [%s] returned %d distinct solutions\n", test, name, size);
 	return true;
 }
 
@@ -42,7 +42,7 @@ int main()
 	int k = 10;
 	unsigned long random_seed = 1;
 
-	int n_tests = 3 * feslite_num_kernels();
+	int n_tests = 3 + 4 * feslite_num_kernels();
 	printf("1..%d\n", n_tests);
 
 	printf("# initalizing random system with seed=0x%lx\n", random_seed);
@@ -50,10 +50,11 @@ int main()
 
 	u32 Fq[496];
 	u32 Fl[33];
+	u32 mask = ((1ull << k) - 1) & 0xffffffff;
 	for (int i = 0; i < 496; i++)
-		Fq[i] = myrand() & ((1 << k) - 1);
+		Fq[i] = myrand() & mask;
 	for (int i = 0; i < 33; i++)
-		Fl[i] = myrand() & ((1 << k) - 1);
+		Fl[i] = myrand() & mask;
 
 	int big_count = 1 << 16;
 	int big_size = 0;
@@ -92,12 +93,12 @@ int main()
 	}
 
 	/* test other kernels */
-	int test_idx = 1;
+	int test_idx = 4;
 	for (int kernel = 0; kernel < feslite_num_kernels(); kernel++) {
 		if (!feslite_kernel_is_available(kernel))
 			continue;
 		const char *name = feslite_kernel_name(kernel);
-		printf("# testing kernel %s\n", name);
+		printf("# testing kernel [%s]\n", name);
 	
 		/* run kernel with small solution limit */
 		int small_count = 10;
@@ -107,12 +108,12 @@ int main()
 			
 		/* check solution number: it should have reached the cap*/
 		if (small_size != small_count)
-			printf("not ok %d - [%s] only %d solutions found, %d expected\n", test_idx++, name, small_size, small_count);
+			printf("not ok %d - kernel [%s] found %d solutions, %d expected\n", test_idx++, name, small_size, small_count);
 		else
-			printf("ok %d - [%s] %d solutions found\n", test_idx++, name, small_count);
+			printf("ok %d - kernel [%s] found %d solutions\n", test_idx++, name, small_count);
 
-		check_correctness(3*kernel + 1, name, n, Fq, Fl, small_size, small_buffer);
-		check_uniqueness(3*kernel + 2, name, small_size, small_buffer);
+		check_correctness(test_idx++, name, n, Fq, Fl, small_size, small_buffer);
+		check_uniqueness(test_idx++, name, small_size, small_buffer);
 
 		/* check that solutions are a subset of big_buffer */
 		bool failed = false;
@@ -124,13 +125,13 @@ int main()
 					break;
 				}
 			if (!ok) {
-				printf("not ok %d - %s found ``unknown'' solution F[%08x] = 0\n", 3*kernel + 3, name, small_buffer[i]);
+				printf("not ok %d - kernel [%s] found ``unknown'' solution F[%08x] = 0\n", test_idx++, name, small_buffer[i]);
 				failed = true;
 				break;
 			}
 		}
 		if (!failed)
-			printf("ok %d - %s found only known solutions\n", 3*kernel + 3, name);
+			printf("ok %d - kernel [%s] found only known solutions\n",  test_idx++, name);
 	}
 	return EXIT_SUCCESS;
 }
