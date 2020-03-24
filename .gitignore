@@ -51,3 +51,9 @@ build
 /test/special_solutions.log
 /test/special_solutions.trs
 /feslite.sublime-workspace
+/test/batch_eval_32
+/test/batch_eval_32.log
+/test/batch_eval_32.trs
+/test/transpose_32
+/test/transpose_32.log
+/test/transpose_32.trs
