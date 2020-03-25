@@ -15,35 +15,29 @@ int main()
 	int k = 24;
 	unsigned long random_seed = 1338;
 
-	int n_tests = 1 + feslite_num_kernels();
+	int n_tests = feslite_num_kernels();
 	printf("1..%d\n", n_tests);
 
 	/*************** setup *****************/
 	printf("# initalizing random system with seed=0x%lx\n", random_seed);
 
 	mysrand(random_seed);
-	int N = n * (n + 1) / 2;
 	u32 Fq[496];
 	u32 Fl[33];
-	for (int i = 0; i < N; i++)
+	for (int i = 0; i < 496; i++)
 		Fq[i] = myrand() & ((1 << k) - 1);
-	for (int i = 0; i < n + 1; i++)
+	for (int i = 0; i < 33; i++)
 		Fl[i] = myrand() & ((1 << k) - 1);
 	Fl[0] = 0;
-	u32 X = myrand() & ((1 << n) - 1); /* designated solution */
-	Fl[0] = feslite_naive_evaluation(n, Fq, Fl, X);
-
-	if (feslite_naive_evaluation(n, Fq, Fl, X) == 0)
-		printf("ok 1 - feslite_naive_evaluation finds designated solution\n");
-	else
-		printf("not ok 1 - feslite_naive_evaluation does NOT find designated solution\n");
-	printf("# F[%08x] = 0\n", X);
+	u32 x = myrand() & ((1 << n) - 1); /* designated solution */
+	Fl[0] = feslite_naive_evaluation(n, Fq, Fl, x);
+	printf("# F[%08x] = 0\n", x);
 
 	int count = 256;
 	u32 buffer[256];
 	
 	/******************** go *******************/
-	int test_idx = 2;
+	int test_idx = 1;
 	for (int kernel = 0; kernel < feslite_num_kernels(); kernel++) {
 		const char *name = feslite_kernel_name(kernel);
 		printf("# testing kernel %s\n", name);
@@ -58,7 +52,7 @@ int main()
 		feslite_kernel_solve(kernel, n, 1, Fq, Fl, count, buffer, &size);
 		for (int i = 0; i < size; i++) {
 			printf("# reporting solution %08x\n", buffer[i]);
-			if (buffer[i] == X) {
+			if (buffer[i] == x) {
 				status = true;
 				break;
 			}

@@ -57,3 +57,7 @@ build
 /test/transpose_32
 /test/transpose_32.log
 /test/transpose_32.trs
+/src/generic/www.sublime-workspace
+/test/naive_eval
+/test/naive_eval.log
+/test/naive_eval.trs
