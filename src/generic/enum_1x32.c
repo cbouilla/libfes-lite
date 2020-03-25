@@ -20,9 +20,8 @@ struct context_t {
 	const u32 * Fq;
 	u32 * Fl;
 	int count;
-
-	u32 *output_buffer;
-	int output_size;
+	u32 *buffer;
+	int *size;
 
 	/* local solution buffer */
 	int local_size;
@@ -49,9 +48,9 @@ static inline void FLUSH_BUFFER(struct context_t *context)
 {		
 	for (int i = 0; i < context->local_size; i++) {
 		u32 x = to_gray(context->local_buffer[i].x);
-		context->output_buffer[context->output_size] = x;
-		context->output_size++;
-		if (context->output_size == context->count)
+		context->buffer[context->size[0]] = x;
+		context->size[0]++;
+		if (context->size[0] == context->count)
 			return;
 	}
 	context->local_size = 0;
@@ -99,9 +98,10 @@ void feslite_generic_enum_1x32(int n, int m, const u32 * Fq, const u32 * Fl, int
 	context.n = n;
 	context.m = m;
 	context.count = count;
-	context.output_buffer = buffer;
-	
-	context.output_size = 0;
+	context.buffer = buffer;
+	context.size = size;
+
+	context.size[0] = 0;
 	context.local_size = 0;
 
 	u32 Fq_[NQUAD];
@@ -138,12 +138,11 @@ void feslite_generic_enum_1x32(int n, int m, const u32 * Fq, const u32 * Fl, int
 		int gamma = idxq(k1, k2);
 		UNROLLED_CHUNK(&context, alpha, beta, gamma, i);
 		FLUSH_BUFFER(&context);
-		if (context.output_size == count)
+		if (context.size[0] == count)
 			break;
 	}
 
 	u64 enumeration_end_time = Now();
 	if (VERBOSE)
 		printf("fes: enumeration+check = %" PRIu64 " cycles\n", enumeration_end_time - enumeration_start_time);
-	*size = context.output_size;
 }

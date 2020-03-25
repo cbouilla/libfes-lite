@@ -2,7 +2,9 @@
 #include <stddef.h>
 #include <stdbool.h>
 
+typedef uint16_t u16;
 typedef uint32_t u32;
+typedef uint64_t u64;
 
 /* 
  * There is ONE entry points to the library:
