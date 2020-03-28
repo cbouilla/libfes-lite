@@ -32,51 +32,44 @@ int main()
 
 	int n_tests = N * feslite_num_kernels();
 	int testidx = 1;
-	printf("1..%d\n", n_tests);
-	
-	for (int k = 0; k < N; k++) {
-		printf("# initalizing random systems with seed=0x%lx\n", random_seed);
 
-		/*************** setup *****************/
-		u32 Fq[496];
-		u32 Fl[33];
-		
-		test_cases[k] &= ((1ull << n) - 1);
-		for (int i = 0; i < 496; i++)
-			Fq[i] = myrand();
-		for (int i = 0; i < 33; i++)
-			Fl[i] = myrand();
-		Fl[0] = 0;
-		Fl[0] = feslite_naive_evaluation(n, Fq, Fl, test_cases[k]);
-		assert(feslite_naive_evaluation(n, Fq, Fl, test_cases[k]) == 0);
-		
-		/******************** go *******************/
-		for (int kernel = 0; kernel < feslite_num_kernels(); kernel++) {
-			const char *name = feslite_kernel_name(kernel);
-			printf("# testing kernel [%s]\n", name);
+	u32 Fq[496];
+	for (int i = 0; i < 496; i++)
+		Fq[i] = myrand();
 
-			if (!feslite_kernel_is_available(kernel)) {
-				printf("ok %d - SKIP kernel [%s] not available\n", testidx++, name);
-				continue;
-			}
+	/******************** go *******************/
+	for (int kernel = 0; kernel < feslite_num_kernels(); kernel++) {
+		const char *name = feslite_kernel_name(kernel);
+		printf("# testing kernel [%s]\n", name);
 
-			/* get all solutions */
-			u32 buffer[256];
-			int size = 0;
-			feslite_kernel_solve(kernel, n, 1, Fq, Fl, 256, buffer, &size);
-			if (size < 0) {
+		if (!feslite_kernel_is_available(kernel)) {
+			printf("ok %d - SKIP kernel [%s] not available\n", testidx++, name);
+			continue;
+		}
+
+		int m = feslite_kernel_batch_size(kernel);
+		u32 Fl[33 * m];
+		int count = 256;
+		u32 buffer[count * m];
+		int size[m];
+
+		for (int k = 0; k < N; k++) {
+			// prepare system with special solution on lane 0
+			for (int i = 0; i < 33 * m; i++)
+				Fl[i] = myrand();
+			u32 x = test_cases[k] & ((1ull << n) - 1);
+			Fl[0] = 0;
+			Fl[0] = feslite_naive_evaluation(n, Fq, Fl, m, x);
+
+			feslite_kernel_solve(kernel, n, m, Fq, Fl, count, buffer, size);
+			if (size[0] < 0) {
 				printf("not ok %d - kernel [%s] failed\n", testidx++, name);
 				continue;
 			}
 
 			bool found = false;
-			for (int i = 0; i < size; i++) {
-				printf("# reporting solution %08x\n", buffer[i]);
-				if (buffer[i] == test_cases[k]) {
-					found = true;
-					break;
-				}
-			}
+			for (int i = 0; i < size[0]; i++)
+				found |= (buffer[i] == x);
 		
 			if (found)
 				printf("ok %d - kernel [%s] found expected solution %08x\n", testidx++, name, test_cases[k]);
@@ -84,5 +77,6 @@ int main()
 				printf("not ok %d - kernel [%s] did NOT find expected solution %08x\n", testidx++, name, test_cases[k]);
 		}	
 	}
+	printf("1..%d\n", n_tests);
 	return EXIT_SUCCESS;
 }

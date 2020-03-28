@@ -76,7 +76,7 @@ void test_stride()
 int main()
 {
 	mysrand(1337);	
-	printf("1.3\n");
+	printf("1..3\n");
 	test_n32();
 	test_n27();
 	test_stride();
