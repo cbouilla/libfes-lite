@@ -1,7 +1,7 @@
 #include "fes.h"
 #include "monomials.h"
 
-u32 feslite_naive_evaluation(int n, const u32 * Fq, const u32 * Fl, u32 x)
+u32 feslite_naive_evaluation(int n, const u32 * Fq, const u32 * Fl, int stride, u32 x)
 {
 	// first expand the values of the variables from `x`
 	u32 v[32];
@@ -15,7 +15,7 @@ u32 feslite_naive_evaluation(int n, const u32 * Fq, const u32 * Fl, u32 x)
 	for (int idx_0 = 0; idx_0 < n; idx_0++) {
 		// computes the contribution of degree-1 terms
 		u32 v_0 = v[idx_0];
-		u32 l = Fl[1 + idx_0];
+		u32 l = Fl[stride * (1 + idx_0)];   // FIXME : get rid of this multiplication
 		y ^= l & v_0;
 
 		for (int idx_1 = 0; idx_1 < idx_0; idx_1++) {

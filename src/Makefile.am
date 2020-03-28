@@ -7,6 +7,7 @@ libfeslite_la_SOURCES = naive_eval.c \
 	feslite.c\
 	generic/minimal.c \
 	generic/enum_1x32.c \
+	generic/enum_2x32.c \
 	generic/eval_32.c \
 	#x86_64/asm_enum_4x32.s x86_64/enum_4x32.c \
 	#x86_64/asm_enum_8x16.s x86_64/enum_8x16.c \

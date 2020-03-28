@@ -25,7 +25,7 @@ struct context_t {
 
 	/* local solution buffer */
 	int local_size;
-	struct solution_t local_buffer[(1 << L) + 32];
+	struct solution_t local_buffer[(1 << L)];
 	
 	/* counter */
 	struct ffs_t ffs;
@@ -44,16 +44,17 @@ static inline void STEP_2(struct context_t *context, int a, int b, u32 index)
 }
 
 
-static inline void FLUSH_BUFFER(struct context_t *context)
+static inline bool FLUSH_BUFFER(struct context_t *context)
 {		
 	for (int i = 0; i < context->local_size; i++) {
 		u32 x = to_gray(context->local_buffer[i].x);
 		context->buffer[context->size[0]] = x;
 		context->size[0]++;
 		if (context->size[0] == context->count)
-			return;
+			return true;
 	}
 	context->local_size = 0;
+	return false;
 }				
 
 
@@ -137,8 +138,7 @@ void feslite_generic_enum_1x32(int n, int m, const u32 * Fq, const u32 * Fl, int
 		int beta = 1 + k1;
 		int gamma = idxq(k1, k2);
 		UNROLLED_CHUNK(&context, alpha, beta, gamma, i);
-		FLUSH_BUFFER(&context);
-		if (context.size[0] == count)
+		if (FLUSH_BUFFER(&context))
 			break;
 	}
 

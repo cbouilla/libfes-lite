@@ -26,18 +26,18 @@ typedef void (*kernel_enumeration_f)(int, int, const u32 *, const uint32_t *, in
 
 struct enum_kernel_t {
    const char *name;
-   const int preferred_batch_size;
-   const kernel_available_f available;
-   const kernel_enumeration_f run;
+   int batch_size;
+   kernel_available_f available;
+   kernel_enumeration_f run;
 };
 
 struct eval_kernel_t {
    const char *name;
-   const kernel_available_f available;
-   const size_t batch_size;
-   const kernel_enumeration_f run;
+   kernel_available_f available;
+   size_t batch_size;
+   kernel_enumeration_f run;
 };
 
 extern const struct enum_kernel_t ENUM_KERNEL[];
 
-u32 feslite_naive_evaluation(int n, const u32 * Fq, const u32 * Fl, u32 x);
+u32 feslite_naive_evaluation(int n, const u32 * Fq, const u32 * Fl, int stride, u32 x);

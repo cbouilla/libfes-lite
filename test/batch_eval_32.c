@@ -25,7 +25,7 @@ int main()
 		Fl[i] = myrand();
 	Fl[0] = 0;
 	u32 x = myrand(); /* designated solution */
-	Fl[0] = feslite_naive_evaluation(32, Fq, Fl, x);
+	Fl[0] = feslite_naive_evaluation(32, Fq, Fl, 1, x);
 	printf("# F[%08x] = 0\n", x);
 
 	u32 inbuffer[32];

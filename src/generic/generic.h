@@ -3,7 +3,7 @@
 /** plain-C enumeration kernels **/
 void feslite_generic_minimal(int n, int m, const u32 * Fq, const u32 * Fl, int count, u32 * buffer, int *size);
 void feslite_generic_enum_1x32(int n, int m, const u32 * Fq, const u32 * Fl, int count, u32 * buffer, int *size);
-
+void feslite_generic_enum_2x32(int n, int m, const u32 * Fq, const u32 * Fl, int count, u32 * buffer, int *size);
 
 void feslite_transpose_32(const u32 * M, u32 * T);
 

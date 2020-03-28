@@ -39,8 +39,8 @@ int feslite_preferred_batch_size();
 int feslite_num_kernels();
 bool feslite_kernel_is_available(int i);
 char const * feslite_kernel_name(int i);
+int feslite_kernel_batch_size(int i);
 int feslite_default_kernel();
 
-/* Solve a single system using the i-th kernel */
+/* Solve a single system using the i-th kernel. The CORRECT batch size (m) must be used. */
 void feslite_kernel_solve(int i, int n, int m, const u32 * Fq, const u32 * Fl, int count, u32 * buffer, int * size);
-int feslite_kernel_preferred_batch_size(int i);
