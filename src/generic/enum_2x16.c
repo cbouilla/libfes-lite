@@ -91,9 +91,9 @@ static inline void FLUSH_CANDIDATES(struct context_t *context, int lane)
 
 static inline void NEW_CANDIDATE(struct context_t *context, u32 x, int lane)
 {
-	u32 y = feslite_naive_evaluation(context->n, context->Fq_start, context->Fl_start + lane, 2, x);
+	// u32 y = feslite_naive_evaluation(context->n, context->Fq_start, context->Fl_start + lane, 2, x);
 	// printf("# [DEBUG] candidate %08x in lane %d, with F[%d][%08x] = %08x\n", x, lane, lane, x, y);
-	assert((y & 0x0000ffff) == 0);
+	// assert((y & 0x0000ffff) == 0);
 
 	int i = context->n_candidates[lane];
 	context->candidates[lane][i] = x;
@@ -173,7 +173,7 @@ void feslite_generic_enum_2x16(int n, int m, const u32 * Fq, const u32 * Fl, int
 	u32 Fl_[33];
 	int N = idxq(0, n);
 	for (int i = 0; i < N; i++) {
-		u16 a = Fq[i] & 0x0000ffff;
+		u32 a = Fq[i] & 0x0000ffff;
 		Fq_[i] = a ^ (a << 16);
 	}
 	Fq_[idxq(0, n)] = 0;
@@ -181,8 +181,8 @@ void feslite_generic_enum_2x16(int n, int m, const u32 * Fq, const u32 * Fl, int
 		Fq_[idxq(i, n)] = Fq_[idxq(i-1, i)];
 	Fq_[idxq(n, n)] = 0;
 	for (int i = 0; i < n + 1; i++) {
-		u16 a = Fl[2 * i + 0] & 0x0000ffff;
-		u16 b = Fl[2 * i + 1] & 0x0000ffff;
+		u32 a = Fl[2 * i + 0] & 0x0000ffff;
+		u32 b = Fl[2 * i + 1] & 0x0000ffff;
 		Fl_[i] = a ^ (b << 16);
 	}
 	context.Fq = Fq_;

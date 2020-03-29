@@ -5,6 +5,12 @@
 
 #include "fes.h"
 
+/*
+ * In this list, kernels are ordered by *increasing* preference
+ * (fastest is last). The test suite assume kernel 0 to always work.
+ */
+
+
 const struct enum_kernel_t ENUM_KERNEL[] = {
 // #ifdef __AVX2__
 // 	{"x64-AVX2 16x16 (256 bits, C+asm)", feslite_avx2_available, feslite_avx2_enum_16x16},
@@ -25,6 +31,7 @@ const struct enum_kernel_t ENUM_KERNEL[] = {
 	{"generic 1x32 (32 bits, plain C)", 1, NULL, feslite_generic_enum_1x32},
 	{"generic 2x16 (32 bits, plain C)", 2, NULL, feslite_generic_enum_2x16},
 	{"generic 2x32 (64 bits, plain C)", 2, NULL, feslite_generic_enum_2x32},
+	{"generic 4x16 (64 bits, plain C)", 2, NULL, feslite_generic_enum_2x16},
 	{NULL, 0, NULL, NULL}
 };
 
@@ -60,7 +67,7 @@ int feslite_kernel_batch_size(int i)
 
 int feslite_default_kernel()
 {
-	for (int i = 0; i < feslite_num_kernels(); i++)
+	for (int i = feslite_num_kernels(); i >= 0 ; i--)
 		if (feslite_kernel_is_available(i))
 			return i;
 	assert(false);
