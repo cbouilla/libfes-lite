@@ -59,8 +59,8 @@ static const u64 MASK3 = 0xffff000000000000ull;
 static inline void STEP_2(struct context_t *context, int a, int b, u32 index)
 {
 	u64 y = context->Fl[0];
-	if (unlikely(((y & MASK0) == 0) | ((y & MASK1) == 0)
-		   | ((y & MASK2) == 0) | ((y & MASK3) == 0))) {
+	if (unlikely(((y & MASK0) == 0) || ((y & MASK1) == 0)
+		  || ((y & MASK2) == 0) || ((y & MASK3) == 0))) {
 		context->local_buffer[context->local_size].mask = y;
 		context->local_buffer[context->local_size].x = index;
 		// printf("got y = %016" PRIx64 "\n", y);

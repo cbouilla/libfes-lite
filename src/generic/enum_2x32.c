@@ -32,14 +32,15 @@ struct context_t {
 	struct ffs_t ffs;
 };
 
-static const u64 LO_MASK = 0x00000000ffffffffull;
-static const u64 HI_MASK = 0xffffffff00000000ull;
+static const u64 MASK0 = 0x00000000ffffffffull;
+static const u64 MASK1 = 0xffffffff00000000ull;
 
 // tests the current value (corresponding to index), then step to the next one using a/b.
 static inline void STEP_2(struct context_t *context, int a, int b, u32 index)
 {
-	if (unlikely(((context->Fl[0] & HI_MASK) == 0) | ((context->Fl[0] & LO_MASK) == 0))) {
-		context->local_buffer[context->local_size].mask = context->Fl[0];
+	u64 y = context->Fl[0];
+	if (unlikely(((y & MASK0) == 0) || ((y & MASK1) == 0))) {
+		context->local_buffer[context->local_size].mask = y;
 		context->local_buffer[context->local_size].x = index;
 		context->local_size++;
 	}
@@ -54,14 +55,14 @@ static inline bool FLUSH_BUFFER(struct context_t *context)
 		u32 x = to_gray(context->local_buffer[i].x);
 		u64 mask = context->local_buffer[i].mask;
 		// lane 0
-		if ((mask & LO_MASK) == 0) {
+		if ((mask & MASK0) == 0) {
 			context->buffer[context->size[0]] = x;
 			context->size[0]++;
 			if (context->size[0] == context->count)
 				return true;
 		}
 		// lane 1
-		if ((mask & HI_MASK) == 0) {
+		if ((mask & MASK1) == 0) {
 			context->buffer[context->count + context->size[1]] = x;
 			context->size[1]++;
 			if (context->size[1] == context->count)

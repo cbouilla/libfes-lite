@@ -48,17 +48,17 @@ struct context_t {
 	struct ffs_t ffs;
 };
 
-static const u32 LO_MASK = 0x0000fffful;
-static const u32 HI_MASK = 0xffff0000ul;
+static const u32 MASK0 = 0x0000fffful;
+static const u32 MASK1 = 0xffff0000ul;
 
 // tests the current value (corresponding to index), then step to the next one using a/b.
 // this has to be as simple as possible... and as fast as possible
 static inline void STEP_2(struct context_t *context, int a, int b, u32 index)
 {
-	if (unlikely(((context->Fl[0] & HI_MASK) == 0) | ((context->Fl[0] & LO_MASK) == 0))) {
-		context->local_buffer[context->local_size].mask = context->Fl[0];
+	u32 y = context->Fl[0];
+	if (unlikely(((y & MASK0) == 0) || ((y & MASK1) == 0))) {
+		context->local_buffer[context->local_size].mask = y;
 		context->local_buffer[context->local_size].x = index;
-		// printf("got Fl[0] = %08x\n", context->Fl[0]);
 		context->local_size++;
 	}
 	context->Fl[a] ^= context->Fq[b];
@@ -109,9 +109,9 @@ static inline bool FLUSH_BUFFER(struct context_t *context)
 	for (int i = 0; i < context->local_size; i++) {
 		u32 x = to_gray(context->local_buffer[i].x);
 		u32 mask = context->local_buffer[i].mask;
-		if ((mask & LO_MASK) == 0)             // lane 0
+		if ((mask & MASK0) == 0)             // lane 0
 			NEW_CANDIDATE(context, x, 0);
-		if ((mask & HI_MASK) == 0)             // lane 1
+		if ((mask & MASK1) == 0)             // lane 1
 			NEW_CANDIDATE(context, x, 1);
 	}
 	context->local_size = 0;
@@ -125,7 +125,6 @@ static inline bool FLUSH_BUFFER(struct context_t *context)
  */
 static inline void UNROLLED_CHUNK(struct context_t *context, int alpha, int beta, int gamma, u32 i)
 {
-	// printf("CHUNK with i = %x, alpha=%d, beta=%d, gamma=%d\n", i, alpha, beta, gamma);
 	STEP_2(context, 1, alpha + 0, i + 0);
 	STEP_2(context, 2, alpha + 1, i + 1);
 	STEP_2(context, 1, 0, i + 2);
@@ -149,7 +148,7 @@ void feslite_generic_enum_2x16(int n, int m, const u32 * Fq, const u32 * Fl, int
 {
 	/* verify input parameters */
 	if (count <= 0 || n < L || n > 32 || m != 2) {
-		*size = -1;
+		size[0] = -1;
 		return;
 	}
 	u64 init_start_time = Now();
