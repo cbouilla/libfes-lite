@@ -53,7 +53,6 @@ static inline bool FLUSH_BUFFER(struct context_t *context)
 	for (int i = 0; i < context->local_size; i++) {	
 		u32 x = to_gray(context->local_buffer[i].x);
 		u64 mask = context->local_buffer[i].mask;
-		printf("# [DEBUG] solution %08x, mask %016" PRIx64 "\n", x, mask);
 		// lane 0
 		if ((mask & LO_MASK) == 0) {
 			context->buffer[context->size[0]] = x;

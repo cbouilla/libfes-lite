@@ -1,32 +1,49 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#include "fes.h"
+#include "feslite.h"
+#include "cycleclock.h"
+	
+/* Measure raw speed of all kernels in the library */
 
 int main()
 {
 	int n = 32;
-	int n_eqs = 28;
-	unsigned long random_seed = 2;
-
-	srand48(random_seed);
-
-	// initalize a random system
-	const int N = 1 + n + n * (n - 1) / 2;
-	uint32_t F[N];
-	int max_solutions = 256;
-	uint32_t solutions[max_solutions];
-	for (int i = 0; i < N; i++)
-		F[i] = lrand48() & ((1ll << n_eqs) - 1);
-
-	fprintf(stderr, "%d kernels\n", feslite_num_kernels());
-	for (int kernel = 0; kernel < feslite_num_kernels(); kernel++) {
-		if (!feslite_kernel_is_available(kernel))
-			continue;
+	
+	/* query the library */
+	int nkernels = feslite_num_kernels();
+	printf("%d kernels\n", nkernels);
+	
+	for (int kernel = 0; kernel < nkernels; kernel++) {
 		const char *name = feslite_kernel_name(kernel);
-		uint64_t start = Now();
-		feslite_kernel_solve(kernel, n, F, solutions, max_solutions);
-		printf("%s : %.2f cycles/candidate\n", name, (Now() - start) * 1.0 / (1ll << n));
+		if (!feslite_kernel_is_available(kernel)) {
+			printf("[%s] is not available on this machine\n", name);
+			continue;
+		}
+		int m = feslite_kernel_batch_size(kernel);
+		printf("[%s] : %d lane... ", name, m);
+		fflush(stdout);
+
+		srand48(1337);
+	
+		/* initalize m random related systems */	
+		u32 Fq[496];
+		u32 Fl[33 * m];
+		for (int i = 0; i < 496; i++)
+			Fq[i] = lrand48();
+		for (int i = 0; i < 33 * m; i++)
+			Fl[i] = lrand48();
+	
+		/* run kernel */
+		int count = 256;
+		u32 buffer[count * m];
+		int size[m];
+		u64 start = Now();
+		feslite_kernel_solve(kernel, n, m, Fq, Fl, count, buffer, size);
+		u64 stop = Now();
+		
+		printf("---> %.2f cycles/candidate\n", ((double) (stop - start)) / m / (1ll << n));
 	}
+
 	return EXIT_SUCCESS;
 }

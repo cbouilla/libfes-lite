@@ -4,33 +4,45 @@
 #include "feslite.h"
 #include "cycleclock.h"
 
-/* demonstrates the correct use of the library */
+/* 
+ * Demonstrate the correct use of the library.
+ *  - Ask what is the preferred batch size (m)
+ *  - Build m related systems of k quadratic boolean equations in n variables.
+ *  - Solve the m systems at once
+ */
 
 int main()
 {
 	int n = 32;
-	int n_eqs = 28;
+	int k = 28;
 	unsigned long random_seed = 2;
 	srand48(random_seed);
 
-	/* initalize a random system */	
-	const int N = 1 + n + n * (n - 1) / 2;
-	uint32_t F[N];
-	int max_solutions = 256;
-	uint32_t solutions[max_solutions];
-	
-	for (int i = 0; i < N; i++)
-		F[i] = lrand48() & ((1ll << n_eqs) - 1);
+	/* query the library */
+	int m = feslite_preferred_batch_size();
+
+	/* initalize m random related systems */	
+	u32 Fq[496];
+	u32 Fl[33 * m];
+	for (int i = 0; i < 496; i++)
+		Fq[i] = lrand48() & ((1ll << k) - 1);
+	for (int i = 0; i < 33 * m; i++)
+		Fl[i] = lrand48() & ((1ll << k) - 1);
 
 	/* solve */
+	u32 solutions[256 * m];
+	int size[m];
 	uint64_t start = Now();
-	int n_solutions = feslite_solve(n, F, solutions, max_solutions);
-	
+	feslite_solve(n, m, Fq, Fl, 256, solutions, size);
+	uint64_t stop = Now();
+
 	/* report */
 	int kernel = feslite_default_kernel();
 	const char *name = feslite_kernel_name(kernel);
-	printf("%s : %d solutions found, %.2f cycles/candidate\n", name, 
-		n_solutions, (Now() - start) * 1.0 / (1ll << n));
+	printf("%s : %d lanes, %.2f cycles/candidate\n", 
+		name, m, ((double) (stop - start)) / m / (1ll << n));
+	for (int i = 0; i < m; i++)
+	printf("Lane %d : %d solutions found\n", i, size[i]);
 	
 	return EXIT_SUCCESS;
 }

@@ -48,8 +48,8 @@ struct context_t {
 	struct ffs_t ffs;
 };
 
-static const u64 LO_MASK = 0x0000fffful;
-static const u64 HI_MASK = 0xffff0000ul;
+static const u32 LO_MASK = 0x0000fffful;
+static const u32 HI_MASK = 0xffff0000ul;
 
 // tests the current value (corresponding to index), then step to the next one using a/b.
 // this has to be as simple as possible... and as fast as possible
