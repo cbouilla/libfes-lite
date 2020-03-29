@@ -10,16 +10,12 @@
 void feslite_generic_minimal(int n, int m, const u32 * Fq, const u32 * Fl, int count, u32 * buffer, int *size)
 {
 	/* verify input parameters */
-	if (count <= 0 || n <= 0 || n > 32 || m <= 0) {
+	if (count <= 0 || n <= 0 || n > 32 || m != 1) {
 		*size = -1;
 		return;
 	}
-	/* restricted sets of inputs */
-	assert(m == 1);
-	assert(n < 31);
-
-	uint64_t init_start_time = Now();
-
+	u64 init_start_time = Now();
+	
 	u32 Fq_[NQUAD];
 	u32 Fl_[NLIN];
 	int N = idxq(0, n);
@@ -31,7 +27,7 @@ void feslite_generic_minimal(int n, int m, const u32 * Fq, const u32 * Fl, int c
 	Fq_[idxq(n, n)] = 0;
 	for (int i = 0; i < n + 1; i++)
 		Fl_[i] = Fl[i];
-	*size = 0;
+	size[0] = 0;
 
 	if (VERBOSE)
 		printf("fes: initialisation = %" PRIu64 " cycles\n", Now() - init_start_time);
@@ -42,12 +38,14 @@ void feslite_generic_minimal(int n, int m, const u32 * Fq, const u32 * Fl, int c
 	ffs_reset(&ffs, n);
 	ffs_step(&ffs);
 
-	for (u32 i = 0; i < (1ul << n); i++) {
+	u32 i = 0;
+	u32 upto = (1ull << n) - 1;
+	while (1) {
 		/* test */
 		if (unlikely((Fl_[0] == 0))) {
-			buffer[*size] = to_gray(i);
-			(*size)++;
-			if (*size == count)
+			buffer[size[0]] = to_gray(i);
+			size[0]++;
+			if (size[0] == count)
 				break;
 		}
 		
@@ -55,11 +53,13 @@ void feslite_generic_minimal(int n, int m, const u32 * Fq, const u32 * Fl, int c
 		int a = 1 + ffs.k1;
 		int b = idxq(ffs.k1, ffs.k2);
 
-		// printf("i = %08x. Stepping with k1=%2d, k2=%2d, a=%3d, b=%3d\n", i, ffs.k1, ffs.k2, a, b);
-
 		Fl_[a] ^= Fq_[b];
 		Fl_[0] ^= Fl_[a];
 		ffs_step(&ffs);
+
+		if (i == upto)
+			break;
+		i++;
 	}
 
 	u64 enumeration_end_time = Now();
