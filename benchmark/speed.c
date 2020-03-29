@@ -4,12 +4,14 @@
 #include "feslite.h"
 #include "cycleclock.h"
 	
-/* Measure raw speed of all kernels in the library */
+/* Measure raw single-thread speed of all kernels in the library */
 
 int main()
 {
 	int n = 32;
 	
+	printf("WARNING : for accurate measurement, disable turbo-boost!\n");
+
 	/* query the library */
 	int nkernels = feslite_num_kernels();
 	printf("%d kernels\n", nkernels);

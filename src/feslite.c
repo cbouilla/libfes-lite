@@ -31,7 +31,7 @@ const struct enum_kernel_t ENUM_KERNEL[] = {
 	{"generic 1x32 (32 bits, plain C)", 1, NULL, feslite_generic_enum_1x32},
 	{"generic 2x16 (32 bits, plain C)", 2, NULL, feslite_generic_enum_2x16},
 	{"generic 2x32 (64 bits, plain C)", 2, NULL, feslite_generic_enum_2x32},
-	{"generic 4x16 (64 bits, plain C)", 2, NULL, feslite_generic_enum_2x16},
+	{"generic 4x16 (64 bits, plain C)", 4, NULL, feslite_generic_enum_4x16},
 	{NULL, 0, NULL, NULL}
 };
 
@@ -67,7 +67,7 @@ int feslite_kernel_batch_size(int i)
 
 int feslite_default_kernel()
 {
-	for (int i = feslite_num_kernels(); i >= 0 ; i--)
+	for (int i = feslite_num_kernels() - 1; i >= 0 ; i--)
 		if (feslite_kernel_is_available(i))
 			return i;
 	assert(false);
