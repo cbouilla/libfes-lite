@@ -1,231 +1,222 @@
 #include <stdio.h>
+#include <inttypes.h>
+#include <stdbool.h>
+#include <assert.h>
 
 #include "fes.h"
+#include "ffs.h"
 #include "monomials.h"
+#include <emmintrin.h>
 
-#define L 9
-
-// before : 0.38 cycles / candidates
-// more unrolling : 0.38
-// knuth trick in rolled : 0.38/0.39
-// full treatment : 0.38...
+#define L 4
+#define VERBOSE 0
 
 struct solution_t {
-  uint32_t x;
-  uint32_t mask;
+	u32 x;
+	u32 mask;
 };
+
+/* deux options : __m128i dans Fq, ou bien u32 dans Fq... */
 
 struct context_t {
 	int n;
-	const  uint32_t * const F_start;
-	__m128i * F;
-	struct solution_t buffer[512*4 + 32];
-	int64_t buffer_size;
-	uint32_t *solutions;
-	int n_solution_found;
-	int max_solutions;
-	int n_solutions;
-	bool verbose;
+	int m;
+	const __m128i * Fq;
+	__m128i * Fl;
 
-	int focus[33];
-	int stack[32];
-	int sp;
+	const u32 * Fq_start;
+	const u32 * Fl_start;
 
-	int k1;
-	int k2;
+	int count;
+	u32 *buffer;
+	int *size;
+
+	/* local solution buffer */
+	int local_size;
+	struct solution_t local_buffer[(1 << L)];
+
+	/* candidates */
+	u32 candidates[4][32];
+	int n_candidates[4];
+	bool overflow;
+
+	/* counter */
+	struct ffs_t ffs;
 };
 
-static void RESET_COUNTER(struct context_t *context)
-{
-	context->sp = 1;
-	context->stack[0] = -1;
-	for (int j = 0; j <= context->n; j++)
-		context->focus[j] = j;
-}
+static const u32 MASK0 = 0x000f;
+static const u32 MASK1 = 0x00f0;
+static const u32 MASK2 = 0x0f00;
+static const u32 MASK3 = 0xf000;
 
-/* this code implements constant-time computation of the number of 
-   trailing zeroes (cf. TAOCP, vol 4) + constant-time evaluation of
-   the position of the second rightmost set bit. */
-static inline void UPDATE_COUNTER(struct context_t *context)
-{
-	int j = context->focus[0];
-	context->focus[0] = 0;
-	context->focus[j] = context->focus[j + 1];
-	context->focus[j + 1] = j + 1;
-	context->k1 = j;
-
-	context->sp -= j;
-	context->k2 = context->stack[context->sp - 1];
-	context->stack[context->sp++] = j;
-}
-
-/* invoked when (at least) one lane is a solution. Both are pushed to the Buffer.
-   Designed to be as quick as possible. */
-static inline void CHECK_SOLUTION(struct context_t *context, uint32_t index)
+// tests the current value (corresponding to index), then step to the next one using a/b.
+// this has to be as simple as possible... and as fast as possible
+static inline void STEP_2(struct context_t *context, int a, int b, u32 index)
 {
 	__m128i zero = _mm_setzero_si128();
-	__m128i cmp = _mm_cmpeq_epi32(context->F[0], zero);
-    	int mask = _mm_movemask_epi8(cmp);
+	__m128i cmp = _mm_cmpeq_epi32(context->Fl[0], zero);
+    	u32 mask = _mm_movemask_epi8(cmp);
 	if (unlikely(mask)) {
-		context->buffer[context->buffer_size].mask = mask;
-		context->buffer[context->buffer_size].x = index;
-		context->buffer_size++;
+		context->local_buffer[context->local_size].x = index;
+		context->local_buffer[context->local_size].mask = mask;
+		// u32 y[4];
+		// _mm_store_si128((__m128i *) y, context->Fl[0]);
+		// printf("got y = %08x %08x %08x %08x\n", y[0], y[1], y[2], y[3]);
+		context->local_size++;
 	}
+	context->Fl[a] ^= context->Fq[b];
+	context->Fl[0] ^= context->Fl[a];
 }
 
-static inline void STEP_0(struct context_t *context, uint32_t index)
+
+/* batch-eval all the candidates */
+static inline void FLUSH_CANDIDATES(struct context_t *context, int lane)
 {
-	CHECK_SOLUTION(context, index);
+	int max_solutions = context->count - context->size[lane];
+
+	//printf("# [DEBUG] FLUSH_CANDIDATES (lane %d) %d candidates, %d solutions, max_allowed=%d\n", 
+	//	lane, context->n_candidates[lane], context->size[lane], max_solutions);
+
+	int k;
+	u32 * outbuf = context->buffer + context->count * lane + context->size[lane];
+
+	feslite_generic_eval_32(context->n, context->Fq_start, context->Fl_start + lane, 4, 
+				context->n_candidates[lane], context->candidates[lane], 
+				max_solutions, outbuf, &k);
+
+	// printf("# [DEBUG] FLUSH_CANDIDATES %d candidates passed for lane %d\n", k, lane);
+	context->size[lane] += k;
+	context->n_candidates[lane] = 0;
+	if (context->size[lane] == context->count)
+		context->overflow = true;
 }
 
-static inline void STEP_1(struct context_t *context, int a, uint32_t index)
+
+static inline void NEW_CANDIDATE(struct context_t *context, u32 x, int lane)
 {
-	context->F[0] = _mm_xor_si128(context->F[0], context->F[a]);
-	STEP_0(context, index);
+	//u32 y = feslite_naive_evaluation(context->n, context->Fq_start, context->Fl_start + lane, 4, x);
+	//printf("# [DEBUG] candidate %08x in lane %d, with F[%d][%08x] = %08x\n", x, lane, lane, x, y);
+	//assert(y == 0);
+
+	int i = context->n_candidates[lane];
+	context->candidates[lane][i] = x;
+	context->n_candidates[lane] = i + 1;
+
+	if (context->n_candidates[lane] == 32)
+		FLUSH_CANDIDATES(context, lane);
 }
 
-static inline void STEP_2(struct context_t *context, int a, int b, uint32_t index)
-{
-	context->F[a] = _mm_xor_si128(context->F[a], context->F[b]);
-	STEP_1(context, a, index);
-}
 
-/* Empty the Buffer. For each entry, check which half is correct,
-   add it to the solutions. */
-static inline void FLUSH_BUFFER(struct context_t *context)
-{		
-	for (int i = 0; i < context->buffer_size; i++) {
-		uint32_t x = to_gray(context->buffer[i].x);
-		if ((context->buffer[i].mask & 0x000f)) {
-			context->solutions[context->n_solutions++] = x;
-			if (context->n_solutions == context->max_solutions)
-				return;
-		}
-		if ((context->buffer[i].mask & 0x00f0)) {
-			context->solutions[context->n_solutions++] = x + (1 << (context->n - 2));
-			if (context->n_solutions == context->max_solutions)
-				return;
-		}
-		if ((context->buffer[i].mask & 0x0f00)) {
-			context->solutions[context->n_solutions++] = x + 2 * (1 << (context->n - 2));
-			if (context->n_solutions == context->max_solutions)
-				return;
-		}
-		if ((context->buffer[i].mask & 0xf000)) {
-			context->solutions[context->n_solutions++] = x + 3 * (1 << (context->n - 2));
-			if (context->n_solutions == context->max_solutions)
-				return;
-		}
+static inline bool FLUSH_BUFFER(struct context_t *context)
+{	
+	for (int i = 0; i < context->local_size; i++) {
+		u32 x = to_gray(context->local_buffer[i].x);
+		u64 mask = context->local_buffer[i].mask;
+		if (mask & MASK0)             // lane 0
+			NEW_CANDIDATE(context, x, 0);
+		if (mask & MASK1)             // lane 1
+			NEW_CANDIDATE(context, x, 1);
+		if (mask & MASK2)             // lane 2
+			NEW_CANDIDATE(context, x, 2);
+		if (mask & MASK3)             // lane 3
+			NEW_CANDIDATE(context, x, 3);
 	}
-	context->buffer_size = 0;
+	context->local_size = 0;
+	return context->overflow;
 }				
 
 
-// generated with L = 9
-int feslite_x86_64_enum_4x32(int n, const uint32_t * const F_,
-			    uint32_t * solutions, int max_solutions,
-			    bool verbose)
+/* 
+ * k1,  k2  computed from i   --> alpha == idxq(0, k1). 
+ * k1', k2' computed from i+1 --> beta == 1 + k1', gamma = idxq(k1', k2')
+ */
+static inline void UNROLLED_CHUNK(struct context_t *context, int alpha, int beta, int gamma, u32 i)
 {
-	uint64_t init_start_time = Now();
+	// printf("CHUNK with i = %x, alpha=%d, beta=%d, gamma=%d\n", i, alpha, beta, gamma);
+	STEP_2(context, 1, alpha + 0, i + 0);
+	STEP_2(context, 2, alpha + 1, i + 1);
+	STEP_2(context, 1, 0, i + 2);
+	STEP_2(context, 3, alpha + 2, i + 3);
+	STEP_2(context, 1, 1, i + 4);
+	STEP_2(context, 2, 2, i + 5);
+	STEP_2(context, 1, 0, i + 6);
+	STEP_2(context, 4, alpha + 3, i + 7);
+	STEP_2(context, 1, 3, i + 8);
+	STEP_2(context, 2, 4, i + 9);
+	STEP_2(context, 1, 0, i + 10);
+	STEP_2(context, 3, 5, i + 11);
+	STEP_2(context, 1, 1, i + 12);
+	STEP_2(context, 2, 2, i + 13);
+	STEP_2(context, 1, 0, i + 14);
+	STEP_2(context, beta, gamma, i + 15);
+}
 
-	struct context_t context = { .F_start = F_ };
+
+void feslite_x86_64_enum_4x32(int n, int m, const u32 * Fq, const u32 * Fl, int count, u32 * buffer, int *size)
+{
+	/* verify input parameters */
+	if (count <= 0 || n < L || n > 32 || m != 4) {
+		size[0] = -1;
+		return;
+	}
+	u64 init_start_time = Now();
+
+	struct context_t context;
 	context.n = n;
-	context.solutions = solutions;
-	context.n_solutions = 0;
-	context.max_solutions = max_solutions;
-	context.verbose = verbose;
-	context.buffer_size = 0;
+	context.m = m;
+	context.count = count;
+	context.buffer = buffer;
+	context.size = size;
+	for (int i = 0; i < 4; i++) {
+		context.n_candidates[i] = 0;
+		context.size[i] = 0;
+	}
+	context.local_size = 0;
+	context.overflow = false;
+	context.Fq_start = Fq;
+	context.Fl_start = Fl;
 
-	int N = idx_1(n);
-	__m128i F[N];
-	context.F = F;
-
-	RESET_COUNTER(&context);
-
+	__m128i Fq_[529];
+	__m128i Fl_[33];
+	int N = idxq(0, n);
 	for (int i = 0; i < N; i++)
-		F[i] = _mm_set1_epi32(F_[i]);
-
-	/******** 2-way "specialization" : remove the (n-1)-th variable */
-    	__m128i v0 = _mm_set_epi32(0xffffffff, 0xffffffff, 0x00000000, 0x00000000);
-	__m128i v1 = _mm_set_epi32(0xffffffff, 0x00000000, 0xffffffff, 0x00000000);
-	 
-	// the constant term is affected by [n-1]
-	F[0] ^= F[idx_1(n-1)] & v0;
-	
-
-	// [i] is affected by [i, n-1]
-	for (int i = 0; i < n - 1; i++)
-		F[idx_1(i)] ^= F[idx_2(i, n-1)] & v0;
-	
-	// the constant term is affected by [n-2]
-	F[0] ^= F[idx_1(n-2)] & v1;
-	
-      	// [i] is affected by [i, n-2]
-	for (int i = 0; i < n - 2; i++)
-		F[idx_1(i)] ^= F[idx_2(i, n-2)] & v1;
-	
-      
-	/******** compute "derivatives" */
-	/* degree-1 terms are affected by degree-2 terms */
+		Fq_[i] = _mm_set1_epi32(Fq[i]);
+	Fq_[idxq(0, n)] = _mm_setzero_si128();
 	for (int i = 1; i < n; i++)
-		F[idx_1(i)] ^= F[idx_2(i - 1, i)];
+		Fq_[idxq(i, n)] = Fq_[idxq(i-1, i)];
+	Fq_[idxq(n, n)] = _mm_setzero_si128();
+	for (int i = 0; i < n + 1; i++)
+		Fl_[i] = _mm_set_epi32(Fl[4*i + 3], Fl[4*i + 2], Fl[4*i + 1],  Fl[4*i + 0]);
+	context.Fq = Fq_;
+	context.Fl = Fl_;
 
-	if (verbose)
-		printf("fes: initialisation = %" PRIu64 " cycles\n",
-		       Now() - init_start_time);
+	if (VERBOSE)
+		printf("fes: initialisation = %" PRIu64 " cycles\n", Now() - init_start_time);
 
-	uint64_t enumeration_start_time = Now();
-	STEP_0(&context, 0);
+	u64 enumeration_start_time = Now();
 
-	for (int idx_0 = 0; idx_0 < min(L, n - 2); idx_0++) {
-		const uint32_t w1 = (1 << idx_0);
+	ffs_reset(&context.ffs, n-L);
+	int k1 = context.ffs.k1 + L;
+	int k2 = context.ffs.k2 + L;
 
-		UPDATE_COUNTER(&context);
-		STEP_1(&context, idx_1(context.k1), w1);
-		for (uint32_t i = w1 + 1; i < 2 * w1; i++) {
-			UPDATE_COUNTER(&context);
-			STEP_2(&context, idx_1(context.k1), idx_2(context.k1, context.k2), i);
-		}
-
-		FLUSH_BUFFER(&context);
-		if (context.n_solutions == context.max_solutions)
-			return context.n_solutions;
+	u32 iterations = 1ul << (n - L);
+	for (u32 j = 0; j < iterations; j++) {
+		u32 i = j << L;
+		int alpha = idxq(0, k1);
+		ffs_step(&context.ffs);	
+		k1 = context.ffs.k1 + L;
+		k2 = context.ffs.k2 + L;
+		int beta = 1 + k1;
+		int gamma = idxq(k1, k2);
+		UNROLLED_CHUNK(&context, alpha, beta, gamma, i);
+		if (FLUSH_BUFFER(&context))
+			break;
 	}
-
-	RESET_COUNTER(&context);
-
-	for (int idx_0 = L; idx_0 < n - 2; idx_0++) {
-		const uint32_t w1 = (1 << idx_0);
-
-		UPDATE_COUNTER(&context);
-		int alpha = idx_1(idx_0);
-		STEP_1(&context, alpha, w1);
-		feslite_x86_64_asm_enum_4x32(F, alpha * sizeof(*F), context.buffer, &context.buffer_size, w1);
-		FLUSH_BUFFER(&context);
-		if (context.n_solutions == context.max_solutions)
-			return context.n_solutions;
-
-		for (uint32_t j = 1 << L; j < w1; j += 1 << L) {
-			uint32_t i = w1 + j;
-			UPDATE_COUNTER(&context);
-			int alpha = idx_1(context.k1 + L);
-			int beta = idx_2(context.k1 + L, context.k2 + L);
-
-			STEP_2(&context, alpha, beta, i);
-          		feslite_x86_64_asm_enum_4x32(F, alpha * sizeof(*F), context.buffer, &context.buffer_size, i);
-
-			FLUSH_BUFFER(&context);
-			if (context.n_solutions == context.max_solutions)
-				return context.n_solutions;
-		}
-	}
-	uint64_t end_time = Now();
+	for (int i = 0; i < 4; i++)
+		FLUSH_CANDIDATES(&context, i);
 	
-
-	if (verbose)
-		printf("fes: enumeration+check = %" PRIu64 " cycles\n",
-		       end_time - enumeration_start_time);
-
-
-	return context.n_solutions;
+	u64 enumeration_end_time = Now();
+	if (VERBOSE)
+		printf("fes: enumeration+check = %" PRIu64 " cycles\n", 
+			enumeration_end_time - enumeration_start_time);
 }
