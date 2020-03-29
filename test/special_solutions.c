@@ -23,60 +23,76 @@ u32 test_cases[N] = {
         0x55555555, 0xcccccccc
 };
 
+int n = 24; // fast version
+unsigned long random_seed = 1337;
+int ntest = 0;
+u32 Fq[496];
+	
+
+void test_kernel(int kernel, int k)
+{
+	const char *name = feslite_kernel_name(kernel);
+
+	int m = feslite_kernel_batch_size(kernel);
+	u32 Fl[33 * m];
+	int count = 256;
+	u32 buffer[count * m];
+	int size[m];
+
+	// prepare system with special solution on lane 0
+	for (int i = 0; i < 33 * m; i++)
+		Fl[i] = myrand();
+	u32 x = test_cases[k] & ((1ull << n) - 1);
+	Fl[0] = 0;
+	Fl[0] = feslite_naive_evaluation(n, Fq, Fl, m, x);
+
+	feslite_kernel_solve(kernel, n, m, Fq, Fl, count, buffer, size);
+	if (size[0] < 0) {
+		printf("not ok %d - kernel [%s] failed\n", ++ntest, name);
+		return;
+	}
+
+	bool found = false;
+	for (int i = 0; i < size[0]; i++) {
+		if (0 != feslite_naive_evaluation(n, Fq, Fl, m, buffer[i])) {
+			printf("not ok %d - [%s] reported incorrect solution %08x in lane 0\n", 
+				++ntest, name, buffer[count*k + i]);
+			return;
+		}
+		printf(" - F[0][%08x] = 0\n", buffer[i]);
+		found |= (buffer[i] == x);
+	}
+	
+	if (found)
+		printf("ok %d - kernel [%s] found expected solution %08x in lane 0\n", 
+			++ntest, name, test_cases[k]);
+	else
+		printf("not ok %d - kernel [%s] did NOT find expected solution %08x in lane 0\n", 
+			++ntest, name, test_cases[k]);
+}
+
 int main()
 {
-	int n = 24; // fast version
-	unsigned long random_seed = 1337;
 	printf("# initalizing random systems with seed=0x%lx\n", random_seed);
 	mysrand(random_seed);
 
-	int n_tests = N * feslite_num_kernels();
-	int testidx = 1;
-
-	u32 Fq[496];
 	for (int i = 0; i < 496; i++)
 		Fq[i] = myrand();
 
 	/******************** go *******************/
 	for (int kernel = 0; kernel < feslite_num_kernels(); kernel++) {
 		const char *name = feslite_kernel_name(kernel);
-		printf("# testing kernel [%s]\n", name);
-
+	
 		if (!feslite_kernel_is_available(kernel)) {
-			printf("ok %d - SKIP kernel [%s] not available\n", testidx++, name);
+			printf("ok %d - SKIP kernel [%s] not available\n", ++ntest, name);
 			continue;
 		}
 
-		int m = feslite_kernel_batch_size(kernel);
-		u32 Fl[33 * m];
-		int count = 256;
-		u32 buffer[count * m];
-		int size[m];
-
-		for (int k = 0; k < N; k++) {
-			// prepare system with special solution on lane 0
-			for (int i = 0; i < 33 * m; i++)
-				Fl[i] = myrand();
-			u32 x = test_cases[k] & ((1ull << n) - 1);
-			Fl[0] = 0;
-			Fl[0] = feslite_naive_evaluation(n, Fq, Fl, m, x);
-
-			feslite_kernel_solve(kernel, n, m, Fq, Fl, count, buffer, size);
-			if (size[0] < 0) {
-				printf("not ok %d - kernel [%s] failed\n", testidx++, name);
-				continue;
-			}
-
-			bool found = false;
-			for (int i = 0; i < size[0]; i++)
-				found |= (buffer[i] == x);
-		
-			if (found)
-				printf("ok %d - kernel [%s] found expected solution %08x\n", testidx++, name, test_cases[k]);
-			else
-				printf("not ok %d - kernel [%s] did NOT find expected solution %08x\n", testidx++, name, test_cases[k]);
-		}	
+		printf("# testing kernel [%s]\n", name);
+		for (int i = 0; i < N; i++)
+			test_kernel(kernel, i);
 	}
-	printf("1..%d\n", n_tests);
+
+	printf("1..%d\n", ntest);
 	return EXIT_SUCCESS;
 }

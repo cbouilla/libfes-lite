@@ -49,7 +49,7 @@ int main()
 		// printf("[in test script] outbuffer = %p\n", outbuffer);
 		// printf("[in test script] size      = %p\n", &size)	;
 
-		feslite_generic_eval_32(32, Fq, Fl, i, inbuffer, 32, outbuffer, &size);
+		feslite_generic_eval_32(32, Fq, Fl, 1, i, inbuffer, 32, outbuffer, &size);
 
 		if (size == 1)
 			printf("ok %d - expected solution found\n", i);

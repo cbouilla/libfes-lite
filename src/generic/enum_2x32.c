@@ -32,8 +32,8 @@ struct context_t {
 	struct ffs_t ffs;
 };
 
-static const uint64_t LO_MASK = 0x00000000ffffffffull;
-static const uint64_t HI_MASK = 0xffffffff00000000ull;
+static const u64 LO_MASK = 0x00000000ffffffffull;
+static const u64 HI_MASK = 0xffffffff00000000ull;
 
 // tests the current value (corresponding to index), then step to the next one using a/b.
 static inline void STEP_2(struct context_t *context, int a, int b, u32 index)
@@ -52,15 +52,17 @@ static inline bool FLUSH_BUFFER(struct context_t *context)
 {	
 	for (int i = 0; i < context->local_size; i++) {	
 		u32 x = to_gray(context->local_buffer[i].x);
+		u64 mask = context->local_buffer[i].mask;
+		printf("# [DEBUG] solution %08x, mask %016" PRIx64 "\n", x, mask);
 		// lane 0
-		if ((context->local_buffer[i].mask & LO_MASK) == 0) {
+		if ((mask & LO_MASK) == 0) {
 			context->buffer[context->size[0]] = x;
 			context->size[0]++;
 			if (context->size[0] == context->count)
 				return true;
 		}
 		// lane 1
-		if ((context->local_buffer[i].mask & HI_MASK) == 0) {
+		if ((mask & HI_MASK) == 0) {
 			context->buffer[context->count + context->size[1]] = x;
 			context->size[1]++;
 			if (context->size[1] == context->count)
@@ -101,13 +103,11 @@ static inline void UNROLLED_CHUNK(struct context_t *context, int alpha, int beta
 void feslite_generic_enum_2x32(int n, int m, const u32 * Fq, const u32 * Fl, int count, u32 * buffer, int *size)
 {
 	/* verify input parameters */
-	if (count <= 0 || n < L || n > 32 || m <= 0) {
+	if (count <= 0 || n < L || n > 32 || m != 2) {
 		*size = -1;
 		return;
 	}
-	assert(m == 2);
-
-	uint64_t init_start_time = Now();
+	u64 init_start_time = Now();
 
 	struct context_t context;
 	context.n = n;
@@ -122,8 +122,8 @@ void feslite_generic_enum_2x32(int n, int m, const u32 * Fq, const u32 * Fl, int
 	size[1] = 0;
 	context.local_size = 0;
 
-	u64 Fq_[NQUAD];
-	u64 Fl_[NLIN];
+	u64 Fq_[529];
+	u64 Fl_[33];
 	int N = idxq(0, n);
 	for (int i = 0; i < N; i++)
 		Fq_[i] = ((u64) Fq[i]) ^ (((u64) Fq[i]) << 32);
@@ -131,14 +131,13 @@ void feslite_generic_enum_2x32(int n, int m, const u32 * Fq, const u32 * Fl, int
 	for (int i = 1; i < n; i++)
 		Fq_[idxq(i, n)] = Fq_[idxq(i-1, i)];
 	Fq_[idxq(n, n)] = 0;
-	// attention à la conversion de type
 	for (int i = 0; i < n + 1; i++)
 		Fl_[i] = Fl[2 * i] ^ (((u64) Fl[2 * i + 1]) << 32);
 	context.Fq = Fq_;
 	context.Fl = Fl_;
 
 	if (VERBOSE)
-		printf("fes: initialisation = %" PRIu64 " cycles\n", Now() - init_start_time);
+		printf("feslite: initialisation = %" PRIu64 " cycles\n", Now() - init_start_time);
 
 	u64 enumeration_start_time = Now();
 

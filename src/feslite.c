@@ -19,11 +19,11 @@ const struct enum_kernel_t ENUM_KERNEL[] = {
 #if 0
 	// these take too long to compile
 	{"generic 4x16 (64 bits, plain C)", NULL, generic_enum_4x16},
-	{"generic 2x16 (32 bits, plain C)", NULL, generic_enum_2x16},
 	{"generic 2x32 (64 bits, plain C)", NULL, generic_enum_2x32},
 #endif
 	{"generic mini (32 bits, plain C)", 1, NULL, feslite_generic_minimal},
 	{"generic 1x32 (32 bits, plain C)", 1, NULL, feslite_generic_enum_1x32},
+	{"generic 2x16 (32 bits, plain C)", 2, NULL, feslite_generic_enum_2x16},
 	{"generic 2x32 (64 bits, plain C)", 2, NULL, feslite_generic_enum_2x32},
 	{NULL, 0, NULL, NULL}
 };

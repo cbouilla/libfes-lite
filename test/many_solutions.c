@@ -11,7 +11,7 @@
  */
 int ntest = 0;
 int n = 22;
-int k = 10;
+int k = 16;
 unsigned long random_seed = 1;
 u32 Fq[496];
 u32 Fl[33];
@@ -22,10 +22,11 @@ void test_kernel(int kernel)
 	if (!feslite_kernel_is_available(kernel))
 		return;
 	const char *name = feslite_kernel_name(kernel);
-	printf("# testing kernel [%s]\n", name);
+	
+	int m = feslite_kernel_batch_size(kernel);
+	printf("# testing kernel [%s] (%d lanes)\n", name, m);
 
 	/* clone original system in all lanes */
-	int m = feslite_kernel_batch_size(kernel);
 	u32 Fl2[33 * m];
 	for (int i = 0; i < 33; i++)
 		for (int j = 0; j < m; j++)
@@ -44,12 +45,18 @@ void test_kernel(int kernel)
 		enough |= (size[lane] == count);
 	}
 	if (!enough)
-		printf("not ok %d - kernel [%s] never found %d\n", ++ntest, name, count);
+		printf("not ok %d - kernel [%s] did NOT reach %d solutions\n", 
+			++ntest, name, count);
 	else
-		printf("ok %d - kernel [%s] reach %d solutions\n", ++ntest, name, count);
+		printf("ok %d - kernel [%s] reached %d solutions\n", ++ntest, name, count);
 	
 	/* check solutions */
 	for (int lane = 0; lane < m; lane++) {
+		if (size[lane] == 0) {
+			printf("not ok %d - SKIP / no solutions to test\n", ++ntest);
+			continue;
+		}
+
 		bool correct = true;
 		for (int i = 0; i < size[lane]; i++) {
 			u32 y = feslite_naive_evaluation(n, Fq, Fl2, m, buffer[count * lane + i]);
@@ -61,11 +68,11 @@ void test_kernel(int kernel)
 			}
 		}
 		if (correct)
-			printf("ok %d - kernel [%s] reported correct solutions in lane %d\n", 
-				++ntest, name, lane);
+			printf("ok %d - kernel [%s] reported %d correct solutions in lane %d\n", 
+				++ntest, name, size[lane], lane);
 		
 		bool unique = true;
-		for (int i = 0; i < size[lane]; i++) 
+		for (int i = 0; i < size[lane]; i++) {
 			for (int j = i + 1; j < size[lane]; j++) {
 				if (buffer[count * lane + i] == buffer[count * lane + j]) {
 					printf("not ok %d - kernel [%s] returned buffer[%d] = buffer[%d] in lane %d\n", 
@@ -75,8 +82,10 @@ void test_kernel(int kernel)
 					break;
 				}
 			}
+		}
 		if (unique)
-			printf("ok %d - kernel [%s] returned distinct solutions in lane %d\n", ++ntest, name, lane);
+			printf("ok %d - kernel [%s] returned %d distinct solutions in lane %d\n", 
+				++ntest, name, size[lane], lane);
 	}
 }
 

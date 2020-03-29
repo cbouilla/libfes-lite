@@ -1,0 +1,1 @@
+// openmp program that solves a random system of up to 64 eqs in up to 64 vars.

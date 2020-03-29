@@ -11,7 +11,7 @@
 #define VERBOSE 0
 
 struct solution_t {
-  uint32_t x;
+  u32 x;
 };
 
 struct context_t {
@@ -87,13 +87,11 @@ static inline void UNROLLED_CHUNK(struct context_t *context, int alpha, int beta
 void feslite_generic_enum_1x32(int n, int m, const u32 * Fq, const u32 * Fl, int count, u32 * buffer, int *size)
 {
 	/* verify input parameters */
-	if (count <= 0 || n < L || n > 32 || m <= 0) {
+	if (count <= 0 || n < L || n > 32 || m != 1) {
 		*size = -1;
 		return;
 	}
-	assert(m == 1);
-
-	uint64_t init_start_time = Now();
+	u64 init_start_time = Now();
 
 	struct context_t context;
 	context.n = n;
@@ -105,14 +103,14 @@ void feslite_generic_enum_1x32(int n, int m, const u32 * Fq, const u32 * Fl, int
 	context.size[0] = 0;
 	context.local_size = 0;
 
-	u32 Fq_[NQUAD];
-	u32 Fl_[NLIN];
+	u32 Fq_[529];
+	u32 Fl_[33];
 	int N = idxq(0, n);
 	for (int i = 0; i < N; i++)
 		Fq_[i] = Fq[i];
 	Fq_[idxq(0, n)] = 0;
 	for (int i = 1; i < n; i++)
-		Fq_[idxq(i, n)] = Fq[idxq(i-1, i)];
+		Fq_[idxq(i, n)] = Fq_[idxq(i-1, i)];
 	Fq_[idxq(n, n)] = 0;
 	for (int i = 0; i < n + 1; i++)
 		Fl_[i] = Fl[i];

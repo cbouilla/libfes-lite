@@ -64,27 +64,30 @@ void feslite_transpose_32(const u32 * M, u32 * T)
 
 /* warning: inbuf must be of size 32, regardless of the actual number of inputs.
             inputs are checked against equations [16:32] */
-void feslite_generic_eval_32(int n, const u32 * Fq, const u32 * Fl, int incount, const u32 *inbuf, 
+void feslite_generic_eval_32(int n, const u32 * Fq, const u32 * Fl, int stride, 
+			     int incount, const u32 *inbuf, 
 			     int outcount, u32 *outbuf, int *size)
 {
 	/* FIXME : consider getting rid of this. This function is internal !*/
 	assert(incount <= 32);
 	*size = 0;
+	
+	// printf("[DEBUG] eval32 : n=%d, %d input candidates, %d output slots\n", n, incount, outcount);
+	// for (int i = 0; i < incount; i++)
+	// 	printf("[DEBUG] - %08x\n", inbuf[i]);
+
 	if (incount == 0 || outcount == 0)
 		return;
-	
-	
+
 	u32 bitslice[32];
-	u32 sentinel = 0xDEADBEEF;
 	feslite_transpose_32(inbuf, bitslice);
-	assert(sentinel == 0xDEADBEEF);
 
 	u32 valid = 0xffffffff; // for each of the inputs, does it still pass?
 	for (int i = 16; i < 32; i++) {
 		/* linear terms */
 		u32 y = (Fl[0] & (1ul << i)) ? 0xffffffff : 0;	
 		for (int j = 0; j < n; j++)
-			y ^= bitslice[j] & ((Fl[1 + j] & (1 << i)) ? 0xffffffff : 0);
+			y ^= bitslice[j] & ((Fl[stride * (1 + j)] & (1 << i)) ? 0xffffffff : 0);
 
 		/* quadratic terms */
 		for (int j = 1; j < n; j++)

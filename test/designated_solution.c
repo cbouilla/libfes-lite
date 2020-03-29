@@ -21,16 +21,20 @@ void test_kernel(int kernel)
 	const char *name = feslite_kernel_name(kernel);
 	int m = feslite_kernel_batch_size(kernel);
 	printf("# testing kernel [%s], batch_size=%d\n", name, m);
+
 		
 	u32 Fl[33 * m];
 	u32 x[m];
-	for (int i = 0; i < 33 * m; i++)
-		Fl[i] = myrand();
+	
+	mysrand(1337);
 	for (int k = 0; k < m; k++) {
+		for (int i = 1; i < 33 ; i++)
+			Fl[k + m*i] = myrand();
+		
 		Fl[k] = 0;
 		x[k] = myrand() & ((1ull << n) - 1); /* designated solution */
 		Fl[k] = feslite_naive_evaluation(n, Fq, &Fl[k], m, x[k]);
-		printf("# F[%d][%08x] = 0\n", k, x[k]);
+		printf("# forcing solution %08x in lane %d\n", x[k], k);
 	}
 
 	/* run kernel */
@@ -38,12 +42,20 @@ void test_kernel(int kernel)
 	int count = 256;
 	u32 buffer[count * m];
 	feslite_kernel_solve(kernel, n, m, Fq, Fl, count, buffer, size);
+	
 	/* check solutions */
 	for (int k = 0; k < m; k++) {
 		bool found = false;
 		printf("# kernel [%s] found %d solutions in lane %d:\n", name, size[k], k);
 		for (int i = 0; i < size[k]; i++) {
-			printf(" - F[%d][%08x] = 0\n", k, buffer[count*k + i]);
+			// check solution correctness
+			if (0 != feslite_naive_evaluation(n, Fq, &Fl[k], m, buffer[count*k + i])) {
+				printf("not ok %d - [%s] reported incorrect solution %08x in lane %d\n", 
+					++ntest, name, buffer[count*k + i], k);
+				continue;
+			}
+			printf("# - F[%d][%08x] = 0\n", k, buffer[count*k + i]);
+			// did we find the right one?
 			found |= (buffer[count*k + i] == x[k]);
 		}
 		if (found)
@@ -55,11 +67,9 @@ void test_kernel(int kernel)
 
 int main()
 {	
-	printf("# initalizing random system with seed=0x%lx\n", random_seed);
-	mysrand(random_seed);
+	mysrand(42);
 	for (int i = 0; i < 496; i++)
 		Fq[i] = myrand();
-	
 
 	for (int kernel = 0; kernel < feslite_num_kernels(); kernel++)
 		test_kernel(kernel);
