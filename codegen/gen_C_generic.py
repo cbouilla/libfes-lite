@@ -1,4 +1,4 @@
-L = 4
+L = 8
 
 def ffs(i):
     if i == 0:
@@ -20,4 +20,4 @@ for i in range((1 << L)):
     else:
         assert idx1 < idx2
         b = idx1 + idx2 * (idx2 - 1) // 2
-    print("\tSTEP_2(context, {}, {}, i + {});".format(a, b, i))
+    print("\tSTEP_2(context, {}, {}, i + {});   /* Fl[0] ^= (Fl[{}] ^= Fq[{}] */".format(a, b, i, a, b))

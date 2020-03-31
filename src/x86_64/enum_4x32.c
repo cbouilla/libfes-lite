@@ -8,15 +8,13 @@
 #include "monomials.h"
 #include <emmintrin.h>
 
-#define L 4
+#define L 8
 #define VERBOSE 0
 
 struct solution_t {
 	u32 x;
 	u32 mask;
 };
-
-/* deux options : __m128i dans Fq, ou bien u32 dans Fq... */
 
 struct context_t {
 	int n;
@@ -32,9 +30,8 @@ struct context_t {
 	int *size;
 
 	/* local solution buffer */
-	int local_size;
 	struct solution_t local_buffer[(1 << L)];
-
+	
 	/* candidates */
 	u32 candidates[4][32];
 	int n_candidates[4];
@@ -49,33 +46,14 @@ static const u32 MASK1 = 0x00f0;
 static const u32 MASK2 = 0x0f00;
 static const u32 MASK3 = 0xf000;
 
-// tests the current value (corresponding to index), then step to the next one using a/b.
-// this has to be as simple as possible... and as fast as possible
-static inline void STEP_2(struct context_t *context, int a, int b, u32 index)
-{
-	__m128i zero = _mm_setzero_si128();
-	__m128i cmp = _mm_cmpeq_epi32(context->Fl[0], zero);
-    	u32 mask = _mm_movemask_epi8(cmp);
-	if (unlikely(mask)) {
-		context->local_buffer[context->local_size].x = index;
-		context->local_buffer[context->local_size].mask = mask;
-		// u32 y[4];
-		// _mm_store_si128((__m128i *) y, context->Fl[0]);
-		// printf("got y = %08x %08x %08x %08x\n", y[0], y[1], y[2], y[3]);
-		context->local_size++;
-	}
-	context->Fl[a] ^= context->Fq[b];
-	context->Fl[0] ^= context->Fl[a];
-}
-
 
 /* batch-eval all the candidates */
 static inline void FLUSH_CANDIDATES(struct context_t *context, int lane)
 {
 	int max_solutions = context->count - context->size[lane];
 
-	//printf("# [DEBUG] FLUSH_CANDIDATES (lane %d) %d candidates, %d solutions, max_allowed=%d\n", 
-	//	lane, context->n_candidates[lane], context->size[lane], max_solutions);
+//	printf("# [DEBUG] FLUSH_CANDIDATES (lane %d) %d candidates, %d solutions, max_allowed=%d\n", 
+//		lane, context->n_candidates[lane], context->size[lane], max_solutions);
 
 	int k;
 	u32 * outbuf = context->buffer + context->count * lane + context->size[lane];
@@ -84,7 +62,7 @@ static inline void FLUSH_CANDIDATES(struct context_t *context, int lane)
 				context->n_candidates[lane], context->candidates[lane], 
 				max_solutions, outbuf, &k);
 
-	// printf("# [DEBUG] FLUSH_CANDIDATES %d candidates passed for lane %d\n", k, lane);
+//	printf("# [DEBUG] FLUSH_CANDIDATES %d candidates passed for lane %d\n", k, lane);
 	context->size[lane] += k;
 	context->n_candidates[lane] = 0;
 	if (context->size[lane] == context->count)
@@ -94,8 +72,8 @@ static inline void FLUSH_CANDIDATES(struct context_t *context, int lane)
 
 static inline void NEW_CANDIDATE(struct context_t *context, u32 x, int lane)
 {
-	//u32 y = feslite_naive_evaluation(context->n, context->Fq_start, context->Fl_start + lane, 4, x);
-	//printf("# [DEBUG] candidate %08x in lane %d, with F[%d][%08x] = %08x\n", x, lane, lane, x, y);
+	// u32 y = feslite_naive_evaluation(context->n, context->Fq_start, context->Fl_start + lane, 4, x);
+	// printf("# [DEBUG] candidate %08x in lane %d, with F[%d][%08x] = %08x\n", x, lane, lane, x, y);
 	//assert(y == 0);
 
 	int i = context->n_candidates[lane];
@@ -107,11 +85,15 @@ static inline void NEW_CANDIDATE(struct context_t *context, u32 x, int lane)
 }
 
 
-static inline bool FLUSH_BUFFER(struct context_t *context)
+static inline bool FLUSH_BUFFER(struct context_t *context, struct solution_t * top, u64 i)
 {	
-	for (int i = 0; i < context->local_size; i++) {
-		u32 x = to_gray(context->local_buffer[i].x);
-		u64 mask = context->local_buffer[i].mask;
+	// if (top != context->local_buffer)
+	// 	printf("[DEBUG]  FLUSH_BUFFER %p -> %p (%ld solutions found)\n", 
+	// 		context->local_buffer, top, top - context->local_buffer);
+	for (struct solution_t * bot = context->local_buffer; bot != top; bot++) {
+		u32 x = to_gray(bot->x + i);
+		u32 mask = bot->mask;
+		// printf("Got x = %08x / mask = %08x\n", x, mask);
 		if (mask & MASK0)             // lane 0
 			NEW_CANDIDATE(context, x, 0);
 		if (mask & MASK1)             // lane 1
@@ -121,36 +103,58 @@ static inline bool FLUSH_BUFFER(struct context_t *context)
 		if (mask & MASK3)             // lane 3
 			NEW_CANDIDATE(context, x, 3);
 	}
-	context->local_size = 0;
 	return context->overflow;
 }				
 
+
+
+// tests the current value (corresponding to index), then step to the next one using a/b.
+// this has to be as simple as possible... and as fast as possible
+static inline struct solution_t * STEP_2(const __m128i * Fq, __m128i * Fl, struct solution_t * local_buffer, u64 a, u64 b, u32 index)
+{
+	__m128i zero = _mm_setzero_si128();
+	__m128i cmp = _mm_cmpeq_epi32(Fl[0], zero);
+    	u32 mask = _mm_movemask_epi8(cmp);
+	if (unlikely(mask)) {
+		local_buffer->x = index;
+		local_buffer->mask = mask;
+		local_buffer++;
+		//u32 y[4];
+		//_mm_store_si128((__m128i *) y, Fl[0]);
+		//printf("got y = %08x %08x %08x %08x\n", y[0], y[1], y[2], y[3]);
+	}
+	Fl[a] =  _mm_xor_si128(Fl[a], Fq[b]);
+	Fl[0] =  _mm_xor_si128(Fl[0], Fl[a]);
+	return local_buffer;
+}
 
 /* 
  * k1,  k2  computed from i   --> alpha == idxq(0, k1). 
  * k1', k2' computed from i+1 --> beta == 1 + k1', gamma = idxq(k1', k2')
  */
-static inline void UNROLLED_CHUNK(struct context_t *context, int alpha, int beta, int gamma, u32 i)
+
+static inline struct solution_t * UNROLLED_CHUNK(const __m128i * Fq, __m128i * Fl, u64 alpha, u64 beta, u64 gamma, 
+	struct solution_t *local_buffer)
 {
 	// printf("CHUNK with i = %x, alpha=%d, beta=%d, gamma=%d\n", i, alpha, beta, gamma);
-	STEP_2(context, 1, alpha + 0, i + 0);
-	STEP_2(context, 2, alpha + 1, i + 1);
-	STEP_2(context, 1, 0, i + 2);
-	STEP_2(context, 3, alpha + 2, i + 3);
-	STEP_2(context, 1, 1, i + 4);
-	STEP_2(context, 2, 2, i + 5);
-	STEP_2(context, 1, 0, i + 6);
-	STEP_2(context, 4, alpha + 3, i + 7);
-	STEP_2(context, 1, 3, i + 8);
-	STEP_2(context, 2, 4, i + 9);
-	STEP_2(context, 1, 0, i + 10);
-	STEP_2(context, 3, 5, i + 11);
-	STEP_2(context, 1, 1, i + 12);
-	STEP_2(context, 2, 2, i + 13);
-	STEP_2(context, 1, 0, i + 14);
-	STEP_2(context, beta, gamma, i + 15);
+	local_buffer = STEP_2(Fq, Fl, local_buffer, 1, alpha + 0, 0);
+	local_buffer = STEP_2(Fq, Fl, local_buffer, 2, alpha + 1, 1);
+	local_buffer = STEP_2(Fq, Fl, local_buffer, 1, 0, 2);
+	local_buffer = STEP_2(Fq, Fl, local_buffer, 3, alpha + 2, 3);
+	local_buffer = STEP_2(Fq, Fl, local_buffer, 1, 1, 4);
+	local_buffer = STEP_2(Fq, Fl, local_buffer, 2, 2, 5);
+	local_buffer = STEP_2(Fq, Fl, local_buffer, 1, 0, 6);
+	local_buffer = STEP_2(Fq, Fl, local_buffer, 4, alpha + 3, 7);
+	local_buffer = STEP_2(Fq, Fl, local_buffer, 1, 3, 8);
+	local_buffer = STEP_2(Fq, Fl, local_buffer, 2, 4, 9);
+	local_buffer = STEP_2(Fq, Fl, local_buffer, 1, 0, 10);
+	local_buffer = STEP_2(Fq, Fl, local_buffer, 3, 5, 11);
+	local_buffer = STEP_2(Fq, Fl, local_buffer, 1, 1, 12);
+	local_buffer = STEP_2(Fq, Fl, local_buffer, 2, 2, 13);
+	local_buffer = STEP_2(Fq, Fl, local_buffer, 1, 0, 14);
+	local_buffer = STEP_2(Fq, Fl, local_buffer, beta, gamma, 15);
+	return local_buffer;
 }
-
 
 void feslite_x86_64_enum_4x32(int n, int m, const u32 * Fq, const u32 * Fl, int count, u32 * buffer, int *size)
 {
@@ -171,7 +175,6 @@ void feslite_x86_64_enum_4x32(int n, int m, const u32 * Fq, const u32 * Fl, int 
 		context.n_candidates[i] = 0;
 		context.size[i] = 0;
 	}
-	context.local_size = 0;
 	context.overflow = false;
 	context.Fq_start = Fq;
 	context.Fl_start = Fl;
@@ -190,6 +193,17 @@ void feslite_x86_64_enum_4x32(int n, int m, const u32 * Fq, const u32 * Fl, int 
 	context.Fq = Fq_;
 	context.Fl = Fl_;
 
+	// for (int i = 0; i <= idxq(n, n); i++) {
+	// 	u32 *x = (u32 *) &context.Fq[i];
+	// 	printf("Fq[%d] = %08x %08x %08x %08x\n", i, x[0], x[1], x[2], x[3]);
+	// }
+	// printf("\n");
+
+	// for (int i = 0; i < n + 1; i++) {
+	// 	u32 *x = (u32 *) &context.Fl[i];
+	// 	printf("Fl[%d] = %08x %08x %08x %08x\n", i, x[0], x[1], x[2], x[3]);
+	// }
+
 	if (VERBOSE)
 		printf("fes: initialisation = %" PRIu64 " cycles\n", Now() - init_start_time);
 
@@ -199,18 +213,26 @@ void feslite_x86_64_enum_4x32(int n, int m, const u32 * Fq, const u32 * Fl, int 
 	int k1 = context.ffs.k1 + L;
 	int k2 = context.ffs.k2 + L;
 
-	u32 iterations = 1ul << (n - L);
-	for (u32 j = 0; j < iterations; j++) {
-		u32 i = j << L;
-		int alpha = idxq(0, k1);
+	u64 iterations = 1ul << (n - L);
+	for (u64 j = 0; j < iterations; j++) {
+		u64 alpha = idxq(0, k1);
 		ffs_step(&context.ffs);	
 		k1 = context.ffs.k1 + L;
 		k2 = context.ffs.k2 + L;
-		int beta = 1 + k1;
-		int gamma = idxq(k1, k2);
-		UNROLLED_CHUNK(&context, alpha, beta, gamma, i);
-		if (FLUSH_BUFFER(&context))
+		u64 beta = 1 + k1;
+		u64 gamma = idxq(k1, k2);
+		//struct solution_t *top = UNROLLED_CHUNK(context.Fq, context.Fl, alpha, beta, gamma, context.local_buffer);
+		struct solution_t *top = feslite_x86_64_asm_enum_4x32(context.Fq, context.Fl, 
+		 	16*alpha, 16*beta, 16*gamma, context.local_buffer);
+		//printf("j = %lx (alpha=%ld, beta=%ld, gamma=%ld)\n", j, alpha, beta, gamma);
+		//for (int i = 0; i < n + 1; i++) {
+		//	u32 *x = (u32 *) &context.Fl[i];
+		//	printf("Fl[%d] = %08x %08x %08x %08x\n", i, x[0], x[1], x[2], x[3]);
+		//}
+		if (FLUSH_BUFFER(&context, top, j << L)) {
+			//printf("Early abort at j=%ld\n", j);
 			break;
+		}
 	}
 	for (int i = 0; i < 4; i++)
 		FLUSH_CANDIDATES(&context, i);
