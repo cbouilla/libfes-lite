@@ -61,3 +61,4 @@ build
 /test/naive_eval
 /test/naive_eval.log
 /test/naive_eval.trs
+/benchmark/list
