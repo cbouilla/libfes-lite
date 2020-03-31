@@ -62,3 +62,6 @@ build
 /test/naive_eval.log
 /test/naive_eval.trs
 /benchmark/list
+/test/zero
+/test/zero.log
+/test/zero.trs

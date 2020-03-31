@@ -11,7 +11,9 @@ TESTS = naive_eval \
 	many_solutions \
 	designated_solution \
 	consistency \
-	special_solutions 
+	zero \
+	special_solutions
+
 EXTRA_DIST = $(TESTS)
 
-check_PROGRAMS = naive_eval designated_solution many_solutions consistency special_solutions batch_eval_32 transpose_32
+check_PROGRAMS = naive_eval designated_solution many_solutions consistency special_solutions batch_eval_32 transpose_32 zero
