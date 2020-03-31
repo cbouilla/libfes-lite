@@ -17,7 +17,7 @@ void bench_kernel(int kernel)
 		return;
 	}
 	int m = feslite_kernel_batch_size(kernel);
-	printf("kernel %d [%s] : %d lane... ", kernel, name, m);
+	printf("kernel %d [%s] : %d lane(s)... ", kernel, name, m);
 	fflush(stdout);
 
 	srand48(1337);

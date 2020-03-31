@@ -8,6 +8,7 @@
 #include "monomials.h"
 #include <emmintrin.h>
 
+#define LANES 4
 #define L 8
 #define VERBOSE 0
 
@@ -33,18 +34,15 @@ struct context_t {
 	struct solution_t local_buffer[(1 << L)];
 	
 	/* candidates */
-	u32 candidates[4][32];
-	int n_candidates[4];
+	u32 candidates[LANES][32];
+	int n_candidates[LANES];
 	bool overflow;
 
 	/* counter */
 	struct ffs_t ffs;
 };
 
-static const u32 MASK0 = 0x000f;
-static const u32 MASK1 = 0x00f0;
-static const u32 MASK2 = 0x0f00;
-static const u32 MASK3 = 0xf000;
+static const u32 MASK[LANES] = {0x000f, 0x00f0, 0x0f00, 0xf000};
 
 
 /* batch-eval all the candidates */
@@ -58,7 +56,7 @@ static inline void FLUSH_CANDIDATES(struct context_t *context, int lane)
 	int k;
 	u32 * outbuf = context->buffer + context->count * lane + context->size[lane];
 
-	feslite_generic_eval_32(context->n, context->Fq_start, context->Fl_start + lane, 4, 
+	feslite_generic_eval_32(context->n, context->Fq_start, context->Fl_start + lane, LANES, 
 				context->n_candidates[lane], context->candidates[lane], 
 				max_solutions, outbuf, &k);
 
@@ -94,13 +92,13 @@ static inline bool FLUSH_BUFFER(struct context_t *context, struct solution_t * t
 		u32 x = to_gray(bot->x + i);
 		u32 mask = bot->mask;
 		// printf("Got x = %08x / mask = %08x\n", x, mask);
-		if (mask & MASK0)             // lane 0
+		if (mask & MASK[0])             // lane 0
 			NEW_CANDIDATE(context, x, 0);
-		if (mask & MASK1)             // lane 1
+		if (mask & MASK[1])             // lane 1
 			NEW_CANDIDATE(context, x, 1);
-		if (mask & MASK2)             // lane 2
+		if (mask & MASK[2])             // lane 2
 			NEW_CANDIDATE(context, x, 2);
-		if (mask & MASK3)             // lane 3
+		if (mask & MASK[3])             // lane 3
 			NEW_CANDIDATE(context, x, 3);
 	}
 	return context->overflow;
@@ -159,7 +157,7 @@ static inline struct solution_t * UNROLLED_CHUNK(const __m128i * Fq, __m128i * F
 void feslite_x86_64_enum_4x32(int n, int m, const u32 * Fq, const u32 * Fl, int count, u32 * buffer, int *size)
 {
 	/* verify input parameters */
-	if (count <= 0 || n < L || n > 32 || m != 4) {
+	if (count <= 0 || n < L || n > 32 || m != LANES) {
 		size[0] = -1;
 		return;
 	}
@@ -171,7 +169,7 @@ void feslite_x86_64_enum_4x32(int n, int m, const u32 * Fq, const u32 * Fl, int 
 	context.count = count;
 	context.buffer = buffer;
 	context.size = size;
-	for (int i = 0; i < 4; i++) {
+	for (int i = 0; i < LANES; i++) {
 		context.n_candidates[i] = 0;
 		context.size[i] = 0;
 	}
@@ -234,7 +232,7 @@ void feslite_x86_64_enum_4x32(int n, int m, const u32 * Fq, const u32 * Fl, int 
 			break;
 		}
 	}
-	for (int i = 0; i < 4; i++)
+	for (int i = 0; i < LANES; i++)
 		FLUSH_CANDIDATES(&context, i);
 	
 	u64 enumeration_end_time = Now();

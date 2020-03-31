@@ -1,4 +1,5 @@
 L = 8
+mode = "8x16"
 
 def ffs(i):
     if i == 0:
@@ -67,12 +68,15 @@ Fq[idxq(2, 3)] = "%xmm12" # 1/16
 Fq[idxq(2, 4)] = "%xmm13" # 1/32
 
 
+
 def output_comparison(i):
     # before the XORs, the comparison
     if mode == "4x32":
         print('pcmpeqd %xmm0, %xmm15'.format())
-    else:
+    elif mode == "8x16":
         print('pcmpeqw %xmm0, %xmm15'.format())
+    else:
+        raise ValueError("bad mode!")
     print('pmovmskb %xmm15, %r11d')
     print('test %r11d, %r11d')
     print('jne ._report_solution_{0}'.format(i))
@@ -95,7 +99,6 @@ for x, reg in Fq.items():
     print("movdqa {offset}(%rdi), {reg}   ## {reg} = Fq[{idx}]".format(offset=x*16, reg=reg, idx=x))
 print()
 
-mode = "4x32"
 alpha = 0
 for i in range((1 << L) - 1):
     ########################## UNROLLED LOOP #######################################
