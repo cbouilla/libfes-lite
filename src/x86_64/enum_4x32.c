@@ -1,12 +1,11 @@
-#include <stdio.h>
-#include <inttypes.h>
-#include <stdbool.h>
-#include <assert.h>
-
 #include "fes.h"
 #include "ffs.h"
 #include "monomials.h"
 #include <emmintrin.h>
+
+extern struct solution_t * feslite_x86_64_asm_enum_4x32(const __m128i * Fq, __m128i * Fl, 
+	u64 alpha, u64 beta, u64 gamma, struct solution_t *local_buffer);
+
 
 #define LANES 4
 #define L 8
@@ -104,55 +103,10 @@ static inline bool FLUSH_BUFFER(struct context_t *context, struct solution_t * t
 	return context->overflow;
 }				
 
-
-
-// tests the current value (corresponding to index), then step to the next one using a/b.
-// this has to be as simple as possible... and as fast as possible
-static inline struct solution_t * STEP_2(const __m128i * Fq, __m128i * Fl, struct solution_t * local_buffer, u64 a, u64 b, u32 index)
-{
-	__m128i zero = _mm_setzero_si128();
-	__m128i cmp = _mm_cmpeq_epi32(Fl[0], zero);
-    	u32 mask = _mm_movemask_epi8(cmp);
-	if (unlikely(mask)) {
-		local_buffer->x = index;
-		local_buffer->mask = mask;
-		local_buffer++;
-		//u32 y[4];
-		//_mm_store_si128((__m128i *) y, Fl[0]);
-		//printf("got y = %08x %08x %08x %08x\n", y[0], y[1], y[2], y[3]);
-	}
-	Fl[a] =  _mm_xor_si128(Fl[a], Fq[b]);
-	Fl[0] =  _mm_xor_si128(Fl[0], Fl[a]);
-	return local_buffer;
-}
-
 /* 
  * k1,  k2  computed from i   --> alpha == idxq(0, k1). 
  * k1', k2' computed from i+1 --> beta == 1 + k1', gamma = idxq(k1', k2')
  */
-
-static inline struct solution_t * UNROLLED_CHUNK(const __m128i * Fq, __m128i * Fl, u64 alpha, u64 beta, u64 gamma, 
-	struct solution_t *local_buffer)
-{
-	// printf("CHUNK with i = %x, alpha=%d, beta=%d, gamma=%d\n", i, alpha, beta, gamma);
-	local_buffer = STEP_2(Fq, Fl, local_buffer, 1, alpha + 0, 0);
-	local_buffer = STEP_2(Fq, Fl, local_buffer, 2, alpha + 1, 1);
-	local_buffer = STEP_2(Fq, Fl, local_buffer, 1, 0, 2);
-	local_buffer = STEP_2(Fq, Fl, local_buffer, 3, alpha + 2, 3);
-	local_buffer = STEP_2(Fq, Fl, local_buffer, 1, 1, 4);
-	local_buffer = STEP_2(Fq, Fl, local_buffer, 2, 2, 5);
-	local_buffer = STEP_2(Fq, Fl, local_buffer, 1, 0, 6);
-	local_buffer = STEP_2(Fq, Fl, local_buffer, 4, alpha + 3, 7);
-	local_buffer = STEP_2(Fq, Fl, local_buffer, 1, 3, 8);
-	local_buffer = STEP_2(Fq, Fl, local_buffer, 2, 4, 9);
-	local_buffer = STEP_2(Fq, Fl, local_buffer, 1, 0, 10);
-	local_buffer = STEP_2(Fq, Fl, local_buffer, 3, 5, 11);
-	local_buffer = STEP_2(Fq, Fl, local_buffer, 1, 1, 12);
-	local_buffer = STEP_2(Fq, Fl, local_buffer, 2, 2, 13);
-	local_buffer = STEP_2(Fq, Fl, local_buffer, 1, 0, 14);
-	local_buffer = STEP_2(Fq, Fl, local_buffer, beta, gamma, 15);
-	return local_buffer;
-}
 
 void feslite_x86_64_enum_4x32(int n, int m, const u32 * Fq, const u32 * Fl, int count, u32 * buffer, int *size)
 {
@@ -161,7 +115,6 @@ void feslite_x86_64_enum_4x32(int n, int m, const u32 * Fq, const u32 * Fl, int 
 		size[0] = -1;
 		return;
 	}
-	u64 init_start_time = Now();
 
 	struct context_t context;
 	context.n = n;
@@ -191,22 +144,6 @@ void feslite_x86_64_enum_4x32(int n, int m, const u32 * Fq, const u32 * Fl, int 
 	context.Fq = Fq_;
 	context.Fl = Fl_;
 
-	// for (int i = 0; i <= idxq(n, n); i++) {
-	// 	u32 *x = (u32 *) &context.Fq[i];
-	// 	printf("Fq[%d] = %08x %08x %08x %08x\n", i, x[0], x[1], x[2], x[3]);
-	// }
-	// printf("\n");
-
-	// for (int i = 0; i < n + 1; i++) {
-	// 	u32 *x = (u32 *) &context.Fl[i];
-	// 	printf("Fl[%d] = %08x %08x %08x %08x\n", i, x[0], x[1], x[2], x[3]);
-	// }
-
-	if (VERBOSE)
-		printf("fes: initialisation = %" PRIu64 " cycles\n", Now() - init_start_time);
-
-	u64 enumeration_start_time = Now();
-
 	ffs_reset(&context.ffs, n-L);
 	int k1 = context.ffs.k1 + L;
 	int k2 = context.ffs.k2 + L;
@@ -234,9 +171,4 @@ void feslite_x86_64_enum_4x32(int n, int m, const u32 * Fq, const u32 * Fl, int 
 	}
 	for (int i = 0; i < LANES; i++)
 		FLUSH_CANDIDATES(&context, i);
-	
-	u64 enumeration_end_time = Now();
-	if (VERBOSE)
-		printf("fes: enumeration+check = %" PRIu64 " cycles\n", 
-			enumeration_end_time - enumeration_start_time);
 }

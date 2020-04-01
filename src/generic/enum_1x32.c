@@ -1,8 +1,3 @@
-#include <stdio.h>
-#include <inttypes.h>
-#include <stdbool.h>
-#include <assert.h>
-
 #include "fes.h"
 #include "ffs.h"
 #include "monomials.h"
@@ -91,7 +86,6 @@ void feslite_generic_enum_1x32(int n, int m, const u32 * Fq, const u32 * Fl, int
 		*size = -1;
 		return;
 	}
-	u64 init_start_time = Now();
 
 	struct context_t context;
 	context.n = n;
@@ -99,7 +93,6 @@ void feslite_generic_enum_1x32(int n, int m, const u32 * Fq, const u32 * Fl, int
 	context.count = count;
 	context.buffer = buffer;
 	context.size = size;
-
 	context.size[0] = 0;
 	context.local_size = 0;
 
@@ -116,11 +109,6 @@ void feslite_generic_enum_1x32(int n, int m, const u32 * Fq, const u32 * Fl, int
 		Fl_[i] = Fl[i];
 	context.Fq = Fq_;
 	context.Fl = Fl_;
-
-	if (VERBOSE)
-		printf("fes: initialisation = %" PRIu64 " cycles\n", Now() - init_start_time);
-
-	u64 enumeration_start_time = Now();
 
 	ffs_reset(&context.ffs, n-L);
 	int k1 = context.ffs.k1 + L;
@@ -139,8 +127,4 @@ void feslite_generic_enum_1x32(int n, int m, const u32 * Fq, const u32 * Fl, int
 		if (FLUSH_BUFFER(&context))
 			break;
 	}
-
-	u64 enumeration_end_time = Now();
-	if (VERBOSE)
-		printf("fes: enumeration+check = %" PRIu64 " cycles\n", enumeration_end_time - enumeration_start_time);
 }

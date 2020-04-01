@@ -1,12 +1,10 @@
-#include <stdio.h>
-#include <inttypes.h>
-#include <stdbool.h>
-#include <assert.h>
-
 #include "fes.h"
 #include "ffs.h"
 #include "monomials.h"
 #include <emmintrin.h>
+
+extern struct solution_t * feslite_x86_64_asm_enum_8x16(const __m128i * Fq, __m128i * Fl, 
+	u64 alpha, u64 beta, u64 gamma, struct solution_t *local_buffer);
 
 #define L 8
 #define LANES 8
@@ -122,7 +120,6 @@ void feslite_x86_64_enum_8x16(int n, int m, const u32 * Fq, const u32 * Fl, int 
 		size[0] = -1;
 		return;
 	}
-	u64 init_start_time = Now();
 
 	struct context_t context;
 	context.n = n;
@@ -174,11 +171,6 @@ void feslite_x86_64_enum_8x16(int n, int m, const u32 * Fq, const u32 * Fl, int 
 	// 	printf("Fl[%d] = %08x %08x %08x %08x\n", i, x[0], x[1], x[2], x[3]);
 	// }
 
-	if (VERBOSE)
-		printf("fes: initialisation = %" PRIu64 " cycles\n", Now() - init_start_time);
-
-	u64 enumeration_start_time = Now();
-
 	ffs_reset(&context.ffs, n-L);
 	int k1 = context.ffs.k1 + L;
 	int k2 = context.ffs.k2 + L;
@@ -206,9 +198,4 @@ void feslite_x86_64_enum_8x16(int n, int m, const u32 * Fq, const u32 * Fl, int 
 	}
 	for (int i = 0; i < LANES; i++)
 		FLUSH_CANDIDATES(&context, i);
-	
-	u64 enumeration_end_time = Now();
-	if (VERBOSE)
-		printf("fes: enumeration+check = %" PRIu64 " cycles\n", 
-			enumeration_end_time - enumeration_start_time);
 }

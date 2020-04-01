@@ -1,14 +1,9 @@
-#include <stdio.h>
-#include <inttypes.h>
-#include <stdbool.h>
-#include <assert.h>
-
 #include "fes.h"
 #include "ffs.h"
 #include "monomials.h"
 
 #define L 4
-#define VERBOSE 0
+#define LANES 2
 
 /*
  * Enumerate and check equations [0:16]. 
@@ -40,23 +35,22 @@ struct context_t {
 	struct solution_t local_buffer[(1 << L)];
 
 	/* candidates */
-	u32 candidates[2][32];
-	int n_candidates[2];
+	u32 candidates[LANES][32];
+	int n_candidates[LANES];
 	bool overflow;
 
 	/* counter */
 	struct ffs_t ffs;
 };
 
-static const u32 MASK0 = 0x0000fffful;
-static const u32 MASK1 = 0xffff0000ul;
+static const u32 MASK[LANES] = {0x0000ffff, 0xffff0000};
 
 // tests the current value (corresponding to index), then step to the next one using a/b.
 // this has to be as simple as possible... and as fast as possible
 static inline void STEP_2(struct context_t *context, int a, int b, u32 index)
 {
 	u32 y = context->Fl[0];
-	if (unlikely(((y & MASK0) == 0) || ((y & MASK1) == 0))) {
+	if (unlikely(((y & MASK[0]) == 0) || ((y & MASK[1]) == 0))) {
 		context->local_buffer[context->local_size].mask = y;
 		context->local_buffer[context->local_size].x = index;
 		context->local_size++;
@@ -77,7 +71,7 @@ static inline void FLUSH_CANDIDATES(struct context_t *context, int lane)
 	int k;
 	u32 * outbuf = context->buffer + context->count * lane + context->size[lane];
 
-	feslite_generic_eval_32(context->n, context->Fq_start, context->Fl_start + lane, 2, 
+	feslite_generic_eval_32(context->n, context->Fq_start, context->Fl_start + lane, LANES, 
 				context->n_candidates[lane], context->candidates[lane], 
 				max_solutions, outbuf, &k);
 
@@ -109,9 +103,9 @@ static inline bool FLUSH_BUFFER(struct context_t *context)
 	for (int i = 0; i < context->local_size; i++) {
 		u32 x = to_gray(context->local_buffer[i].x);
 		u32 mask = context->local_buffer[i].mask;
-		if ((mask & MASK0) == 0)             // lane 0
+		if ((mask & MASK[0]) == 0)             // lane 0
 			NEW_CANDIDATE(context, x, 0);
-		if ((mask & MASK1) == 0)             // lane 1
+		if ((mask & MASK[1]) == 0)             // lane 1
 			NEW_CANDIDATE(context, x, 1);
 	}
 	context->local_size = 0;
@@ -147,11 +141,10 @@ static inline void UNROLLED_CHUNK(struct context_t *context, int alpha, int beta
 void feslite_generic_enum_2x16(int n, int m, const u32 * Fq, const u32 * Fl, int count, u32 * buffer, int *size)
 {
 	/* verify input parameters */
-	if (count <= 0 || n < L || n > 32 || m != 2) {
+	if (count <= 0 || n < L || n > 32 || m != LANES) {
 		size[0] = -1;
 		return;
 	}
-	u64 init_start_time = Now();
 
 	struct context_t context;
 	context.n = n;
@@ -159,10 +152,10 @@ void feslite_generic_enum_2x16(int n, int m, const u32 * Fq, const u32 * Fl, int
 	context.count = count;
 	context.buffer = buffer;
 	context.size = size;
-	context.n_candidates[0] = 0;
-	context.n_candidates[1] = 0;
-	context.size[0] = 0;
-	context.size[1] = 0;
+	for (int i = 0; i < LANES; i++) {
+		context.n_candidates[i] = 0;
+		context.size[i] = 0;
+	}
 	context.local_size = 0;
 	context.overflow = false;
 	context.Fq_start = Fq;
@@ -187,11 +180,6 @@ void feslite_generic_enum_2x16(int n, int m, const u32 * Fq, const u32 * Fl, int
 	context.Fq = Fq_;
 	context.Fl = Fl_;
 
-	if (VERBOSE)
-		printf("fes: initialisation = %" PRIu64 " cycles\n", Now() - init_start_time);
-
-	u64 enumeration_start_time = Now();
-
 	ffs_reset(&context.ffs, n-L);
 	int k1 = context.ffs.k1 + L;
 	int k2 = context.ffs.k2 + L;
@@ -211,9 +199,4 @@ void feslite_generic_enum_2x16(int n, int m, const u32 * Fq, const u32 * Fl, int
 	}
 	FLUSH_CANDIDATES(&context, 0);
 	FLUSH_CANDIDATES(&context, 1);
-
-	u64 enumeration_end_time = Now();
-	if (VERBOSE)
-		printf("fes: enumeration+check = %" PRIu64 " cycles\n", 
-			enumeration_end_time - enumeration_start_time);
 }

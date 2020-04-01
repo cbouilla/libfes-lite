@@ -1,11 +1,6 @@
-#include <stdio.h>
-#include <assert.h>
-
 #include "fes.h"
 #include "ffs.h"
 #include "monomials.h"
-
-#define VERBOSE 0
 
 void feslite_generic_minimal(int n, int m, const u32 * Fq, const u32 * Fl, int count, u32 * buffer, int *size)
 {
@@ -14,7 +9,6 @@ void feslite_generic_minimal(int n, int m, const u32 * Fq, const u32 * Fl, int c
 		*size = -1;
 		return;
 	}
-	u64 init_start_time = Now();
 	
 	u32 Fq_[NQUAD];
 	u32 Fl_[NLIN];
@@ -28,11 +22,6 @@ void feslite_generic_minimal(int n, int m, const u32 * Fq, const u32 * Fl, int c
 	for (int i = 0; i < n + 1; i++)
 		Fl_[i] = Fl[i];
 	size[0] = 0;
-
-	if (VERBOSE)
-		printf("fes: initialisation = %" PRIu64 " cycles\n", Now() - init_start_time);
-
-	u64 enumeration_start_time = Now();
 
 	struct ffs_t ffs;
 	ffs_reset(&ffs, n);
@@ -61,8 +50,4 @@ void feslite_generic_minimal(int n, int m, const u32 * Fq, const u32 * Fl, int c
 			break;
 		i++;
 	}
-
-	u64 enumeration_end_time = Now();
-	if (VERBOSE)
-		printf("fes: enumeration+check = %" PRIu64 " cycles\n", enumeration_end_time - enumeration_start_time);
 }
