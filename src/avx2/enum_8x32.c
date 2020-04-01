@@ -49,56 +49,27 @@ static const u32 MASK[LANES] = { 0x0000000f, 0x000000f0, 0x00000f00, 0x0000f000,
                                  0x000f0000, 0x00f00000, 0x0f000000, 0xf0000000 };
 
 
-/* batch-eval all the candidates */
-static inline void FLUSH_CANDIDATES(struct context_t *context, int lane)
+static inline bool NEW_SOLUTION(struct context_t *context, u32 x, int lane)
 {
-	int max_solutions = context->count - context->size[lane];
-
-//	printf("# [DEBUG] FLUSH_CANDIDATES (lane %d) %d candidates, %d solutions, max_allowed=%d\n", 
-//		lane, context->n_candidates[lane], context->size[lane], max_solutions);
-
-	int k;
-	u32 * outbuf = context->buffer + context->count * lane + context->size[lane];
-
-	feslite_generic_eval_32(context->n, context->Fq_start, context->Fl_start + lane, LANES, 
-				context->n_candidates[lane], context->candidates[lane], 
-				max_solutions, outbuf, &k);
-
-//	printf("# [DEBUG] FLUSH_CANDIDATES %d candidates passed for lane %d\n", k, lane);
-	context->size[lane] += k;
-	context->n_candidates[lane] = 0;
-	if (context->size[lane] == context->count)
-		context->overflow = true;
+	int k = context->size[lane];
+	context->buffer[context->count * lane + k] = x;
+	context->size[lane] = k + 1;
+	return (context->size[lane] == context->count);
 }
-
-
-static inline void NEW_CANDIDATE(struct context_t *context, u32 x, int lane)
-{
-	// u32 y = feslite_naive_evaluation(context->n, context->Fq_start, context->Fl_start + lane, 4, x);
-	// printf("# [DEBUG] candidate %08x in lane %d, with F[%d][%08x] = %08x\n", x, lane, lane, x, y);
-	//assert(y == 0);
-
-	int i = context->n_candidates[lane];
-	context->candidates[lane][i] = x;
-	context->n_candidates[lane] = i + 1;
-
-	if (context->n_candidates[lane] == 32)
-		FLUSH_CANDIDATES(context, lane);
-}
-
 
 static inline bool FLUSH_BUFFER(struct context_t *context, struct solution_t * top, u64 i)
 {	
 	for (struct solution_t * bot = context->local_buffer; bot != top; bot++) {
 		u32 x = to_gray(bot->x + i);
 		u32 mask = bot->mask;
-		#pragma GCC unroll 32
-		for (int i = 0; i < LANES; i++)
-			if ((mask & MASK[i]) == MASK[i]) // bug!
-				NEW_CANDIDATE(context, x, i);
+		#pragma GCC unroll 64
+		for (int lane = 0; lane < LANES; lane++) 
+			if ((mask & MASK[lane]) == MASK[lane])
+				if (NEW_SOLUTION(context, x, lane))
+					return true;
 	}
-	return context->overflow;
-}				
+	return false;
+}
 
 
 void feslite_avx2_enum_8x32(int n, int m, const u32 * Fq, const u32 * Fl, int count, u32 * buffer, int *size)
@@ -174,6 +145,4 @@ void feslite_avx2_enum_8x32(int n, int m, const u32 * Fq, const u32 * Fl, int co
 			break;
 		}
 	}
-	for (int i = 0; i < LANES; i++)
-		FLUSH_CANDIDATES(&context, i);
 }

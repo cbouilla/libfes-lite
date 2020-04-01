@@ -44,32 +44,13 @@ struct context_t {
 static const u32 MASK[LANES] = {0x000f, 0x00f0, 0x0f00, 0xf000};
 
 
-/* batch-eval all the candidates */
-static inline void FLUSH_CANDIDATES(struct context_t *context, int lane)
+static inline bool NEW_SOLUTION(struct context_t *context, u32 x, int lane)
 {
-	int max_solutions = context->count - context->size[lane];
-	int k;
-	u32 * outbuf = context->buffer + context->count * lane + context->size[lane];
-	feslite_generic_eval_32(context->n, context->Fq_start, context->Fl_start + lane, LANES, 
-				context->n_candidates[lane], context->candidates[lane], 
-				max_solutions, outbuf, &k);
-	context->size[lane] += k;
-	context->n_candidates[lane] = 0;
-	if (context->size[lane] == context->count)
-		context->overflow = true;
+	int k = context->size[lane];
+	context->buffer[context->count * lane + k] = x;
+	context->size[lane] = k + 1;
+	return (context->size[lane] == context->count);
 }
-
-
-static inline void NEW_CANDIDATE(struct context_t *context, u32 x, int lane)
-{
-	int i = context->n_candidates[lane];
-	context->candidates[lane][i] = x;
-	context->n_candidates[lane] = i + 1;
-
-	if (context->n_candidates[lane] == 32)
-		FLUSH_CANDIDATES(context, lane);
-}
-
 
 static inline bool FLUSH_BUFFER(struct context_t *context, struct solution_t * top, u64 i)
 {	
@@ -77,12 +58,13 @@ static inline bool FLUSH_BUFFER(struct context_t *context, struct solution_t * t
 		u32 x = to_gray(bot->x + i);
 		u32 mask = bot->mask;
 		#pragma GCC unroll 8
-		for (int i = 0; i < LANES; i++) 
-			if ((mask & MASK[i]) == MASK[i])
-				NEW_CANDIDATE(context, x, i);
+		for (int lane = 0; lane < LANES; lane++) 
+			if ((mask & MASK[lane]) == MASK[lane])
+				if (NEW_SOLUTION(context, x, lane))
+					return true;
 	}
-	return context->overflow;
-}				
+	return false;
+}
 
 /* 
  * k1,  k2  computed from i   --> alpha == idxq(0, k1). 
@@ -142,6 +124,4 @@ void feslite_x86_64_enum_4x32(int n, int m, const u32 * Fq, const u32 * Fl, int 
 		if (FLUSH_BUFFER(&context, top, j << L))
 			break;
 	}
-	for (int i = 0; i < LANES; i++)
-		FLUSH_CANDIDATES(&context, i);
 }
