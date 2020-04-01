@@ -1,5 +1,4 @@
 L = 8
-mode = "8x16"
 
 def ffs(i):
     if i == 0:
@@ -19,7 +18,7 @@ PROLOGUE = """
 .text
 .p2align 5
 
-.globl feslite_x86_64_asm_enum_4x32
+.globl feslite_x86_64_asm_enum
 ### static inline struct solution_t * UNROLLED_CHUNK(const __m128i * Fq, __m128i * Fl, u64 alpha, 
 ###                                                  u64 beta, u64 gamma, struct solution_t *local_buffer)
 
@@ -44,7 +43,7 @@ PROLOGUE = """
 # %r9 and %r10 are available
 # Let's go
 
-feslite_x86_64_asm_enum_4x32:
+feslite_x86_64_asm_enum:
 pxor %xmm15, %xmm15
 movq %r9, %rax         
 """
@@ -71,12 +70,7 @@ Fq[idxq(2, 4)] = "%xmm13" # 1/32
 
 def output_comparison(i):
     # before the XORs, the comparison
-    if mode == "4x32":
-        print('pcmpeqd %xmm0, %xmm15'.format())
-    elif mode == "8x16":
-        print('pcmpeqw %xmm0, %xmm15'.format())
-    else:
-        raise ValueError("bad mode!")
+    print('pcmpeqw %xmm0, %xmm15'.format())
     print('pmovmskb %xmm15, %r11d')
     print('test %r11d, %r11d')
     print('jne ._report_solution_{0}'.format(i))

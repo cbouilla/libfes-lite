@@ -19,7 +19,7 @@ PROLOGUE = """
 .text
 .p2align 5
 
-.globl feslite_avx2_asm_enum_{mode}
+.globl feslite_avx2_asm_enum
 ### static inline struct solution_t * UNROLLED_CHUNK(const __m256i * Fq, __m256i * Fl, u64 alpha, 
 ###                                                  u64 beta, u64 gamma, struct solution_t *local_buffer)
 
@@ -44,7 +44,7 @@ PROLOGUE = """
 # %r9 and %r10 are available
 # Let's go
 
-feslite_avx2_asm_enum_{mode}:
+feslite_avx2_asm_enum:
 vpxor %ymm15, %ymm15, %ymm15
 movq %r9, %rax         
 """.format(mode=mode)
@@ -71,12 +71,12 @@ Fq[idxq(2, 4)] = "%ymm13" # 1/32
 
 def output_comparison(i):
     # before the XORs, the comparison
-    if mode == "8x32":
-        print('vpcmpeqd %ymm0, %ymm15, %ymm15'.format())
-    elif mode == "16x16":
-        print('vpcmpeqw %ymm0, %ymm15, %ymm15'.format())
-    else:
-        raise ValueError("bad mode!")
+    #if mode == "8x32":
+    #    print('vpcmpeqd %ymm0, %ymm15, %ymm15'.format())
+    #elif mode == "16x16":
+    print('vpcmpeqw %ymm0, %ymm15, %ymm15'.format())
+    #else:
+    #    raise ValueError("bad mode!")
     print('vpmovmskb %ymm15, %r11d')
     print('test %r11d, %r11d')
     print('jne ._report_solution_{0}'.format(i))

@@ -2,7 +2,7 @@
 .text
 .p2align 5
 
-.globl feslite_x86_64_asm_enum_4x32
+.globl feslite_x86_64_asm_enum
 ### static inline struct solution_t * UNROLLED_CHUNK(const __m128i * Fq, __m128i * Fl, u64 alpha, 
 ###                                                  u64 beta, u64 gamma, struct solution_t *local_buffer)
 
@@ -27,7 +27,7 @@
 # %r9 and %r10 are available
 # Let's go
 
-feslite_x86_64_asm_enum_4x32:
+feslite_x86_64_asm_enum:
 pxor %xmm15, %xmm15
 movq %r9, %rax         
 
@@ -52,7 +52,7 @@ movdqa 128(%rdi), %xmm13   ## %xmm13 = Fq[8]
 
 ##### step   0 : Fl[0] ^= (Fl[1] ^= Fq[alpha + 0])
 
-pcmpeqd %xmm0, %xmm15
+pcmpeqw %xmm0, %xmm15
 pmovmskb %xmm15, %r11d
 test %r11d, %r11d
 jne ._report_solution_0
@@ -64,7 +64,7 @@ pxor %xmm1, %xmm0
 
 ##### step   1 : Fl[0] ^= (Fl[2] ^= Fq[alpha + 1])
 
-pcmpeqd %xmm0, %xmm15
+pcmpeqw %xmm0, %xmm15
 pmovmskb %xmm15, %r11d
 test %r11d, %r11d
 jne ._report_solution_1
@@ -76,7 +76,7 @@ pxor %xmm2, %xmm0
 
 ##### step   2 : Fl[0] ^= (Fl[1] ^= Fq[0])
 
-pcmpeqd %xmm0, %xmm15
+pcmpeqw %xmm0, %xmm15
 pmovmskb %xmm15, %r11d
 test %r11d, %r11d
 jne ._report_solution_2
@@ -88,7 +88,7 @@ pxor %xmm1, %xmm0
 
 ##### step   3 : Fl[0] ^= (Fl[3] ^= Fq[alpha + 2])
 
-pcmpeqd %xmm0, %xmm15
+pcmpeqw %xmm0, %xmm15
 pmovmskb %xmm15, %r11d
 test %r11d, %r11d
 jne ._report_solution_3
@@ -100,7 +100,7 @@ pxor %xmm3, %xmm0
 
 ##### step   4 : Fl[0] ^= (Fl[1] ^= Fq[1])
 
-pcmpeqd %xmm0, %xmm15
+pcmpeqw %xmm0, %xmm15
 pmovmskb %xmm15, %r11d
 test %r11d, %r11d
 jne ._report_solution_4
@@ -112,7 +112,7 @@ pxor %xmm1, %xmm0
 
 ##### step   5 : Fl[0] ^= (Fl[2] ^= Fq[2])
 
-pcmpeqd %xmm0, %xmm15
+pcmpeqw %xmm0, %xmm15
 pmovmskb %xmm15, %r11d
 test %r11d, %r11d
 jne ._report_solution_5
@@ -124,7 +124,7 @@ pxor %xmm2, %xmm0
 
 ##### step   6 : Fl[0] ^= (Fl[1] ^= Fq[0])
 
-pcmpeqd %xmm0, %xmm15
+pcmpeqw %xmm0, %xmm15
 pmovmskb %xmm15, %r11d
 test %r11d, %r11d
 jne ._report_solution_6
@@ -136,7 +136,7 @@ pxor %xmm1, %xmm0
 
 ##### step   7 : Fl[0] ^= (Fl[4] ^= Fq[alpha + 3])
 
-pcmpeqd %xmm0, %xmm15
+pcmpeqw %xmm0, %xmm15
 pmovmskb %xmm15, %r11d
 test %r11d, %r11d
 jne ._report_solution_7
@@ -148,7 +148,7 @@ pxor %xmm4, %xmm0
 
 ##### step   8 : Fl[0] ^= (Fl[1] ^= Fq[3])
 
-pcmpeqd %xmm0, %xmm15
+pcmpeqw %xmm0, %xmm15
 pmovmskb %xmm15, %r11d
 test %r11d, %r11d
 jne ._report_solution_8
@@ -160,7 +160,7 @@ pxor %xmm1, %xmm0
 
 ##### step   9 : Fl[0] ^= (Fl[2] ^= Fq[4])
 
-pcmpeqd %xmm0, %xmm15
+pcmpeqw %xmm0, %xmm15
 pmovmskb %xmm15, %r11d
 test %r11d, %r11d
 jne ._report_solution_9
@@ -172,7 +172,7 @@ pxor %xmm2, %xmm0
 
 ##### step  10 : Fl[0] ^= (Fl[1] ^= Fq[0])
 
-pcmpeqd %xmm0, %xmm15
+pcmpeqw %xmm0, %xmm15
 pmovmskb %xmm15, %r11d
 test %r11d, %r11d
 jne ._report_solution_10
@@ -184,7 +184,7 @@ pxor %xmm1, %xmm0
 
 ##### step  11 : Fl[0] ^= (Fl[3] ^= Fq[5])
 
-pcmpeqd %xmm0, %xmm15
+pcmpeqw %xmm0, %xmm15
 pmovmskb %xmm15, %r11d
 test %r11d, %r11d
 jne ._report_solution_11
@@ -196,7 +196,7 @@ pxor %xmm3, %xmm0
 
 ##### step  12 : Fl[0] ^= (Fl[1] ^= Fq[1])
 
-pcmpeqd %xmm0, %xmm15
+pcmpeqw %xmm0, %xmm15
 pmovmskb %xmm15, %r11d
 test %r11d, %r11d
 jne ._report_solution_12
@@ -208,7 +208,7 @@ pxor %xmm1, %xmm0
 
 ##### step  13 : Fl[0] ^= (Fl[2] ^= Fq[2])
 
-pcmpeqd %xmm0, %xmm15
+pcmpeqw %xmm0, %xmm15
 pmovmskb %xmm15, %r11d
 test %r11d, %r11d
 jne ._report_solution_13
@@ -220,7 +220,7 @@ pxor %xmm2, %xmm0
 
 ##### step  14 : Fl[0] ^= (Fl[1] ^= Fq[0])
 
-pcmpeqd %xmm0, %xmm15
+pcmpeqw %xmm0, %xmm15
 pmovmskb %xmm15, %r11d
 test %r11d, %r11d
 jne ._report_solution_14
@@ -232,7 +232,7 @@ pxor %xmm1, %xmm0
 
 ##### step  15 : Fl[0] ^= (Fl[5] ^= Fq[alpha + 4])
 
-pcmpeqd %xmm0, %xmm15
+pcmpeqw %xmm0, %xmm15
 pmovmskb %xmm15, %r11d
 test %r11d, %r11d
 jne ._report_solution_15
@@ -244,7 +244,7 @@ pxor %xmm5, %xmm0
 
 ##### step  16 : Fl[0] ^= (Fl[1] ^= Fq[6])
 
-pcmpeqd %xmm0, %xmm15
+pcmpeqw %xmm0, %xmm15
 pmovmskb %xmm15, %r11d
 test %r11d, %r11d
 jne ._report_solution_16
@@ -256,7 +256,7 @@ pxor %xmm1, %xmm0
 
 ##### step  17 : Fl[0] ^= (Fl[2] ^= Fq[7])
 
-pcmpeqd %xmm0, %xmm15
+pcmpeqw %xmm0, %xmm15
 pmovmskb %xmm15, %r11d
 test %r11d, %r11d
 jne ._report_solution_17
@@ -268,7 +268,7 @@ pxor %xmm2, %xmm0
 
 ##### step  18 : Fl[0] ^= (Fl[1] ^= Fq[0])
 
-pcmpeqd %xmm0, %xmm15
+pcmpeqw %xmm0, %xmm15
 pmovmskb %xmm15, %r11d
 test %r11d, %r11d
 jne ._report_solution_18
@@ -280,7 +280,7 @@ pxor %xmm1, %xmm0
 
 ##### step  19 : Fl[0] ^= (Fl[3] ^= Fq[8])
 
-pcmpeqd %xmm0, %xmm15
+pcmpeqw %xmm0, %xmm15
 pmovmskb %xmm15, %r11d
 test %r11d, %r11d
 jne ._report_solution_19
@@ -292,7 +292,7 @@ pxor %xmm3, %xmm0
 
 ##### step  20 : Fl[0] ^= (Fl[1] ^= Fq[1])
 
-pcmpeqd %xmm0, %xmm15
+pcmpeqw %xmm0, %xmm15
 pmovmskb %xmm15, %r11d
 test %r11d, %r11d
 jne ._report_solution_20
@@ -304,7 +304,7 @@ pxor %xmm1, %xmm0
 
 ##### step  21 : Fl[0] ^= (Fl[2] ^= Fq[2])
 
-pcmpeqd %xmm0, %xmm15
+pcmpeqw %xmm0, %xmm15
 pmovmskb %xmm15, %r11d
 test %r11d, %r11d
 jne ._report_solution_21
@@ -316,7 +316,7 @@ pxor %xmm2, %xmm0
 
 ##### step  22 : Fl[0] ^= (Fl[1] ^= Fq[0])
 
-pcmpeqd %xmm0, %xmm15
+pcmpeqw %xmm0, %xmm15
 pmovmskb %xmm15, %r11d
 test %r11d, %r11d
 jne ._report_solution_22
@@ -328,7 +328,7 @@ pxor %xmm1, %xmm0
 
 ##### step  23 : Fl[0] ^= (Fl[4] ^= Fq[9])
 
-pcmpeqd %xmm0, %xmm15
+pcmpeqw %xmm0, %xmm15
 pmovmskb %xmm15, %r11d
 test %r11d, %r11d
 jne ._report_solution_23
@@ -340,7 +340,7 @@ pxor %xmm4, %xmm0
 
 ##### step  24 : Fl[0] ^= (Fl[1] ^= Fq[3])
 
-pcmpeqd %xmm0, %xmm15
+pcmpeqw %xmm0, %xmm15
 pmovmskb %xmm15, %r11d
 test %r11d, %r11d
 jne ._report_solution_24
@@ -352,7 +352,7 @@ pxor %xmm1, %xmm0
 
 ##### step  25 : Fl[0] ^= (Fl[2] ^= Fq[4])
 
-pcmpeqd %xmm0, %xmm15
+pcmpeqw %xmm0, %xmm15
 pmovmskb %xmm15, %r11d
 test %r11d, %r11d
 jne ._report_solution_25
@@ -364,7 +364,7 @@ pxor %xmm2, %xmm0
 
 ##### step  26 : Fl[0] ^= (Fl[1] ^= Fq[0])
 
-pcmpeqd %xmm0, %xmm15
+pcmpeqw %xmm0, %xmm15
 pmovmskb %xmm15, %r11d
 test %r11d, %r11d
 jne ._report_solution_26
@@ -376,7 +376,7 @@ pxor %xmm1, %xmm0
 
 ##### step  27 : Fl[0] ^= (Fl[3] ^= Fq[5])
 
-pcmpeqd %xmm0, %xmm15
+pcmpeqw %xmm0, %xmm15
 pmovmskb %xmm15, %r11d
 test %r11d, %r11d
 jne ._report_solution_27
@@ -388,7 +388,7 @@ pxor %xmm3, %xmm0
 
 ##### step  28 : Fl[0] ^= (Fl[1] ^= Fq[1])
 
-pcmpeqd %xmm0, %xmm15
+pcmpeqw %xmm0, %xmm15
 pmovmskb %xmm15, %r11d
 test %r11d, %r11d
 jne ._report_solution_28
@@ -400,7 +400,7 @@ pxor %xmm1, %xmm0
 
 ##### step  29 : Fl[0] ^= (Fl[2] ^= Fq[2])
 
-pcmpeqd %xmm0, %xmm15
+pcmpeqw %xmm0, %xmm15
 pmovmskb %xmm15, %r11d
 test %r11d, %r11d
 jne ._report_solution_29
@@ -412,7 +412,7 @@ pxor %xmm2, %xmm0
 
 ##### step  30 : Fl[0] ^= (Fl[1] ^= Fq[0])
 
-pcmpeqd %xmm0, %xmm15
+pcmpeqw %xmm0, %xmm15
 pmovmskb %xmm15, %r11d
 test %r11d, %r11d
 jne ._report_solution_30
@@ -424,7 +424,7 @@ pxor %xmm1, %xmm0
 
 ##### step  31 : Fl[0] ^= (Fl[6] ^= Fq[alpha + 5])
 
-pcmpeqd %xmm0, %xmm15
+pcmpeqw %xmm0, %xmm15
 pmovmskb %xmm15, %r11d
 test %r11d, %r11d
 jne ._report_solution_31
@@ -436,7 +436,7 @@ pxor %xmm6, %xmm0
 
 ##### step  32 : Fl[0] ^= (Fl[1] ^= Fq[10])
 
-pcmpeqd %xmm0, %xmm15
+pcmpeqw %xmm0, %xmm15
 pmovmskb %xmm15, %r11d
 test %r11d, %r11d
 jne ._report_solution_32
@@ -448,7 +448,7 @@ pxor %xmm1, %xmm0
 
 ##### step  33 : Fl[0] ^= (Fl[2] ^= Fq[11])
 
-pcmpeqd %xmm0, %xmm15
+pcmpeqw %xmm0, %xmm15
 pmovmskb %xmm15, %r11d
 test %r11d, %r11d
 jne ._report_solution_33
@@ -460,7 +460,7 @@ pxor %xmm2, %xmm0
 
 ##### step  34 : Fl[0] ^= (Fl[1] ^= Fq[0])
 
-pcmpeqd %xmm0, %xmm15
+pcmpeqw %xmm0, %xmm15
 pmovmskb %xmm15, %r11d
 test %r11d, %r11d
 jne ._report_solution_34
@@ -472,7 +472,7 @@ pxor %xmm1, %xmm0
 
 ##### step  35 : Fl[0] ^= (Fl[3] ^= Fq[12])
 
-pcmpeqd %xmm0, %xmm15
+pcmpeqw %xmm0, %xmm15
 pmovmskb %xmm15, %r11d
 test %r11d, %r11d
 jne ._report_solution_35
@@ -484,7 +484,7 @@ pxor %xmm3, %xmm0
 
 ##### step  36 : Fl[0] ^= (Fl[1] ^= Fq[1])
 
-pcmpeqd %xmm0, %xmm15
+pcmpeqw %xmm0, %xmm15
 pmovmskb %xmm15, %r11d
 test %r11d, %r11d
 jne ._report_solution_36
@@ -496,7 +496,7 @@ pxor %xmm1, %xmm0
 
 ##### step  37 : Fl[0] ^= (Fl[2] ^= Fq[2])
 
-pcmpeqd %xmm0, %xmm15
+pcmpeqw %xmm0, %xmm15
 pmovmskb %xmm15, %r11d
 test %r11d, %r11d
 jne ._report_solution_37
@@ -508,7 +508,7 @@ pxor %xmm2, %xmm0
 
 ##### step  38 : Fl[0] ^= (Fl[1] ^= Fq[0])
 
-pcmpeqd %xmm0, %xmm15
+pcmpeqw %xmm0, %xmm15
 pmovmskb %xmm15, %r11d
 test %r11d, %r11d
 jne ._report_solution_38
@@ -520,7 +520,7 @@ pxor %xmm1, %xmm0
 
 ##### step  39 : Fl[0] ^= (Fl[4] ^= Fq[13])
 
-pcmpeqd %xmm0, %xmm15
+pcmpeqw %xmm0, %xmm15
 pmovmskb %xmm15, %r11d
 test %r11d, %r11d
 jne ._report_solution_39
@@ -532,7 +532,7 @@ pxor %xmm4, %xmm0
 
 ##### step  40 : Fl[0] ^= (Fl[1] ^= Fq[3])
 
-pcmpeqd %xmm0, %xmm15
+pcmpeqw %xmm0, %xmm15
 pmovmskb %xmm15, %r11d
 test %r11d, %r11d
 jne ._report_solution_40
@@ -544,7 +544,7 @@ pxor %xmm1, %xmm0
 
 ##### step  41 : Fl[0] ^= (Fl[2] ^= Fq[4])
 
-pcmpeqd %xmm0, %xmm15
+pcmpeqw %xmm0, %xmm15
 pmovmskb %xmm15, %r11d
 test %r11d, %r11d
 jne ._report_solution_41
@@ -556,7 +556,7 @@ pxor %xmm2, %xmm0
 
 ##### step  42 : Fl[0] ^= (Fl[1] ^= Fq[0])
 
-pcmpeqd %xmm0, %xmm15
+pcmpeqw %xmm0, %xmm15
 pmovmskb %xmm15, %r11d
 test %r11d, %r11d
 jne ._report_solution_42
@@ -568,7 +568,7 @@ pxor %xmm1, %xmm0
 
 ##### step  43 : Fl[0] ^= (Fl[3] ^= Fq[5])
 
-pcmpeqd %xmm0, %xmm15
+pcmpeqw %xmm0, %xmm15
 pmovmskb %xmm15, %r11d
 test %r11d, %r11d
 jne ._report_solution_43
@@ -580,7 +580,7 @@ pxor %xmm3, %xmm0
 
 ##### step  44 : Fl[0] ^= (Fl[1] ^= Fq[1])
 
-pcmpeqd %xmm0, %xmm15
+pcmpeqw %xmm0, %xmm15
 pmovmskb %xmm15, %r11d
 test %r11d, %r11d
 jne ._report_solution_44
@@ -592,7 +592,7 @@ pxor %xmm1, %xmm0
 
 ##### step  45 : Fl[0] ^= (Fl[2] ^= Fq[2])
 
-pcmpeqd %xmm0, %xmm15
+pcmpeqw %xmm0, %xmm15
 pmovmskb %xmm15, %r11d
 test %r11d, %r11d
 jne ._report_solution_45
@@ -604,7 +604,7 @@ pxor %xmm2, %xmm0
 
 ##### step  46 : Fl[0] ^= (Fl[1] ^= Fq[0])
 
-pcmpeqd %xmm0, %xmm15
+pcmpeqw %xmm0, %xmm15
 pmovmskb %xmm15, %r11d
 test %r11d, %r11d
 jne ._report_solution_46
@@ -616,7 +616,7 @@ pxor %xmm1, %xmm0
 
 ##### step  47 : Fl[0] ^= (Fl[5] ^= Fq[14])
 
-pcmpeqd %xmm0, %xmm15
+pcmpeqw %xmm0, %xmm15
 pmovmskb %xmm15, %r11d
 test %r11d, %r11d
 jne ._report_solution_47
@@ -628,7 +628,7 @@ pxor %xmm5, %xmm0
 
 ##### step  48 : Fl[0] ^= (Fl[1] ^= Fq[6])
 
-pcmpeqd %xmm0, %xmm15
+pcmpeqw %xmm0, %xmm15
 pmovmskb %xmm15, %r11d
 test %r11d, %r11d
 jne ._report_solution_48
@@ -640,7 +640,7 @@ pxor %xmm1, %xmm0
 
 ##### step  49 : Fl[0] ^= (Fl[2] ^= Fq[7])
 
-pcmpeqd %xmm0, %xmm15
+pcmpeqw %xmm0, %xmm15
 pmovmskb %xmm15, %r11d
 test %r11d, %r11d
 jne ._report_solution_49
@@ -652,7 +652,7 @@ pxor %xmm2, %xmm0
 
 ##### step  50 : Fl[0] ^= (Fl[1] ^= Fq[0])
 
-pcmpeqd %xmm0, %xmm15
+pcmpeqw %xmm0, %xmm15
 pmovmskb %xmm15, %r11d
 test %r11d, %r11d
 jne ._report_solution_50
@@ -664,7 +664,7 @@ pxor %xmm1, %xmm0
 
 ##### step  51 : Fl[0] ^= (Fl[3] ^= Fq[8])
 
-pcmpeqd %xmm0, %xmm15
+pcmpeqw %xmm0, %xmm15
 pmovmskb %xmm15, %r11d
 test %r11d, %r11d
 jne ._report_solution_51
@@ -676,7 +676,7 @@ pxor %xmm3, %xmm0
 
 ##### step  52 : Fl[0] ^= (Fl[1] ^= Fq[1])
 
-pcmpeqd %xmm0, %xmm15
+pcmpeqw %xmm0, %xmm15
 pmovmskb %xmm15, %r11d
 test %r11d, %r11d
 jne ._report_solution_52
@@ -688,7 +688,7 @@ pxor %xmm1, %xmm0
 
 ##### step  53 : Fl[0] ^= (Fl[2] ^= Fq[2])
 
-pcmpeqd %xmm0, %xmm15
+pcmpeqw %xmm0, %xmm15
 pmovmskb %xmm15, %r11d
 test %r11d, %r11d
 jne ._report_solution_53
@@ -700,7 +700,7 @@ pxor %xmm2, %xmm0
 
 ##### step  54 : Fl[0] ^= (Fl[1] ^= Fq[0])
 
-pcmpeqd %xmm0, %xmm15
+pcmpeqw %xmm0, %xmm15
 pmovmskb %xmm15, %r11d
 test %r11d, %r11d
 jne ._report_solution_54
@@ -712,7 +712,7 @@ pxor %xmm1, %xmm0
 
 ##### step  55 : Fl[0] ^= (Fl[4] ^= Fq[9])
 
-pcmpeqd %xmm0, %xmm15
+pcmpeqw %xmm0, %xmm15
 pmovmskb %xmm15, %r11d
 test %r11d, %r11d
 jne ._report_solution_55
@@ -724,7 +724,7 @@ pxor %xmm4, %xmm0
 
 ##### step  56 : Fl[0] ^= (Fl[1] ^= Fq[3])
 
-pcmpeqd %xmm0, %xmm15
+pcmpeqw %xmm0, %xmm15
 pmovmskb %xmm15, %r11d
 test %r11d, %r11d
 jne ._report_solution_56
@@ -736,7 +736,7 @@ pxor %xmm1, %xmm0
 
 ##### step  57 : Fl[0] ^= (Fl[2] ^= Fq[4])
 
-pcmpeqd %xmm0, %xmm15
+pcmpeqw %xmm0, %xmm15
 pmovmskb %xmm15, %r11d
 test %r11d, %r11d
 jne ._report_solution_57
@@ -748,7 +748,7 @@ pxor %xmm2, %xmm0
 
 ##### step  58 : Fl[0] ^= (Fl[1] ^= Fq[0])
 
-pcmpeqd %xmm0, %xmm15
+pcmpeqw %xmm0, %xmm15
 pmovmskb %xmm15, %r11d
 test %r11d, %r11d
 jne ._report_solution_58
@@ -760,7 +760,7 @@ pxor %xmm1, %xmm0
 
 ##### step  59 : Fl[0] ^= (Fl[3] ^= Fq[5])
 
-pcmpeqd %xmm0, %xmm15
+pcmpeqw %xmm0, %xmm15
 pmovmskb %xmm15, %r11d
 test %r11d, %r11d
 jne ._report_solution_59
@@ -772,7 +772,7 @@ pxor %xmm3, %xmm0
 
 ##### step  60 : Fl[0] ^= (Fl[1] ^= Fq[1])
 
-pcmpeqd %xmm0, %xmm15
+pcmpeqw %xmm0, %xmm15
 pmovmskb %xmm15, %r11d
 test %r11d, %r11d
 jne ._report_solution_60
@@ -784,7 +784,7 @@ pxor %xmm1, %xmm0
 
 ##### step  61 : Fl[0] ^= (Fl[2] ^= Fq[2])
 
-pcmpeqd %xmm0, %xmm15
+pcmpeqw %xmm0, %xmm15
 pmovmskb %xmm15, %r11d
 test %r11d, %r11d
 jne ._report_solution_61
@@ -796,7 +796,7 @@ pxor %xmm2, %xmm0
 
 ##### step  62 : Fl[0] ^= (Fl[1] ^= Fq[0])
 
-pcmpeqd %xmm0, %xmm15
+pcmpeqw %xmm0, %xmm15
 pmovmskb %xmm15, %r11d
 test %r11d, %r11d
 jne ._report_solution_62
@@ -808,7 +808,7 @@ pxor %xmm1, %xmm0
 
 ##### step  63 : Fl[0] ^= (Fl[7] ^= Fq[alpha + 6])
 
-pcmpeqd %xmm0, %xmm15
+pcmpeqw %xmm0, %xmm15
 pmovmskb %xmm15, %r11d
 test %r11d, %r11d
 jne ._report_solution_63
@@ -822,7 +822,7 @@ pxor %xmm14, %xmm0
 
 ##### step  64 : Fl[0] ^= (Fl[1] ^= Fq[15])
 
-pcmpeqd %xmm0, %xmm15
+pcmpeqw %xmm0, %xmm15
 pmovmskb %xmm15, %r11d
 test %r11d, %r11d
 jne ._report_solution_64
@@ -834,7 +834,7 @@ pxor %xmm1, %xmm0
 
 ##### step  65 : Fl[0] ^= (Fl[2] ^= Fq[16])
 
-pcmpeqd %xmm0, %xmm15
+pcmpeqw %xmm0, %xmm15
 pmovmskb %xmm15, %r11d
 test %r11d, %r11d
 jne ._report_solution_65
@@ -846,7 +846,7 @@ pxor %xmm2, %xmm0
 
 ##### step  66 : Fl[0] ^= (Fl[1] ^= Fq[0])
 
-pcmpeqd %xmm0, %xmm15
+pcmpeqw %xmm0, %xmm15
 pmovmskb %xmm15, %r11d
 test %r11d, %r11d
 jne ._report_solution_66
@@ -858,7 +858,7 @@ pxor %xmm1, %xmm0
 
 ##### step  67 : Fl[0] ^= (Fl[3] ^= Fq[17])
 
-pcmpeqd %xmm0, %xmm15
+pcmpeqw %xmm0, %xmm15
 pmovmskb %xmm15, %r11d
 test %r11d, %r11d
 jne ._report_solution_67
@@ -870,7 +870,7 @@ pxor %xmm3, %xmm0
 
 ##### step  68 : Fl[0] ^= (Fl[1] ^= Fq[1])
 
-pcmpeqd %xmm0, %xmm15
+pcmpeqw %xmm0, %xmm15
 pmovmskb %xmm15, %r11d
 test %r11d, %r11d
 jne ._report_solution_68
@@ -882,7 +882,7 @@ pxor %xmm1, %xmm0
 
 ##### step  69 : Fl[0] ^= (Fl[2] ^= Fq[2])
 
-pcmpeqd %xmm0, %xmm15
+pcmpeqw %xmm0, %xmm15
 pmovmskb %xmm15, %r11d
 test %r11d, %r11d
 jne ._report_solution_69
@@ -894,7 +894,7 @@ pxor %xmm2, %xmm0
 
 ##### step  70 : Fl[0] ^= (Fl[1] ^= Fq[0])
 
-pcmpeqd %xmm0, %xmm15
+pcmpeqw %xmm0, %xmm15
 pmovmskb %xmm15, %r11d
 test %r11d, %r11d
 jne ._report_solution_70
@@ -906,7 +906,7 @@ pxor %xmm1, %xmm0
 
 ##### step  71 : Fl[0] ^= (Fl[4] ^= Fq[18])
 
-pcmpeqd %xmm0, %xmm15
+pcmpeqw %xmm0, %xmm15
 pmovmskb %xmm15, %r11d
 test %r11d, %r11d
 jne ._report_solution_71
@@ -918,7 +918,7 @@ pxor %xmm4, %xmm0
 
 ##### step  72 : Fl[0] ^= (Fl[1] ^= Fq[3])
 
-pcmpeqd %xmm0, %xmm15
+pcmpeqw %xmm0, %xmm15
 pmovmskb %xmm15, %r11d
 test %r11d, %r11d
 jne ._report_solution_72
@@ -930,7 +930,7 @@ pxor %xmm1, %xmm0
 
 ##### step  73 : Fl[0] ^= (Fl[2] ^= Fq[4])
 
-pcmpeqd %xmm0, %xmm15
+pcmpeqw %xmm0, %xmm15
 pmovmskb %xmm15, %r11d
 test %r11d, %r11d
 jne ._report_solution_73
@@ -942,7 +942,7 @@ pxor %xmm2, %xmm0
 
 ##### step  74 : Fl[0] ^= (Fl[1] ^= Fq[0])
 
-pcmpeqd %xmm0, %xmm15
+pcmpeqw %xmm0, %xmm15
 pmovmskb %xmm15, %r11d
 test %r11d, %r11d
 jne ._report_solution_74
@@ -954,7 +954,7 @@ pxor %xmm1, %xmm0
 
 ##### step  75 : Fl[0] ^= (Fl[3] ^= Fq[5])
 
-pcmpeqd %xmm0, %xmm15
+pcmpeqw %xmm0, %xmm15
 pmovmskb %xmm15, %r11d
 test %r11d, %r11d
 jne ._report_solution_75
@@ -966,7 +966,7 @@ pxor %xmm3, %xmm0
 
 ##### step  76 : Fl[0] ^= (Fl[1] ^= Fq[1])
 
-pcmpeqd %xmm0, %xmm15
+pcmpeqw %xmm0, %xmm15
 pmovmskb %xmm15, %r11d
 test %r11d, %r11d
 jne ._report_solution_76
@@ -978,7 +978,7 @@ pxor %xmm1, %xmm0
 
 ##### step  77 : Fl[0] ^= (Fl[2] ^= Fq[2])
 
-pcmpeqd %xmm0, %xmm15
+pcmpeqw %xmm0, %xmm15
 pmovmskb %xmm15, %r11d
 test %r11d, %r11d
 jne ._report_solution_77
@@ -990,7 +990,7 @@ pxor %xmm2, %xmm0
 
 ##### step  78 : Fl[0] ^= (Fl[1] ^= Fq[0])
 
-pcmpeqd %xmm0, %xmm15
+pcmpeqw %xmm0, %xmm15
 pmovmskb %xmm15, %r11d
 test %r11d, %r11d
 jne ._report_solution_78
@@ -1002,7 +1002,7 @@ pxor %xmm1, %xmm0
 
 ##### step  79 : Fl[0] ^= (Fl[5] ^= Fq[19])
 
-pcmpeqd %xmm0, %xmm15
+pcmpeqw %xmm0, %xmm15
 pmovmskb %xmm15, %r11d
 test %r11d, %r11d
 jne ._report_solution_79
@@ -1014,7 +1014,7 @@ pxor %xmm5, %xmm0
 
 ##### step  80 : Fl[0] ^= (Fl[1] ^= Fq[6])
 
-pcmpeqd %xmm0, %xmm15
+pcmpeqw %xmm0, %xmm15
 pmovmskb %xmm15, %r11d
 test %r11d, %r11d
 jne ._report_solution_80
@@ -1026,7 +1026,7 @@ pxor %xmm1, %xmm0
 
 ##### step  81 : Fl[0] ^= (Fl[2] ^= Fq[7])
 
-pcmpeqd %xmm0, %xmm15
+pcmpeqw %xmm0, %xmm15
 pmovmskb %xmm15, %r11d
 test %r11d, %r11d
 jne ._report_solution_81
@@ -1038,7 +1038,7 @@ pxor %xmm2, %xmm0
 
 ##### step  82 : Fl[0] ^= (Fl[1] ^= Fq[0])
 
-pcmpeqd %xmm0, %xmm15
+pcmpeqw %xmm0, %xmm15
 pmovmskb %xmm15, %r11d
 test %r11d, %r11d
 jne ._report_solution_82
@@ -1050,7 +1050,7 @@ pxor %xmm1, %xmm0
 
 ##### step  83 : Fl[0] ^= (Fl[3] ^= Fq[8])
 
-pcmpeqd %xmm0, %xmm15
+pcmpeqw %xmm0, %xmm15
 pmovmskb %xmm15, %r11d
 test %r11d, %r11d
 jne ._report_solution_83
@@ -1062,7 +1062,7 @@ pxor %xmm3, %xmm0
 
 ##### step  84 : Fl[0] ^= (Fl[1] ^= Fq[1])
 
-pcmpeqd %xmm0, %xmm15
+pcmpeqw %xmm0, %xmm15
 pmovmskb %xmm15, %r11d
 test %r11d, %r11d
 jne ._report_solution_84
@@ -1074,7 +1074,7 @@ pxor %xmm1, %xmm0
 
 ##### step  85 : Fl[0] ^= (Fl[2] ^= Fq[2])
 
-pcmpeqd %xmm0, %xmm15
+pcmpeqw %xmm0, %xmm15
 pmovmskb %xmm15, %r11d
 test %r11d, %r11d
 jne ._report_solution_85
@@ -1086,7 +1086,7 @@ pxor %xmm2, %xmm0
 
 ##### step  86 : Fl[0] ^= (Fl[1] ^= Fq[0])
 
-pcmpeqd %xmm0, %xmm15
+pcmpeqw %xmm0, %xmm15
 pmovmskb %xmm15, %r11d
 test %r11d, %r11d
 jne ._report_solution_86
@@ -1098,7 +1098,7 @@ pxor %xmm1, %xmm0
 
 ##### step  87 : Fl[0] ^= (Fl[4] ^= Fq[9])
 
-pcmpeqd %xmm0, %xmm15
+pcmpeqw %xmm0, %xmm15
 pmovmskb %xmm15, %r11d
 test %r11d, %r11d
 jne ._report_solution_87
@@ -1110,7 +1110,7 @@ pxor %xmm4, %xmm0
 
 ##### step  88 : Fl[0] ^= (Fl[1] ^= Fq[3])
 
-pcmpeqd %xmm0, %xmm15
+pcmpeqw %xmm0, %xmm15
 pmovmskb %xmm15, %r11d
 test %r11d, %r11d
 jne ._report_solution_88
@@ -1122,7 +1122,7 @@ pxor %xmm1, %xmm0
 
 ##### step  89 : Fl[0] ^= (Fl[2] ^= Fq[4])
 
-pcmpeqd %xmm0, %xmm15
+pcmpeqw %xmm0, %xmm15
 pmovmskb %xmm15, %r11d
 test %r11d, %r11d
 jne ._report_solution_89
@@ -1134,7 +1134,7 @@ pxor %xmm2, %xmm0
 
 ##### step  90 : Fl[0] ^= (Fl[1] ^= Fq[0])
 
-pcmpeqd %xmm0, %xmm15
+pcmpeqw %xmm0, %xmm15
 pmovmskb %xmm15, %r11d
 test %r11d, %r11d
 jne ._report_solution_90
@@ -1146,7 +1146,7 @@ pxor %xmm1, %xmm0
 
 ##### step  91 : Fl[0] ^= (Fl[3] ^= Fq[5])
 
-pcmpeqd %xmm0, %xmm15
+pcmpeqw %xmm0, %xmm15
 pmovmskb %xmm15, %r11d
 test %r11d, %r11d
 jne ._report_solution_91
@@ -1158,7 +1158,7 @@ pxor %xmm3, %xmm0
 
 ##### step  92 : Fl[0] ^= (Fl[1] ^= Fq[1])
 
-pcmpeqd %xmm0, %xmm15
+pcmpeqw %xmm0, %xmm15
 pmovmskb %xmm15, %r11d
 test %r11d, %r11d
 jne ._report_solution_92
@@ -1170,7 +1170,7 @@ pxor %xmm1, %xmm0
 
 ##### step  93 : Fl[0] ^= (Fl[2] ^= Fq[2])
 
-pcmpeqd %xmm0, %xmm15
+pcmpeqw %xmm0, %xmm15
 pmovmskb %xmm15, %r11d
 test %r11d, %r11d
 jne ._report_solution_93
@@ -1182,7 +1182,7 @@ pxor %xmm2, %xmm0
 
 ##### step  94 : Fl[0] ^= (Fl[1] ^= Fq[0])
 
-pcmpeqd %xmm0, %xmm15
+pcmpeqw %xmm0, %xmm15
 pmovmskb %xmm15, %r11d
 test %r11d, %r11d
 jne ._report_solution_94
@@ -1194,7 +1194,7 @@ pxor %xmm1, %xmm0
 
 ##### step  95 : Fl[0] ^= (Fl[6] ^= Fq[20])
 
-pcmpeqd %xmm0, %xmm15
+pcmpeqw %xmm0, %xmm15
 pmovmskb %xmm15, %r11d
 test %r11d, %r11d
 jne ._report_solution_95
@@ -1206,7 +1206,7 @@ pxor %xmm6, %xmm0
 
 ##### step  96 : Fl[0] ^= (Fl[1] ^= Fq[10])
 
-pcmpeqd %xmm0, %xmm15
+pcmpeqw %xmm0, %xmm15
 pmovmskb %xmm15, %r11d
 test %r11d, %r11d
 jne ._report_solution_96
@@ -1218,7 +1218,7 @@ pxor %xmm1, %xmm0
 
 ##### step  97 : Fl[0] ^= (Fl[2] ^= Fq[11])
 
-pcmpeqd %xmm0, %xmm15
+pcmpeqw %xmm0, %xmm15
 pmovmskb %xmm15, %r11d
 test %r11d, %r11d
 jne ._report_solution_97
@@ -1230,7 +1230,7 @@ pxor %xmm2, %xmm0
 
 ##### step  98 : Fl[0] ^= (Fl[1] ^= Fq[0])
 
-pcmpeqd %xmm0, %xmm15
+pcmpeqw %xmm0, %xmm15
 pmovmskb %xmm15, %r11d
 test %r11d, %r11d
 jne ._report_solution_98
@@ -1242,7 +1242,7 @@ pxor %xmm1, %xmm0
 
 ##### step  99 : Fl[0] ^= (Fl[3] ^= Fq[12])
 
-pcmpeqd %xmm0, %xmm15
+pcmpeqw %xmm0, %xmm15
 pmovmskb %xmm15, %r11d
 test %r11d, %r11d
 jne ._report_solution_99
@@ -1254,7 +1254,7 @@ pxor %xmm3, %xmm0
 
 ##### step 100 : Fl[0] ^= (Fl[1] ^= Fq[1])
 
-pcmpeqd %xmm0, %xmm15
+pcmpeqw %xmm0, %xmm15
 pmovmskb %xmm15, %r11d
 test %r11d, %r11d
 jne ._report_solution_100
@@ -1266,7 +1266,7 @@ pxor %xmm1, %xmm0
 
 ##### step 101 : Fl[0] ^= (Fl[2] ^= Fq[2])
 
-pcmpeqd %xmm0, %xmm15
+pcmpeqw %xmm0, %xmm15
 pmovmskb %xmm15, %r11d
 test %r11d, %r11d
 jne ._report_solution_101
@@ -1278,7 +1278,7 @@ pxor %xmm2, %xmm0
 
 ##### step 102 : Fl[0] ^= (Fl[1] ^= Fq[0])
 
-pcmpeqd %xmm0, %xmm15
+pcmpeqw %xmm0, %xmm15
 pmovmskb %xmm15, %r11d
 test %r11d, %r11d
 jne ._report_solution_102
@@ -1290,7 +1290,7 @@ pxor %xmm1, %xmm0
 
 ##### step 103 : Fl[0] ^= (Fl[4] ^= Fq[13])
 
-pcmpeqd %xmm0, %xmm15
+pcmpeqw %xmm0, %xmm15
 pmovmskb %xmm15, %r11d
 test %r11d, %r11d
 jne ._report_solution_103
@@ -1302,7 +1302,7 @@ pxor %xmm4, %xmm0
 
 ##### step 104 : Fl[0] ^= (Fl[1] ^= Fq[3])
 
-pcmpeqd %xmm0, %xmm15
+pcmpeqw %xmm0, %xmm15
 pmovmskb %xmm15, %r11d
 test %r11d, %r11d
 jne ._report_solution_104
@@ -1314,7 +1314,7 @@ pxor %xmm1, %xmm0
 
 ##### step 105 : Fl[0] ^= (Fl[2] ^= Fq[4])
 
-pcmpeqd %xmm0, %xmm15
+pcmpeqw %xmm0, %xmm15
 pmovmskb %xmm15, %r11d
 test %r11d, %r11d
 jne ._report_solution_105
@@ -1326,7 +1326,7 @@ pxor %xmm2, %xmm0
 
 ##### step 106 : Fl[0] ^= (Fl[1] ^= Fq[0])
 
-pcmpeqd %xmm0, %xmm15
+pcmpeqw %xmm0, %xmm15
 pmovmskb %xmm15, %r11d
 test %r11d, %r11d
 jne ._report_solution_106
@@ -1338,7 +1338,7 @@ pxor %xmm1, %xmm0
 
 ##### step 107 : Fl[0] ^= (Fl[3] ^= Fq[5])
 
-pcmpeqd %xmm0, %xmm15
+pcmpeqw %xmm0, %xmm15
 pmovmskb %xmm15, %r11d
 test %r11d, %r11d
 jne ._report_solution_107
@@ -1350,7 +1350,7 @@ pxor %xmm3, %xmm0
 
 ##### step 108 : Fl[0] ^= (Fl[1] ^= Fq[1])
 
-pcmpeqd %xmm0, %xmm15
+pcmpeqw %xmm0, %xmm15
 pmovmskb %xmm15, %r11d
 test %r11d, %r11d
 jne ._report_solution_108
@@ -1362,7 +1362,7 @@ pxor %xmm1, %xmm0
 
 ##### step 109 : Fl[0] ^= (Fl[2] ^= Fq[2])
 
-pcmpeqd %xmm0, %xmm15
+pcmpeqw %xmm0, %xmm15
 pmovmskb %xmm15, %r11d
 test %r11d, %r11d
 jne ._report_solution_109
@@ -1374,7 +1374,7 @@ pxor %xmm2, %xmm0
 
 ##### step 110 : Fl[0] ^= (Fl[1] ^= Fq[0])
 
-pcmpeqd %xmm0, %xmm15
+pcmpeqw %xmm0, %xmm15
 pmovmskb %xmm15, %r11d
 test %r11d, %r11d
 jne ._report_solution_110
@@ -1386,7 +1386,7 @@ pxor %xmm1, %xmm0
 
 ##### step 111 : Fl[0] ^= (Fl[5] ^= Fq[14])
 
-pcmpeqd %xmm0, %xmm15
+pcmpeqw %xmm0, %xmm15
 pmovmskb %xmm15, %r11d
 test %r11d, %r11d
 jne ._report_solution_111
@@ -1398,7 +1398,7 @@ pxor %xmm5, %xmm0
 
 ##### step 112 : Fl[0] ^= (Fl[1] ^= Fq[6])
 
-pcmpeqd %xmm0, %xmm15
+pcmpeqw %xmm0, %xmm15
 pmovmskb %xmm15, %r11d
 test %r11d, %r11d
 jne ._report_solution_112
@@ -1410,7 +1410,7 @@ pxor %xmm1, %xmm0
 
 ##### step 113 : Fl[0] ^= (Fl[2] ^= Fq[7])
 
-pcmpeqd %xmm0, %xmm15
+pcmpeqw %xmm0, %xmm15
 pmovmskb %xmm15, %r11d
 test %r11d, %r11d
 jne ._report_solution_113
@@ -1422,7 +1422,7 @@ pxor %xmm2, %xmm0
 
 ##### step 114 : Fl[0] ^= (Fl[1] ^= Fq[0])
 
-pcmpeqd %xmm0, %xmm15
+pcmpeqw %xmm0, %xmm15
 pmovmskb %xmm15, %r11d
 test %r11d, %r11d
 jne ._report_solution_114
@@ -1434,7 +1434,7 @@ pxor %xmm1, %xmm0
 
 ##### step 115 : Fl[0] ^= (Fl[3] ^= Fq[8])
 
-pcmpeqd %xmm0, %xmm15
+pcmpeqw %xmm0, %xmm15
 pmovmskb %xmm15, %r11d
 test %r11d, %r11d
 jne ._report_solution_115
@@ -1446,7 +1446,7 @@ pxor %xmm3, %xmm0
 
 ##### step 116 : Fl[0] ^= (Fl[1] ^= Fq[1])
 
-pcmpeqd %xmm0, %xmm15
+pcmpeqw %xmm0, %xmm15
 pmovmskb %xmm15, %r11d
 test %r11d, %r11d
 jne ._report_solution_116
@@ -1458,7 +1458,7 @@ pxor %xmm1, %xmm0
 
 ##### step 117 : Fl[0] ^= (Fl[2] ^= Fq[2])
 
-pcmpeqd %xmm0, %xmm15
+pcmpeqw %xmm0, %xmm15
 pmovmskb %xmm15, %r11d
 test %r11d, %r11d
 jne ._report_solution_117
@@ -1470,7 +1470,7 @@ pxor %xmm2, %xmm0
 
 ##### step 118 : Fl[0] ^= (Fl[1] ^= Fq[0])
 
-pcmpeqd %xmm0, %xmm15
+pcmpeqw %xmm0, %xmm15
 pmovmskb %xmm15, %r11d
 test %r11d, %r11d
 jne ._report_solution_118
@@ -1482,7 +1482,7 @@ pxor %xmm1, %xmm0
 
 ##### step 119 : Fl[0] ^= (Fl[4] ^= Fq[9])
 
-pcmpeqd %xmm0, %xmm15
+pcmpeqw %xmm0, %xmm15
 pmovmskb %xmm15, %r11d
 test %r11d, %r11d
 jne ._report_solution_119
@@ -1494,7 +1494,7 @@ pxor %xmm4, %xmm0
 
 ##### step 120 : Fl[0] ^= (Fl[1] ^= Fq[3])
 
-pcmpeqd %xmm0, %xmm15
+pcmpeqw %xmm0, %xmm15
 pmovmskb %xmm15, %r11d
 test %r11d, %r11d
 jne ._report_solution_120
@@ -1506,7 +1506,7 @@ pxor %xmm1, %xmm0
 
 ##### step 121 : Fl[0] ^= (Fl[2] ^= Fq[4])
 
-pcmpeqd %xmm0, %xmm15
+pcmpeqw %xmm0, %xmm15
 pmovmskb %xmm15, %r11d
 test %r11d, %r11d
 jne ._report_solution_121
@@ -1518,7 +1518,7 @@ pxor %xmm2, %xmm0
 
 ##### step 122 : Fl[0] ^= (Fl[1] ^= Fq[0])
 
-pcmpeqd %xmm0, %xmm15
+pcmpeqw %xmm0, %xmm15
 pmovmskb %xmm15, %r11d
 test %r11d, %r11d
 jne ._report_solution_122
@@ -1530,7 +1530,7 @@ pxor %xmm1, %xmm0
 
 ##### step 123 : Fl[0] ^= (Fl[3] ^= Fq[5])
 
-pcmpeqd %xmm0, %xmm15
+pcmpeqw %xmm0, %xmm15
 pmovmskb %xmm15, %r11d
 test %r11d, %r11d
 jne ._report_solution_123
@@ -1542,7 +1542,7 @@ pxor %xmm3, %xmm0
 
 ##### step 124 : Fl[0] ^= (Fl[1] ^= Fq[1])
 
-pcmpeqd %xmm0, %xmm15
+pcmpeqw %xmm0, %xmm15
 pmovmskb %xmm15, %r11d
 test %r11d, %r11d
 jne ._report_solution_124
@@ -1554,7 +1554,7 @@ pxor %xmm1, %xmm0
 
 ##### step 125 : Fl[0] ^= (Fl[2] ^= Fq[2])
 
-pcmpeqd %xmm0, %xmm15
+pcmpeqw %xmm0, %xmm15
 pmovmskb %xmm15, %r11d
 test %r11d, %r11d
 jne ._report_solution_125
@@ -1566,7 +1566,7 @@ pxor %xmm2, %xmm0
 
 ##### step 126 : Fl[0] ^= (Fl[1] ^= Fq[0])
 
-pcmpeqd %xmm0, %xmm15
+pcmpeqw %xmm0, %xmm15
 pmovmskb %xmm15, %r11d
 test %r11d, %r11d
 jne ._report_solution_126
@@ -1578,7 +1578,7 @@ pxor %xmm1, %xmm0
 
 ##### step 127 : Fl[0] ^= (Fl[8] ^= Fq[alpha + 7])
 
-pcmpeqd %xmm0, %xmm15
+pcmpeqw %xmm0, %xmm15
 pmovmskb %xmm15, %r11d
 test %r11d, %r11d
 jne ._report_solution_127
@@ -1592,7 +1592,7 @@ pxor %xmm14, %xmm0
 
 ##### step 128 : Fl[0] ^= (Fl[1] ^= Fq[21])
 
-pcmpeqd %xmm0, %xmm15
+pcmpeqw %xmm0, %xmm15
 pmovmskb %xmm15, %r11d
 test %r11d, %r11d
 jne ._report_solution_128
@@ -1604,7 +1604,7 @@ pxor %xmm1, %xmm0
 
 ##### step 129 : Fl[0] ^= (Fl[2] ^= Fq[22])
 
-pcmpeqd %xmm0, %xmm15
+pcmpeqw %xmm0, %xmm15
 pmovmskb %xmm15, %r11d
 test %r11d, %r11d
 jne ._report_solution_129
@@ -1616,7 +1616,7 @@ pxor %xmm2, %xmm0
 
 ##### step 130 : Fl[0] ^= (Fl[1] ^= Fq[0])
 
-pcmpeqd %xmm0, %xmm15
+pcmpeqw %xmm0, %xmm15
 pmovmskb %xmm15, %r11d
 test %r11d, %r11d
 jne ._report_solution_130
@@ -1628,7 +1628,7 @@ pxor %xmm1, %xmm0
 
 ##### step 131 : Fl[0] ^= (Fl[3] ^= Fq[23])
 
-pcmpeqd %xmm0, %xmm15
+pcmpeqw %xmm0, %xmm15
 pmovmskb %xmm15, %r11d
 test %r11d, %r11d
 jne ._report_solution_131
@@ -1640,7 +1640,7 @@ pxor %xmm3, %xmm0
 
 ##### step 132 : Fl[0] ^= (Fl[1] ^= Fq[1])
 
-pcmpeqd %xmm0, %xmm15
+pcmpeqw %xmm0, %xmm15
 pmovmskb %xmm15, %r11d
 test %r11d, %r11d
 jne ._report_solution_132
@@ -1652,7 +1652,7 @@ pxor %xmm1, %xmm0
 
 ##### step 133 : Fl[0] ^= (Fl[2] ^= Fq[2])
 
-pcmpeqd %xmm0, %xmm15
+pcmpeqw %xmm0, %xmm15
 pmovmskb %xmm15, %r11d
 test %r11d, %r11d
 jne ._report_solution_133
@@ -1664,7 +1664,7 @@ pxor %xmm2, %xmm0
 
 ##### step 134 : Fl[0] ^= (Fl[1] ^= Fq[0])
 
-pcmpeqd %xmm0, %xmm15
+pcmpeqw %xmm0, %xmm15
 pmovmskb %xmm15, %r11d
 test %r11d, %r11d
 jne ._report_solution_134
@@ -1676,7 +1676,7 @@ pxor %xmm1, %xmm0
 
 ##### step 135 : Fl[0] ^= (Fl[4] ^= Fq[24])
 
-pcmpeqd %xmm0, %xmm15
+pcmpeqw %xmm0, %xmm15
 pmovmskb %xmm15, %r11d
 test %r11d, %r11d
 jne ._report_solution_135
@@ -1688,7 +1688,7 @@ pxor %xmm4, %xmm0
 
 ##### step 136 : Fl[0] ^= (Fl[1] ^= Fq[3])
 
-pcmpeqd %xmm0, %xmm15
+pcmpeqw %xmm0, %xmm15
 pmovmskb %xmm15, %r11d
 test %r11d, %r11d
 jne ._report_solution_136
@@ -1700,7 +1700,7 @@ pxor %xmm1, %xmm0
 
 ##### step 137 : Fl[0] ^= (Fl[2] ^= Fq[4])
 
-pcmpeqd %xmm0, %xmm15
+pcmpeqw %xmm0, %xmm15
 pmovmskb %xmm15, %r11d
 test %r11d, %r11d
 jne ._report_solution_137
@@ -1712,7 +1712,7 @@ pxor %xmm2, %xmm0
 
 ##### step 138 : Fl[0] ^= (Fl[1] ^= Fq[0])
 
-pcmpeqd %xmm0, %xmm15
+pcmpeqw %xmm0, %xmm15
 pmovmskb %xmm15, %r11d
 test %r11d, %r11d
 jne ._report_solution_138
@@ -1724,7 +1724,7 @@ pxor %xmm1, %xmm0
 
 ##### step 139 : Fl[0] ^= (Fl[3] ^= Fq[5])
 
-pcmpeqd %xmm0, %xmm15
+pcmpeqw %xmm0, %xmm15
 pmovmskb %xmm15, %r11d
 test %r11d, %r11d
 jne ._report_solution_139
@@ -1736,7 +1736,7 @@ pxor %xmm3, %xmm0
 
 ##### step 140 : Fl[0] ^= (Fl[1] ^= Fq[1])
 
-pcmpeqd %xmm0, %xmm15
+pcmpeqw %xmm0, %xmm15
 pmovmskb %xmm15, %r11d
 test %r11d, %r11d
 jne ._report_solution_140
@@ -1748,7 +1748,7 @@ pxor %xmm1, %xmm0
 
 ##### step 141 : Fl[0] ^= (Fl[2] ^= Fq[2])
 
-pcmpeqd %xmm0, %xmm15
+pcmpeqw %xmm0, %xmm15
 pmovmskb %xmm15, %r11d
 test %r11d, %r11d
 jne ._report_solution_141
@@ -1760,7 +1760,7 @@ pxor %xmm2, %xmm0
 
 ##### step 142 : Fl[0] ^= (Fl[1] ^= Fq[0])
 
-pcmpeqd %xmm0, %xmm15
+pcmpeqw %xmm0, %xmm15
 pmovmskb %xmm15, %r11d
 test %r11d, %r11d
 jne ._report_solution_142
@@ -1772,7 +1772,7 @@ pxor %xmm1, %xmm0
 
 ##### step 143 : Fl[0] ^= (Fl[5] ^= Fq[25])
 
-pcmpeqd %xmm0, %xmm15
+pcmpeqw %xmm0, %xmm15
 pmovmskb %xmm15, %r11d
 test %r11d, %r11d
 jne ._report_solution_143
@@ -1784,7 +1784,7 @@ pxor %xmm5, %xmm0
 
 ##### step 144 : Fl[0] ^= (Fl[1] ^= Fq[6])
 
-pcmpeqd %xmm0, %xmm15
+pcmpeqw %xmm0, %xmm15
 pmovmskb %xmm15, %r11d
 test %r11d, %r11d
 jne ._report_solution_144
@@ -1796,7 +1796,7 @@ pxor %xmm1, %xmm0
 
 ##### step 145 : Fl[0] ^= (Fl[2] ^= Fq[7])
 
-pcmpeqd %xmm0, %xmm15
+pcmpeqw %xmm0, %xmm15
 pmovmskb %xmm15, %r11d
 test %r11d, %r11d
 jne ._report_solution_145
@@ -1808,7 +1808,7 @@ pxor %xmm2, %xmm0
 
 ##### step 146 : Fl[0] ^= (Fl[1] ^= Fq[0])
 
-pcmpeqd %xmm0, %xmm15
+pcmpeqw %xmm0, %xmm15
 pmovmskb %xmm15, %r11d
 test %r11d, %r11d
 jne ._report_solution_146
@@ -1820,7 +1820,7 @@ pxor %xmm1, %xmm0
 
 ##### step 147 : Fl[0] ^= (Fl[3] ^= Fq[8])
 
-pcmpeqd %xmm0, %xmm15
+pcmpeqw %xmm0, %xmm15
 pmovmskb %xmm15, %r11d
 test %r11d, %r11d
 jne ._report_solution_147
@@ -1832,7 +1832,7 @@ pxor %xmm3, %xmm0
 
 ##### step 148 : Fl[0] ^= (Fl[1] ^= Fq[1])
 
-pcmpeqd %xmm0, %xmm15
+pcmpeqw %xmm0, %xmm15
 pmovmskb %xmm15, %r11d
 test %r11d, %r11d
 jne ._report_solution_148
@@ -1844,7 +1844,7 @@ pxor %xmm1, %xmm0
 
 ##### step 149 : Fl[0] ^= (Fl[2] ^= Fq[2])
 
-pcmpeqd %xmm0, %xmm15
+pcmpeqw %xmm0, %xmm15
 pmovmskb %xmm15, %r11d
 test %r11d, %r11d
 jne ._report_solution_149
@@ -1856,7 +1856,7 @@ pxor %xmm2, %xmm0
 
 ##### step 150 : Fl[0] ^= (Fl[1] ^= Fq[0])
 
-pcmpeqd %xmm0, %xmm15
+pcmpeqw %xmm0, %xmm15
 pmovmskb %xmm15, %r11d
 test %r11d, %r11d
 jne ._report_solution_150
@@ -1868,7 +1868,7 @@ pxor %xmm1, %xmm0
 
 ##### step 151 : Fl[0] ^= (Fl[4] ^= Fq[9])
 
-pcmpeqd %xmm0, %xmm15
+pcmpeqw %xmm0, %xmm15
 pmovmskb %xmm15, %r11d
 test %r11d, %r11d
 jne ._report_solution_151
@@ -1880,7 +1880,7 @@ pxor %xmm4, %xmm0
 
 ##### step 152 : Fl[0] ^= (Fl[1] ^= Fq[3])
 
-pcmpeqd %xmm0, %xmm15
+pcmpeqw %xmm0, %xmm15
 pmovmskb %xmm15, %r11d
 test %r11d, %r11d
 jne ._report_solution_152
@@ -1892,7 +1892,7 @@ pxor %xmm1, %xmm0
 
 ##### step 153 : Fl[0] ^= (Fl[2] ^= Fq[4])
 
-pcmpeqd %xmm0, %xmm15
+pcmpeqw %xmm0, %xmm15
 pmovmskb %xmm15, %r11d
 test %r11d, %r11d
 jne ._report_solution_153
@@ -1904,7 +1904,7 @@ pxor %xmm2, %xmm0
 
 ##### step 154 : Fl[0] ^= (Fl[1] ^= Fq[0])
 
-pcmpeqd %xmm0, %xmm15
+pcmpeqw %xmm0, %xmm15
 pmovmskb %xmm15, %r11d
 test %r11d, %r11d
 jne ._report_solution_154
@@ -1916,7 +1916,7 @@ pxor %xmm1, %xmm0
 
 ##### step 155 : Fl[0] ^= (Fl[3] ^= Fq[5])
 
-pcmpeqd %xmm0, %xmm15
+pcmpeqw %xmm0, %xmm15
 pmovmskb %xmm15, %r11d
 test %r11d, %r11d
 jne ._report_solution_155
@@ -1928,7 +1928,7 @@ pxor %xmm3, %xmm0
 
 ##### step 156 : Fl[0] ^= (Fl[1] ^= Fq[1])
 
-pcmpeqd %xmm0, %xmm15
+pcmpeqw %xmm0, %xmm15
 pmovmskb %xmm15, %r11d
 test %r11d, %r11d
 jne ._report_solution_156
@@ -1940,7 +1940,7 @@ pxor %xmm1, %xmm0
 
 ##### step 157 : Fl[0] ^= (Fl[2] ^= Fq[2])
 
-pcmpeqd %xmm0, %xmm15
+pcmpeqw %xmm0, %xmm15
 pmovmskb %xmm15, %r11d
 test %r11d, %r11d
 jne ._report_solution_157
@@ -1952,7 +1952,7 @@ pxor %xmm2, %xmm0
 
 ##### step 158 : Fl[0] ^= (Fl[1] ^= Fq[0])
 
-pcmpeqd %xmm0, %xmm15
+pcmpeqw %xmm0, %xmm15
 pmovmskb %xmm15, %r11d
 test %r11d, %r11d
 jne ._report_solution_158
@@ -1964,7 +1964,7 @@ pxor %xmm1, %xmm0
 
 ##### step 159 : Fl[0] ^= (Fl[6] ^= Fq[26])
 
-pcmpeqd %xmm0, %xmm15
+pcmpeqw %xmm0, %xmm15
 pmovmskb %xmm15, %r11d
 test %r11d, %r11d
 jne ._report_solution_159
@@ -1976,7 +1976,7 @@ pxor %xmm6, %xmm0
 
 ##### step 160 : Fl[0] ^= (Fl[1] ^= Fq[10])
 
-pcmpeqd %xmm0, %xmm15
+pcmpeqw %xmm0, %xmm15
 pmovmskb %xmm15, %r11d
 test %r11d, %r11d
 jne ._report_solution_160
@@ -1988,7 +1988,7 @@ pxor %xmm1, %xmm0
 
 ##### step 161 : Fl[0] ^= (Fl[2] ^= Fq[11])
 
-pcmpeqd %xmm0, %xmm15
+pcmpeqw %xmm0, %xmm15
 pmovmskb %xmm15, %r11d
 test %r11d, %r11d
 jne ._report_solution_161
@@ -2000,7 +2000,7 @@ pxor %xmm2, %xmm0
 
 ##### step 162 : Fl[0] ^= (Fl[1] ^= Fq[0])
 
-pcmpeqd %xmm0, %xmm15
+pcmpeqw %xmm0, %xmm15
 pmovmskb %xmm15, %r11d
 test %r11d, %r11d
 jne ._report_solution_162
@@ -2012,7 +2012,7 @@ pxor %xmm1, %xmm0
 
 ##### step 163 : Fl[0] ^= (Fl[3] ^= Fq[12])
 
-pcmpeqd %xmm0, %xmm15
+pcmpeqw %xmm0, %xmm15
 pmovmskb %xmm15, %r11d
 test %r11d, %r11d
 jne ._report_solution_163
@@ -2024,7 +2024,7 @@ pxor %xmm3, %xmm0
 
 ##### step 164 : Fl[0] ^= (Fl[1] ^= Fq[1])
 
-pcmpeqd %xmm0, %xmm15
+pcmpeqw %xmm0, %xmm15
 pmovmskb %xmm15, %r11d
 test %r11d, %r11d
 jne ._report_solution_164
@@ -2036,7 +2036,7 @@ pxor %xmm1, %xmm0
 
 ##### step 165 : Fl[0] ^= (Fl[2] ^= Fq[2])
 
-pcmpeqd %xmm0, %xmm15
+pcmpeqw %xmm0, %xmm15
 pmovmskb %xmm15, %r11d
 test %r11d, %r11d
 jne ._report_solution_165
@@ -2048,7 +2048,7 @@ pxor %xmm2, %xmm0
 
 ##### step 166 : Fl[0] ^= (Fl[1] ^= Fq[0])
 
-pcmpeqd %xmm0, %xmm15
+pcmpeqw %xmm0, %xmm15
 pmovmskb %xmm15, %r11d
 test %r11d, %r11d
 jne ._report_solution_166
@@ -2060,7 +2060,7 @@ pxor %xmm1, %xmm0
 
 ##### step 167 : Fl[0] ^= (Fl[4] ^= Fq[13])
 
-pcmpeqd %xmm0, %xmm15
+pcmpeqw %xmm0, %xmm15
 pmovmskb %xmm15, %r11d
 test %r11d, %r11d
 jne ._report_solution_167
@@ -2072,7 +2072,7 @@ pxor %xmm4, %xmm0
 
 ##### step 168 : Fl[0] ^= (Fl[1] ^= Fq[3])
 
-pcmpeqd %xmm0, %xmm15
+pcmpeqw %xmm0, %xmm15
 pmovmskb %xmm15, %r11d
 test %r11d, %r11d
 jne ._report_solution_168
@@ -2084,7 +2084,7 @@ pxor %xmm1, %xmm0
 
 ##### step 169 : Fl[0] ^= (Fl[2] ^= Fq[4])
 
-pcmpeqd %xmm0, %xmm15
+pcmpeqw %xmm0, %xmm15
 pmovmskb %xmm15, %r11d
 test %r11d, %r11d
 jne ._report_solution_169
@@ -2096,7 +2096,7 @@ pxor %xmm2, %xmm0
 
 ##### step 170 : Fl[0] ^= (Fl[1] ^= Fq[0])
 
-pcmpeqd %xmm0, %xmm15
+pcmpeqw %xmm0, %xmm15
 pmovmskb %xmm15, %r11d
 test %r11d, %r11d
 jne ._report_solution_170
@@ -2108,7 +2108,7 @@ pxor %xmm1, %xmm0
 
 ##### step 171 : Fl[0] ^= (Fl[3] ^= Fq[5])
 
-pcmpeqd %xmm0, %xmm15
+pcmpeqw %xmm0, %xmm15
 pmovmskb %xmm15, %r11d
 test %r11d, %r11d
 jne ._report_solution_171
@@ -2120,7 +2120,7 @@ pxor %xmm3, %xmm0
 
 ##### step 172 : Fl[0] ^= (Fl[1] ^= Fq[1])
 
-pcmpeqd %xmm0, %xmm15
+pcmpeqw %xmm0, %xmm15
 pmovmskb %xmm15, %r11d
 test %r11d, %r11d
 jne ._report_solution_172
@@ -2132,7 +2132,7 @@ pxor %xmm1, %xmm0
 
 ##### step 173 : Fl[0] ^= (Fl[2] ^= Fq[2])
 
-pcmpeqd %xmm0, %xmm15
+pcmpeqw %xmm0, %xmm15
 pmovmskb %xmm15, %r11d
 test %r11d, %r11d
 jne ._report_solution_173
@@ -2144,7 +2144,7 @@ pxor %xmm2, %xmm0
 
 ##### step 174 : Fl[0] ^= (Fl[1] ^= Fq[0])
 
-pcmpeqd %xmm0, %xmm15
+pcmpeqw %xmm0, %xmm15
 pmovmskb %xmm15, %r11d
 test %r11d, %r11d
 jne ._report_solution_174
@@ -2156,7 +2156,7 @@ pxor %xmm1, %xmm0
 
 ##### step 175 : Fl[0] ^= (Fl[5] ^= Fq[14])
 
-pcmpeqd %xmm0, %xmm15
+pcmpeqw %xmm0, %xmm15
 pmovmskb %xmm15, %r11d
 test %r11d, %r11d
 jne ._report_solution_175
@@ -2168,7 +2168,7 @@ pxor %xmm5, %xmm0
 
 ##### step 176 : Fl[0] ^= (Fl[1] ^= Fq[6])
 
-pcmpeqd %xmm0, %xmm15
+pcmpeqw %xmm0, %xmm15
 pmovmskb %xmm15, %r11d
 test %r11d, %r11d
 jne ._report_solution_176
@@ -2180,7 +2180,7 @@ pxor %xmm1, %xmm0
 
 ##### step 177 : Fl[0] ^= (Fl[2] ^= Fq[7])
 
-pcmpeqd %xmm0, %xmm15
+pcmpeqw %xmm0, %xmm15
 pmovmskb %xmm15, %r11d
 test %r11d, %r11d
 jne ._report_solution_177
@@ -2192,7 +2192,7 @@ pxor %xmm2, %xmm0
 
 ##### step 178 : Fl[0] ^= (Fl[1] ^= Fq[0])
 
-pcmpeqd %xmm0, %xmm15
+pcmpeqw %xmm0, %xmm15
 pmovmskb %xmm15, %r11d
 test %r11d, %r11d
 jne ._report_solution_178
@@ -2204,7 +2204,7 @@ pxor %xmm1, %xmm0
 
 ##### step 179 : Fl[0] ^= (Fl[3] ^= Fq[8])
 
-pcmpeqd %xmm0, %xmm15
+pcmpeqw %xmm0, %xmm15
 pmovmskb %xmm15, %r11d
 test %r11d, %r11d
 jne ._report_solution_179
@@ -2216,7 +2216,7 @@ pxor %xmm3, %xmm0
 
 ##### step 180 : Fl[0] ^= (Fl[1] ^= Fq[1])
 
-pcmpeqd %xmm0, %xmm15
+pcmpeqw %xmm0, %xmm15
 pmovmskb %xmm15, %r11d
 test %r11d, %r11d
 jne ._report_solution_180
@@ -2228,7 +2228,7 @@ pxor %xmm1, %xmm0
 
 ##### step 181 : Fl[0] ^= (Fl[2] ^= Fq[2])
 
-pcmpeqd %xmm0, %xmm15
+pcmpeqw %xmm0, %xmm15
 pmovmskb %xmm15, %r11d
 test %r11d, %r11d
 jne ._report_solution_181
@@ -2240,7 +2240,7 @@ pxor %xmm2, %xmm0
 
 ##### step 182 : Fl[0] ^= (Fl[1] ^= Fq[0])
 
-pcmpeqd %xmm0, %xmm15
+pcmpeqw %xmm0, %xmm15
 pmovmskb %xmm15, %r11d
 test %r11d, %r11d
 jne ._report_solution_182
@@ -2252,7 +2252,7 @@ pxor %xmm1, %xmm0
 
 ##### step 183 : Fl[0] ^= (Fl[4] ^= Fq[9])
 
-pcmpeqd %xmm0, %xmm15
+pcmpeqw %xmm0, %xmm15
 pmovmskb %xmm15, %r11d
 test %r11d, %r11d
 jne ._report_solution_183
@@ -2264,7 +2264,7 @@ pxor %xmm4, %xmm0
 
 ##### step 184 : Fl[0] ^= (Fl[1] ^= Fq[3])
 
-pcmpeqd %xmm0, %xmm15
+pcmpeqw %xmm0, %xmm15
 pmovmskb %xmm15, %r11d
 test %r11d, %r11d
 jne ._report_solution_184
@@ -2276,7 +2276,7 @@ pxor %xmm1, %xmm0
 
 ##### step 185 : Fl[0] ^= (Fl[2] ^= Fq[4])
 
-pcmpeqd %xmm0, %xmm15
+pcmpeqw %xmm0, %xmm15
 pmovmskb %xmm15, %r11d
 test %r11d, %r11d
 jne ._report_solution_185
@@ -2288,7 +2288,7 @@ pxor %xmm2, %xmm0
 
 ##### step 186 : Fl[0] ^= (Fl[1] ^= Fq[0])
 
-pcmpeqd %xmm0, %xmm15
+pcmpeqw %xmm0, %xmm15
 pmovmskb %xmm15, %r11d
 test %r11d, %r11d
 jne ._report_solution_186
@@ -2300,7 +2300,7 @@ pxor %xmm1, %xmm0
 
 ##### step 187 : Fl[0] ^= (Fl[3] ^= Fq[5])
 
-pcmpeqd %xmm0, %xmm15
+pcmpeqw %xmm0, %xmm15
 pmovmskb %xmm15, %r11d
 test %r11d, %r11d
 jne ._report_solution_187
@@ -2312,7 +2312,7 @@ pxor %xmm3, %xmm0
 
 ##### step 188 : Fl[0] ^= (Fl[1] ^= Fq[1])
 
-pcmpeqd %xmm0, %xmm15
+pcmpeqw %xmm0, %xmm15
 pmovmskb %xmm15, %r11d
 test %r11d, %r11d
 jne ._report_solution_188
@@ -2324,7 +2324,7 @@ pxor %xmm1, %xmm0
 
 ##### step 189 : Fl[0] ^= (Fl[2] ^= Fq[2])
 
-pcmpeqd %xmm0, %xmm15
+pcmpeqw %xmm0, %xmm15
 pmovmskb %xmm15, %r11d
 test %r11d, %r11d
 jne ._report_solution_189
@@ -2336,7 +2336,7 @@ pxor %xmm2, %xmm0
 
 ##### step 190 : Fl[0] ^= (Fl[1] ^= Fq[0])
 
-pcmpeqd %xmm0, %xmm15
+pcmpeqw %xmm0, %xmm15
 pmovmskb %xmm15, %r11d
 test %r11d, %r11d
 jne ._report_solution_190
@@ -2348,7 +2348,7 @@ pxor %xmm1, %xmm0
 
 ##### step 191 : Fl[0] ^= (Fl[7] ^= Fq[27])
 
-pcmpeqd %xmm0, %xmm15
+pcmpeqw %xmm0, %xmm15
 pmovmskb %xmm15, %r11d
 test %r11d, %r11d
 jne ._report_solution_191
@@ -2362,7 +2362,7 @@ pxor %xmm14, %xmm0
 
 ##### step 192 : Fl[0] ^= (Fl[1] ^= Fq[15])
 
-pcmpeqd %xmm0, %xmm15
+pcmpeqw %xmm0, %xmm15
 pmovmskb %xmm15, %r11d
 test %r11d, %r11d
 jne ._report_solution_192
@@ -2374,7 +2374,7 @@ pxor %xmm1, %xmm0
 
 ##### step 193 : Fl[0] ^= (Fl[2] ^= Fq[16])
 
-pcmpeqd %xmm0, %xmm15
+pcmpeqw %xmm0, %xmm15
 pmovmskb %xmm15, %r11d
 test %r11d, %r11d
 jne ._report_solution_193
@@ -2386,7 +2386,7 @@ pxor %xmm2, %xmm0
 
 ##### step 194 : Fl[0] ^= (Fl[1] ^= Fq[0])
 
-pcmpeqd %xmm0, %xmm15
+pcmpeqw %xmm0, %xmm15
 pmovmskb %xmm15, %r11d
 test %r11d, %r11d
 jne ._report_solution_194
@@ -2398,7 +2398,7 @@ pxor %xmm1, %xmm0
 
 ##### step 195 : Fl[0] ^= (Fl[3] ^= Fq[17])
 
-pcmpeqd %xmm0, %xmm15
+pcmpeqw %xmm0, %xmm15
 pmovmskb %xmm15, %r11d
 test %r11d, %r11d
 jne ._report_solution_195
@@ -2410,7 +2410,7 @@ pxor %xmm3, %xmm0
 
 ##### step 196 : Fl[0] ^= (Fl[1] ^= Fq[1])
 
-pcmpeqd %xmm0, %xmm15
+pcmpeqw %xmm0, %xmm15
 pmovmskb %xmm15, %r11d
 test %r11d, %r11d
 jne ._report_solution_196
@@ -2422,7 +2422,7 @@ pxor %xmm1, %xmm0
 
 ##### step 197 : Fl[0] ^= (Fl[2] ^= Fq[2])
 
-pcmpeqd %xmm0, %xmm15
+pcmpeqw %xmm0, %xmm15
 pmovmskb %xmm15, %r11d
 test %r11d, %r11d
 jne ._report_solution_197
@@ -2434,7 +2434,7 @@ pxor %xmm2, %xmm0
 
 ##### step 198 : Fl[0] ^= (Fl[1] ^= Fq[0])
 
-pcmpeqd %xmm0, %xmm15
+pcmpeqw %xmm0, %xmm15
 pmovmskb %xmm15, %r11d
 test %r11d, %r11d
 jne ._report_solution_198
@@ -2446,7 +2446,7 @@ pxor %xmm1, %xmm0
 
 ##### step 199 : Fl[0] ^= (Fl[4] ^= Fq[18])
 
-pcmpeqd %xmm0, %xmm15
+pcmpeqw %xmm0, %xmm15
 pmovmskb %xmm15, %r11d
 test %r11d, %r11d
 jne ._report_solution_199
@@ -2458,7 +2458,7 @@ pxor %xmm4, %xmm0
 
 ##### step 200 : Fl[0] ^= (Fl[1] ^= Fq[3])
 
-pcmpeqd %xmm0, %xmm15
+pcmpeqw %xmm0, %xmm15
 pmovmskb %xmm15, %r11d
 test %r11d, %r11d
 jne ._report_solution_200
@@ -2470,7 +2470,7 @@ pxor %xmm1, %xmm0
 
 ##### step 201 : Fl[0] ^= (Fl[2] ^= Fq[4])
 
-pcmpeqd %xmm0, %xmm15
+pcmpeqw %xmm0, %xmm15
 pmovmskb %xmm15, %r11d
 test %r11d, %r11d
 jne ._report_solution_201
@@ -2482,7 +2482,7 @@ pxor %xmm2, %xmm0
 
 ##### step 202 : Fl[0] ^= (Fl[1] ^= Fq[0])
 
-pcmpeqd %xmm0, %xmm15
+pcmpeqw %xmm0, %xmm15
 pmovmskb %xmm15, %r11d
 test %r11d, %r11d
 jne ._report_solution_202
@@ -2494,7 +2494,7 @@ pxor %xmm1, %xmm0
 
 ##### step 203 : Fl[0] ^= (Fl[3] ^= Fq[5])
 
-pcmpeqd %xmm0, %xmm15
+pcmpeqw %xmm0, %xmm15
 pmovmskb %xmm15, %r11d
 test %r11d, %r11d
 jne ._report_solution_203
@@ -2506,7 +2506,7 @@ pxor %xmm3, %xmm0
 
 ##### step 204 : Fl[0] ^= (Fl[1] ^= Fq[1])
 
-pcmpeqd %xmm0, %xmm15
+pcmpeqw %xmm0, %xmm15
 pmovmskb %xmm15, %r11d
 test %r11d, %r11d
 jne ._report_solution_204
@@ -2518,7 +2518,7 @@ pxor %xmm1, %xmm0
 
 ##### step 205 : Fl[0] ^= (Fl[2] ^= Fq[2])
 
-pcmpeqd %xmm0, %xmm15
+pcmpeqw %xmm0, %xmm15
 pmovmskb %xmm15, %r11d
 test %r11d, %r11d
 jne ._report_solution_205
@@ -2530,7 +2530,7 @@ pxor %xmm2, %xmm0
 
 ##### step 206 : Fl[0] ^= (Fl[1] ^= Fq[0])
 
-pcmpeqd %xmm0, %xmm15
+pcmpeqw %xmm0, %xmm15
 pmovmskb %xmm15, %r11d
 test %r11d, %r11d
 jne ._report_solution_206
@@ -2542,7 +2542,7 @@ pxor %xmm1, %xmm0
 
 ##### step 207 : Fl[0] ^= (Fl[5] ^= Fq[19])
 
-pcmpeqd %xmm0, %xmm15
+pcmpeqw %xmm0, %xmm15
 pmovmskb %xmm15, %r11d
 test %r11d, %r11d
 jne ._report_solution_207
@@ -2554,7 +2554,7 @@ pxor %xmm5, %xmm0
 
 ##### step 208 : Fl[0] ^= (Fl[1] ^= Fq[6])
 
-pcmpeqd %xmm0, %xmm15
+pcmpeqw %xmm0, %xmm15
 pmovmskb %xmm15, %r11d
 test %r11d, %r11d
 jne ._report_solution_208
@@ -2566,7 +2566,7 @@ pxor %xmm1, %xmm0
 
 ##### step 209 : Fl[0] ^= (Fl[2] ^= Fq[7])
 
-pcmpeqd %xmm0, %xmm15
+pcmpeqw %xmm0, %xmm15
 pmovmskb %xmm15, %r11d
 test %r11d, %r11d
 jne ._report_solution_209
@@ -2578,7 +2578,7 @@ pxor %xmm2, %xmm0
 
 ##### step 210 : Fl[0] ^= (Fl[1] ^= Fq[0])
 
-pcmpeqd %xmm0, %xmm15
+pcmpeqw %xmm0, %xmm15
 pmovmskb %xmm15, %r11d
 test %r11d, %r11d
 jne ._report_solution_210
@@ -2590,7 +2590,7 @@ pxor %xmm1, %xmm0
 
 ##### step 211 : Fl[0] ^= (Fl[3] ^= Fq[8])
 
-pcmpeqd %xmm0, %xmm15
+pcmpeqw %xmm0, %xmm15
 pmovmskb %xmm15, %r11d
 test %r11d, %r11d
 jne ._report_solution_211
@@ -2602,7 +2602,7 @@ pxor %xmm3, %xmm0
 
 ##### step 212 : Fl[0] ^= (Fl[1] ^= Fq[1])
 
-pcmpeqd %xmm0, %xmm15
+pcmpeqw %xmm0, %xmm15
 pmovmskb %xmm15, %r11d
 test %r11d, %r11d
 jne ._report_solution_212
@@ -2614,7 +2614,7 @@ pxor %xmm1, %xmm0
 
 ##### step 213 : Fl[0] ^= (Fl[2] ^= Fq[2])
 
-pcmpeqd %xmm0, %xmm15
+pcmpeqw %xmm0, %xmm15
 pmovmskb %xmm15, %r11d
 test %r11d, %r11d
 jne ._report_solution_213
@@ -2626,7 +2626,7 @@ pxor %xmm2, %xmm0
 
 ##### step 214 : Fl[0] ^= (Fl[1] ^= Fq[0])
 
-pcmpeqd %xmm0, %xmm15
+pcmpeqw %xmm0, %xmm15
 pmovmskb %xmm15, %r11d
 test %r11d, %r11d
 jne ._report_solution_214
@@ -2638,7 +2638,7 @@ pxor %xmm1, %xmm0
 
 ##### step 215 : Fl[0] ^= (Fl[4] ^= Fq[9])
 
-pcmpeqd %xmm0, %xmm15
+pcmpeqw %xmm0, %xmm15
 pmovmskb %xmm15, %r11d
 test %r11d, %r11d
 jne ._report_solution_215
@@ -2650,7 +2650,7 @@ pxor %xmm4, %xmm0
 
 ##### step 216 : Fl[0] ^= (Fl[1] ^= Fq[3])
 
-pcmpeqd %xmm0, %xmm15
+pcmpeqw %xmm0, %xmm15
 pmovmskb %xmm15, %r11d
 test %r11d, %r11d
 jne ._report_solution_216
@@ -2662,7 +2662,7 @@ pxor %xmm1, %xmm0
 
 ##### step 217 : Fl[0] ^= (Fl[2] ^= Fq[4])
 
-pcmpeqd %xmm0, %xmm15
+pcmpeqw %xmm0, %xmm15
 pmovmskb %xmm15, %r11d
 test %r11d, %r11d
 jne ._report_solution_217
@@ -2674,7 +2674,7 @@ pxor %xmm2, %xmm0
 
 ##### step 218 : Fl[0] ^= (Fl[1] ^= Fq[0])
 
-pcmpeqd %xmm0, %xmm15
+pcmpeqw %xmm0, %xmm15
 pmovmskb %xmm15, %r11d
 test %r11d, %r11d
 jne ._report_solution_218
@@ -2686,7 +2686,7 @@ pxor %xmm1, %xmm0
 
 ##### step 219 : Fl[0] ^= (Fl[3] ^= Fq[5])
 
-pcmpeqd %xmm0, %xmm15
+pcmpeqw %xmm0, %xmm15
 pmovmskb %xmm15, %r11d
 test %r11d, %r11d
 jne ._report_solution_219
@@ -2698,7 +2698,7 @@ pxor %xmm3, %xmm0
 
 ##### step 220 : Fl[0] ^= (Fl[1] ^= Fq[1])
 
-pcmpeqd %xmm0, %xmm15
+pcmpeqw %xmm0, %xmm15
 pmovmskb %xmm15, %r11d
 test %r11d, %r11d
 jne ._report_solution_220
@@ -2710,7 +2710,7 @@ pxor %xmm1, %xmm0
 
 ##### step 221 : Fl[0] ^= (Fl[2] ^= Fq[2])
 
-pcmpeqd %xmm0, %xmm15
+pcmpeqw %xmm0, %xmm15
 pmovmskb %xmm15, %r11d
 test %r11d, %r11d
 jne ._report_solution_221
@@ -2722,7 +2722,7 @@ pxor %xmm2, %xmm0
 
 ##### step 222 : Fl[0] ^= (Fl[1] ^= Fq[0])
 
-pcmpeqd %xmm0, %xmm15
+pcmpeqw %xmm0, %xmm15
 pmovmskb %xmm15, %r11d
 test %r11d, %r11d
 jne ._report_solution_222
@@ -2734,7 +2734,7 @@ pxor %xmm1, %xmm0
 
 ##### step 223 : Fl[0] ^= (Fl[6] ^= Fq[20])
 
-pcmpeqd %xmm0, %xmm15
+pcmpeqw %xmm0, %xmm15
 pmovmskb %xmm15, %r11d
 test %r11d, %r11d
 jne ._report_solution_223
@@ -2746,7 +2746,7 @@ pxor %xmm6, %xmm0
 
 ##### step 224 : Fl[0] ^= (Fl[1] ^= Fq[10])
 
-pcmpeqd %xmm0, %xmm15
+pcmpeqw %xmm0, %xmm15
 pmovmskb %xmm15, %r11d
 test %r11d, %r11d
 jne ._report_solution_224
@@ -2758,7 +2758,7 @@ pxor %xmm1, %xmm0
 
 ##### step 225 : Fl[0] ^= (Fl[2] ^= Fq[11])
 
-pcmpeqd %xmm0, %xmm15
+pcmpeqw %xmm0, %xmm15
 pmovmskb %xmm15, %r11d
 test %r11d, %r11d
 jne ._report_solution_225
@@ -2770,7 +2770,7 @@ pxor %xmm2, %xmm0
 
 ##### step 226 : Fl[0] ^= (Fl[1] ^= Fq[0])
 
-pcmpeqd %xmm0, %xmm15
+pcmpeqw %xmm0, %xmm15
 pmovmskb %xmm15, %r11d
 test %r11d, %r11d
 jne ._report_solution_226
@@ -2782,7 +2782,7 @@ pxor %xmm1, %xmm0
 
 ##### step 227 : Fl[0] ^= (Fl[3] ^= Fq[12])
 
-pcmpeqd %xmm0, %xmm15
+pcmpeqw %xmm0, %xmm15
 pmovmskb %xmm15, %r11d
 test %r11d, %r11d
 jne ._report_solution_227
@@ -2794,7 +2794,7 @@ pxor %xmm3, %xmm0
 
 ##### step 228 : Fl[0] ^= (Fl[1] ^= Fq[1])
 
-pcmpeqd %xmm0, %xmm15
+pcmpeqw %xmm0, %xmm15
 pmovmskb %xmm15, %r11d
 test %r11d, %r11d
 jne ._report_solution_228
@@ -2806,7 +2806,7 @@ pxor %xmm1, %xmm0
 
 ##### step 229 : Fl[0] ^= (Fl[2] ^= Fq[2])
 
-pcmpeqd %xmm0, %xmm15
+pcmpeqw %xmm0, %xmm15
 pmovmskb %xmm15, %r11d
 test %r11d, %r11d
 jne ._report_solution_229
@@ -2818,7 +2818,7 @@ pxor %xmm2, %xmm0
 
 ##### step 230 : Fl[0] ^= (Fl[1] ^= Fq[0])
 
-pcmpeqd %xmm0, %xmm15
+pcmpeqw %xmm0, %xmm15
 pmovmskb %xmm15, %r11d
 test %r11d, %r11d
 jne ._report_solution_230
@@ -2830,7 +2830,7 @@ pxor %xmm1, %xmm0
 
 ##### step 231 : Fl[0] ^= (Fl[4] ^= Fq[13])
 
-pcmpeqd %xmm0, %xmm15
+pcmpeqw %xmm0, %xmm15
 pmovmskb %xmm15, %r11d
 test %r11d, %r11d
 jne ._report_solution_231
@@ -2842,7 +2842,7 @@ pxor %xmm4, %xmm0
 
 ##### step 232 : Fl[0] ^= (Fl[1] ^= Fq[3])
 
-pcmpeqd %xmm0, %xmm15
+pcmpeqw %xmm0, %xmm15
 pmovmskb %xmm15, %r11d
 test %r11d, %r11d
 jne ._report_solution_232
@@ -2854,7 +2854,7 @@ pxor %xmm1, %xmm0
 
 ##### step 233 : Fl[0] ^= (Fl[2] ^= Fq[4])
 
-pcmpeqd %xmm0, %xmm15
+pcmpeqw %xmm0, %xmm15
 pmovmskb %xmm15, %r11d
 test %r11d, %r11d
 jne ._report_solution_233
@@ -2866,7 +2866,7 @@ pxor %xmm2, %xmm0
 
 ##### step 234 : Fl[0] ^= (Fl[1] ^= Fq[0])
 
-pcmpeqd %xmm0, %xmm15
+pcmpeqw %xmm0, %xmm15
 pmovmskb %xmm15, %r11d
 test %r11d, %r11d
 jne ._report_solution_234
@@ -2878,7 +2878,7 @@ pxor %xmm1, %xmm0
 
 ##### step 235 : Fl[0] ^= (Fl[3] ^= Fq[5])
 
-pcmpeqd %xmm0, %xmm15
+pcmpeqw %xmm0, %xmm15
 pmovmskb %xmm15, %r11d
 test %r11d, %r11d
 jne ._report_solution_235
@@ -2890,7 +2890,7 @@ pxor %xmm3, %xmm0
 
 ##### step 236 : Fl[0] ^= (Fl[1] ^= Fq[1])
 
-pcmpeqd %xmm0, %xmm15
+pcmpeqw %xmm0, %xmm15
 pmovmskb %xmm15, %r11d
 test %r11d, %r11d
 jne ._report_solution_236
@@ -2902,7 +2902,7 @@ pxor %xmm1, %xmm0
 
 ##### step 237 : Fl[0] ^= (Fl[2] ^= Fq[2])
 
-pcmpeqd %xmm0, %xmm15
+pcmpeqw %xmm0, %xmm15
 pmovmskb %xmm15, %r11d
 test %r11d, %r11d
 jne ._report_solution_237
@@ -2914,7 +2914,7 @@ pxor %xmm2, %xmm0
 
 ##### step 238 : Fl[0] ^= (Fl[1] ^= Fq[0])
 
-pcmpeqd %xmm0, %xmm15
+pcmpeqw %xmm0, %xmm15
 pmovmskb %xmm15, %r11d
 test %r11d, %r11d
 jne ._report_solution_238
@@ -2926,7 +2926,7 @@ pxor %xmm1, %xmm0
 
 ##### step 239 : Fl[0] ^= (Fl[5] ^= Fq[14])
 
-pcmpeqd %xmm0, %xmm15
+pcmpeqw %xmm0, %xmm15
 pmovmskb %xmm15, %r11d
 test %r11d, %r11d
 jne ._report_solution_239
@@ -2938,7 +2938,7 @@ pxor %xmm5, %xmm0
 
 ##### step 240 : Fl[0] ^= (Fl[1] ^= Fq[6])
 
-pcmpeqd %xmm0, %xmm15
+pcmpeqw %xmm0, %xmm15
 pmovmskb %xmm15, %r11d
 test %r11d, %r11d
 jne ._report_solution_240
@@ -2950,7 +2950,7 @@ pxor %xmm1, %xmm0
 
 ##### step 241 : Fl[0] ^= (Fl[2] ^= Fq[7])
 
-pcmpeqd %xmm0, %xmm15
+pcmpeqw %xmm0, %xmm15
 pmovmskb %xmm15, %r11d
 test %r11d, %r11d
 jne ._report_solution_241
@@ -2962,7 +2962,7 @@ pxor %xmm2, %xmm0
 
 ##### step 242 : Fl[0] ^= (Fl[1] ^= Fq[0])
 
-pcmpeqd %xmm0, %xmm15
+pcmpeqw %xmm0, %xmm15
 pmovmskb %xmm15, %r11d
 test %r11d, %r11d
 jne ._report_solution_242
@@ -2974,7 +2974,7 @@ pxor %xmm1, %xmm0
 
 ##### step 243 : Fl[0] ^= (Fl[3] ^= Fq[8])
 
-pcmpeqd %xmm0, %xmm15
+pcmpeqw %xmm0, %xmm15
 pmovmskb %xmm15, %r11d
 test %r11d, %r11d
 jne ._report_solution_243
@@ -2986,7 +2986,7 @@ pxor %xmm3, %xmm0
 
 ##### step 244 : Fl[0] ^= (Fl[1] ^= Fq[1])
 
-pcmpeqd %xmm0, %xmm15
+pcmpeqw %xmm0, %xmm15
 pmovmskb %xmm15, %r11d
 test %r11d, %r11d
 jne ._report_solution_244
@@ -2998,7 +2998,7 @@ pxor %xmm1, %xmm0
 
 ##### step 245 : Fl[0] ^= (Fl[2] ^= Fq[2])
 
-pcmpeqd %xmm0, %xmm15
+pcmpeqw %xmm0, %xmm15
 pmovmskb %xmm15, %r11d
 test %r11d, %r11d
 jne ._report_solution_245
@@ -3010,7 +3010,7 @@ pxor %xmm2, %xmm0
 
 ##### step 246 : Fl[0] ^= (Fl[1] ^= Fq[0])
 
-pcmpeqd %xmm0, %xmm15
+pcmpeqw %xmm0, %xmm15
 pmovmskb %xmm15, %r11d
 test %r11d, %r11d
 jne ._report_solution_246
@@ -3022,7 +3022,7 @@ pxor %xmm1, %xmm0
 
 ##### step 247 : Fl[0] ^= (Fl[4] ^= Fq[9])
 
-pcmpeqd %xmm0, %xmm15
+pcmpeqw %xmm0, %xmm15
 pmovmskb %xmm15, %r11d
 test %r11d, %r11d
 jne ._report_solution_247
@@ -3034,7 +3034,7 @@ pxor %xmm4, %xmm0
 
 ##### step 248 : Fl[0] ^= (Fl[1] ^= Fq[3])
 
-pcmpeqd %xmm0, %xmm15
+pcmpeqw %xmm0, %xmm15
 pmovmskb %xmm15, %r11d
 test %r11d, %r11d
 jne ._report_solution_248
@@ -3046,7 +3046,7 @@ pxor %xmm1, %xmm0
 
 ##### step 249 : Fl[0] ^= (Fl[2] ^= Fq[4])
 
-pcmpeqd %xmm0, %xmm15
+pcmpeqw %xmm0, %xmm15
 pmovmskb %xmm15, %r11d
 test %r11d, %r11d
 jne ._report_solution_249
@@ -3058,7 +3058,7 @@ pxor %xmm2, %xmm0
 
 ##### step 250 : Fl[0] ^= (Fl[1] ^= Fq[0])
 
-pcmpeqd %xmm0, %xmm15
+pcmpeqw %xmm0, %xmm15
 pmovmskb %xmm15, %r11d
 test %r11d, %r11d
 jne ._report_solution_250
@@ -3070,7 +3070,7 @@ pxor %xmm1, %xmm0
 
 ##### step 251 : Fl[0] ^= (Fl[3] ^= Fq[5])
 
-pcmpeqd %xmm0, %xmm15
+pcmpeqw %xmm0, %xmm15
 pmovmskb %xmm15, %r11d
 test %r11d, %r11d
 jne ._report_solution_251
@@ -3082,7 +3082,7 @@ pxor %xmm3, %xmm0
 
 ##### step 252 : Fl[0] ^= (Fl[1] ^= Fq[1])
 
-pcmpeqd %xmm0, %xmm15
+pcmpeqw %xmm0, %xmm15
 pmovmskb %xmm15, %r11d
 test %r11d, %r11d
 jne ._report_solution_252
@@ -3094,7 +3094,7 @@ pxor %xmm1, %xmm0
 
 ##### step 253 : Fl[0] ^= (Fl[2] ^= Fq[2])
 
-pcmpeqd %xmm0, %xmm15
+pcmpeqw %xmm0, %xmm15
 pmovmskb %xmm15, %r11d
 test %r11d, %r11d
 jne ._report_solution_253
@@ -3106,7 +3106,7 @@ pxor %xmm2, %xmm0
 
 ##### step 254 : Fl[0] ^= (Fl[1] ^= Fq[0])
 
-pcmpeqd %xmm0, %xmm15
+pcmpeqw %xmm0, %xmm15
 pmovmskb %xmm15, %r11d
 test %r11d, %r11d
 jne ._report_solution_254
@@ -3129,7 +3129,7 @@ movdqa %xmm6, 96(%rsi)     #Fl[6] <-- %xmm6
 
 ##### special last step 255 : Fl[0] ^= (Fl[beta] ^= Fq[gamma])
 
-pcmpeqd %xmm0, %xmm15
+pcmpeqw %xmm0, %xmm15
 pmovmskb %xmm15, %r11d
 test %r11d, %r11d
 jne ._report_solution_255

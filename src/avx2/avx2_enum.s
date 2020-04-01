@@ -2,7 +2,7 @@
 .text
 .p2align 5
 
-.globl feslite_avx2_asm_enum_16x16
+.globl feslite_avx2_asm_enum
 ### static inline struct solution_t * UNROLLED_CHUNK(const __m256i * Fq, __m256i * Fl, u64 alpha, 
 ###                                                  u64 beta, u64 gamma, struct solution_t *local_buffer)
 
@@ -27,7 +27,7 @@
 # %r9 and %r10 are available
 # Let's go
 
-feslite_avx2_asm_enum_16x16:
+feslite_avx2_asm_enum:
 vpxor %ymm15, %ymm15, %ymm15
 movq %r9, %rax         
 
