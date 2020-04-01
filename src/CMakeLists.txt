@@ -37,4 +37,15 @@ if(HAVE_AVX2)
 endif()
 
 
+if(HAVE_AVX512BW)
+    enable_language(ASM)
+    target_sources(feslite PRIVATE 
+	avx512bw/available.c
+	avx512bw/avx512bw_enum.s
+	avx512bw/enum_16x32.c
+	avx512bw/enum_32x16.c
+    )
+endif()
+
+
 install(TARGETS feslite DESTINATION lib)

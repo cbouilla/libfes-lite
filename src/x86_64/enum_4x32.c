@@ -1,8 +1,5 @@
 #include "fes.h"
 
-extern struct solution_t * feslite_x86_64_asm_enum(const u32 * Fq, u32 * Fl, 
-	u64 alpha, u64 beta, u64 gamma, struct solution_t *local_buffer);
-
 #define LANES 4
 #define UNROLL 8
 

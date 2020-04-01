@@ -16,10 +16,10 @@ def idxq(i, j):
 
 PROLOGUE = """
 .text
-.p2align 5
+.p2align 6
 
-.globl feslite_avx2_asm_enum
-### static inline struct solution_t * UNROLLED_CHUNK(const __m256i * Fq, __m256i * Fl, u64 alpha, 
+.globl feslite_avx512bw_asm_enum
+### static inline struct solution_t * UNROLLED_CHUNK(const __m512i * Fq, __m512i * Fl, u64 alpha, 
 ###                                                  u64 beta, u64 gamma, struct solution_t *local_buffer)
 
 # the System V AMD64 ABI says that :
@@ -28,59 +28,68 @@ PROLOGUE = """
 # C) We will receive the arguments of the function in registers :
 #       Fq           in %rdi
 #       Fl           in %rsi
-#       alpha        in %rdx
-#       beta         in %rcx
-#       gamma        in %r8
+#       64*alpha     in %rdx
+#       64*beta      in %rcx
+#       64*gamma     in %r8
 #       local_buffer in %r9
 # D) we return local_buffer in %rax
 
 # no need to save the callee-save registers (we do not touch them)
-# Load the 14 most used values into XMM0-XMM13
-# %ymm15 is pinned to zero
+# Load the 30 most used values into ZMM0-ZMM29
+# %zmm31 is pinned to zero
 # me move %r9 to %rax because it will be the return value.
 # we may still use %9, %r10 and %r11
 # %r11 contains the comparison output mask 
 # %r9 and %r10 are available
 # Let's go
 
-feslite_avx2_asm_enum:
-shlq $5, %rdx
-shlq $5, %rcx
-shlq $5, %r8
-vpxor %ymm15, %ymm15, %ymm15
+feslite_avx512bw_asm_enum:
+shlq $6, %rdx
+shlq $6, %rcx
+shlq $6, %r8
+vpxord %zmm31, %zmm31, %zmm31
 movq %r9, %rax         
 """
 
 Fl = {}
-Fl[0] = "%ymm0"   # 1
-Fl[1] = "%ymm1"   # 1/2
-Fl[2] = "%ymm2"   # 1/4
-Fl[3] = "%ymm3"   # 1/8
-Fl[4] = "%ymm4"   # 1/16
-Fl[5] = "%ymm5"   # 1/32
-Fl[6] = "%ymm6"   # 1/64
+Fl[0] = "%zmm0"   # 1
+Fl[1] = "%zmm1"   # 1/2
+Fl[2] = "%zmm2"   # 1/4
+Fl[3] = "%zmm3"   # 1/8
+Fl[4] = "%zmm4"   # 1/16
+Fl[5] = "%zmm5"   # 1/32
+Fl[6] = "%zmm6"   # 1/64
+Fl[7] = "%zmm7"   # 1/128
+Fl[8] = "%zmm8"   # 1/256
+
 
 Fq = {}
-Fq[idxq(0, 1)] = "%ymm7"  # 1/4
-Fq[idxq(0, 2)] = "%ymm8"  # 1/8
-Fq[idxq(1, 2)] = "%ymm9"  # 1/8
-Fq[idxq(0, 3)] = "%ymm10"  # 1/16
-Fq[idxq(1, 3)] = "%ymm11" # 1/16
-Fq[idxq(2, 3)] = "%ymm12" # 1/16
-Fq[idxq(2, 4)] = "%ymm13" # 1/32
-
-
+Fq[idxq(0, 1)] = "%zmm9"     # 1/4
+Fq[idxq(0, 2)] = "%zmm10"    # 1/8
+Fq[idxq(1, 2)] = "%zmm11"    # 1/8
+Fq[idxq(0, 3)] = "%zmm12"    # 1/16
+Fq[idxq(1, 3)] = "%zmm13"    # 1/16
+Fq[idxq(2, 3)] = "%zmm14"    # 1/16
+Fq[idxq(0, 4)] = "%zmm15"    # 1/32
+Fq[idxq(1, 4)] = "%zmm16"    # 1/32
+Fq[idxq(2, 4)] = "%zmm17"    # 1/32
+Fq[idxq(3, 4)] = "%zmm18"    # 1/32
+Fq[idxq(0, 5)] = "%zmm19"    # 1/64
+Fq[idxq(1, 5)] = "%zmm20"    # 1/64
+Fq[idxq(2, 5)] = "%zmm21"    # 1/64
+Fq[idxq(3, 5)] = "%zmm22"    # 1/64
+Fq[idxq(4, 5)] = "%zmm23"    # 1/64
+Fq[idxq(0, 6)] = "%zmm24"    # 1/128
+Fq[idxq(1, 6)] = "%zmm25"    # 1/128
+Fq[idxq(2, 6)] = "%zmm26"    # 1/128
+Fq[idxq(3, 6)] = "%zmm27"    # 1/128
+Fq[idxq(4, 6)] = "%zmm28"    # 1/128
+Fq[idxq(5, 6)] = "%zmm29"    # 1/128
 
 def output_comparison(i):
     # before the XORs, the comparison
-    #if mode == "8x32":
-    #    print('vpcmpeqd %ymm0, %ymm15, %ymm15'.format())
-    #elif mode == "16x16":
-    print('vpcmpeqw %ymm0, %ymm15, %ymm15'.format())
-    #else:
-    #    raise ValueError("bad mode!")
-    print('vpmovmskb %ymm15, %r11d')
-    print('test %r11d, %r11d')
+    print('vpcmpequw %zmm0, %zmm31, %k0')
+    print('ktestd %k0, %k0')
     print('jne ._report_solution_{0}'.format(i))
     print()
     print('._step_{0}_end:'.format(i))
@@ -89,16 +98,16 @@ def output_comparison(i):
 
 ###################""
 
-assert Fl[0] == "%ymm0"
+assert Fl[0] == "%zmm0"
 print(PROLOGUE)
 print()
 
 print( "# load the most-frequently used values into vector registers" )
 for i, reg in Fl.items():
-    print("vmovdqa {offset}(%rsi), {reg}   ## {reg} = Fl[{i}]".format(offset=i*32, reg=reg, i=i))
+    print("vmovdqa32 {offset}(%rsi), {reg}   ## {reg} = Fl[{i}]".format(offset=i*64, reg=reg, i=i))
 print()
 for x, reg in Fq.items():
-    print("vmovdqa {offset}(%rdi), {reg}   ## {reg} = Fq[{idx}]".format(offset=x*32, reg=reg, idx=x))
+    print("vmovdqa32 {offset}(%rdi), {reg}   ## {reg} = Fq[{idx}]".format(offset=x*64, reg=reg, idx=x))
 print()
 
 alpha = 0
@@ -109,7 +118,7 @@ for i in range((1 << L) - 1):
     a = idx1 + 1                              # offset dans Fl
     Fq_memref = None
     if idx2 == -1:
-        Fq_memref = "{offset}(%rdi, %rdx)".format(offset=32*alpha)
+        Fq_memref = "{offset}(%rdi, %rdx)".format(offset=64*alpha)
         b = "alpha + {}".format(alpha)
         alpha += 1
     else:
@@ -129,22 +138,22 @@ for i in range((1 << L) - 1):
 
     if a in Fl:
         if b in Fq: # reg / reg
-            print("vpxor {src}, {dst}, {dst}".format(src=Fq[b], dst=Fl[a]))
+            print("vpxord {src}, {dst}, {dst}".format(src=Fq[b], dst=Fl[a]))
         elif Fq_memref is None: # mem / reg
-            print("vpxor {offset}(%rdi), {dst}, {dst}".format(offset=32*b, dst=Fl[a]))
+            print("vpxord {offset}(%rdi), {dst}, {dst}".format(offset=64*b, dst=Fl[a]))
         else: # mem(alpha) / reg
-            print("vpxor {src}, {dst}, {dst}".format(src=Fq_memref, dst=Fl[a]))
-        print("vpxor {src}, %ymm0, %ymm0".format(src=Fl[a]))
+            print("vpxord {src}, {dst}, {dst}".format(src=Fq_memref, dst=Fl[a]))
+        print("vpxord {src}, %zmm0, %zmm0".format(src=Fl[a]))
     
     elif a not in Fl:
         assert b not in Fq
-        print("vmovdqa {offset}(%rsi), %ymm14".format(offset=32*a)) # load Fl[a]
+        print("vmovdqa32 {offset}(%rsi), %zmm30".format(offset=64*a)) # load Fl[a]
         if Fq_memref is None: 
-            print("vpxor {offset}(%rdi), %ymm14, %ymm14".format(offset=32*b))
+            print("vpxord {offset}(%rdi), %zmm30, %zmm30".format(offset=64*b))
         else:
-            print("vpxor {src}, %ymm14, %ymm14".format(src=Fq_memref))
-        print("vmovdqa %ymm14, {offset}(%rsi)".format(offset=32*a)) # store Fl[a]
-        print("vpxor %ymm14, %ymm0, %ymm0")
+            print("vpxord {src}, %zmm30, %zmm30".format(src=Fq_memref))
+        print("vmovdqa32 %zmm30, {offset}(%rsi)".format(offset=64*a)) # store Fl[a]
+        print("vpxord %zmm30, %zmm0, %zmm0")
     print()
 
 ####### ne pas oublier le dernier tour special
@@ -156,18 +165,18 @@ print("# Save the Fl[1:] back to memory")
 for i, reg in Fl.items():
     if i == 0:
         continue
-    print("vmovdqa {reg}, {offset:2d}(%rsi)     #Fl[{i}] <-- {reg}".format(offset=i*32, reg=reg, i=i))
+    print("vmovdqa32 {reg}, {offset:2d}(%rsi)     #Fl[{i}] <-- {reg}".format(offset=i*64, reg=reg, i=i))
 print()
 print('##### special last step {:3d} : Fl[0] ^= (Fl[beta] ^= Fq[gamma])'.format((1 << L) - 1))
 print()
 output_comparison((1 << L) - 1)
-print("vmovdqa (%rsi, %rcx), %ymm14")     # load Fl[beta]
-print("vpxor (%rdi, %r8), %ymm14, %ymm14")        # xor Fq[gamma]
-print("vmovdqa %ymm14, (%rsi, %rcx)")     # store Fl[beta]
-print("vpxor %ymm14, %ymm0, %ymm0")
+print("vmovdqa32 (%rsi, %rcx), %zmm30")     # load Fl[beta]
+print("vpxord (%rdi, %r8), %zmm30, %zmm30")        # xor Fq[gamma]
+print("vmovdqa32 %zmm30, (%rsi, %rcx)")     # store Fl[beta]
+print("vpxord %zmm30, %zmm0, %zmm0")
 print()
 print("# Save Fl[0] back to memory")
-print("vmovdqa %ymm0, (%rsi)     #Fl[0] <-- %ymm0")
+print("vmovdqa32 %zmm0, (%rsi)     #Fl[0] <-- %zmm0")
 print()
 print('ret')
 print()
@@ -179,13 +188,12 @@ print('########### now the code that reports solutions')
 print()
 
 for i in range(1<<L):
-    # the mask is in %r11.
-    # available registers: %r9, %r10
-    # à améliorer : pourquoi contourner l'adressage?
+    # the mask is in %k0.
+    # available registers: %r9, %r10, %r11
     print('._report_solution_{i}:          # GrayCode(i + {i}) is a solution'.format(i=i))
-    print('vpxor %ymm15, %ymm15, %ymm15    # reset %ymm15 to zero')
-    print('movl ${i},  0(%rax)             # buffer.x = {i}'.format(i=i))
-    print('movl %r11d, 4(%rax)             # buffer.mask = %r11')
-    print('addq $8, %rax                   # buffer++'); 
+    # we no longer need to reset %zmm31
+    print('movl ${i}, 0(%rax)               # buffer.x = {i}'.format(i=i))
+    print('kmovd %k0, 4(%rax)               # buffer.mask = %r11')
+    print('addq $8, %rax                    # buffer++'); 
     print('jmp ._step_{i}_end'.format(i=i))  # return to the enumeration 
     print()

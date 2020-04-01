@@ -1,8 +1,7 @@
 #include "fes.h"
 
 #define L 8
-#define LANES 8
-#define VERBOSE 0
+#define LANES 32
 
 struct solution_t {
 	u32 x;
@@ -12,8 +11,8 @@ struct solution_t {
 struct context_t {
 	int n;
 	int m;
-	u16 Fq[529 * LANES] __attribute__((aligned(16)));
-	u16 Fl[33 * LANES] __attribute__((aligned(16)));
+	u16 Fq[529 * LANES] __attribute__((aligned(64)));
+	u16 Fl[33 * LANES] __attribute__((aligned(64)));
 
 	const u32 * Fq_start;
 	const u32 * Fl_start;
@@ -34,7 +33,15 @@ struct context_t {
 	struct ffs_t ffs;
 };
 
-static const u32 MASK[LANES] = {0x0003, 0x000c, 0x0030, 0x00c0, 0x0300, 0x0c00, 0x3000, 0xc000};
+static const u32 MASK[LANES] = {0x00000001, 0x00000002, 0x00000004, 0x00000008,
+	                        0x00000010, 0x00000020, 0x00000040, 0x00000080,
+	                        0x00000100, 0x00000200, 0x00000400, 0x00000800,
+				0x00001000, 0x00002000, 0x00004000, 0x00008000,
+				0x00010000, 0x00020000, 0x00040000, 0x00080000,
+	                        0x00100000, 0x00200000, 0x00400000, 0x00800000,
+	                        0x01000000, 0x02000000, 0x04000000, 0x08000000,
+				0x10000000, 0x20000000, 0x40000000, 0x80000000,
+			};
 
 
 /* batch-eval all the candidates */
@@ -43,7 +50,6 @@ static inline void FLUSH_CANDIDATES(struct context_t *context, int lane)
 	int max_solutions = context->count - context->size[lane];
 	int k;
 	u32 * outbuf = context->buffer + context->count * lane + context->size[lane];
-
 	feslite_generic_eval_32(context->n, context->Fq_start, context->Fl_start + lane, LANES, 
 				context->n_candidates[lane], context->candidates[lane], 
 				max_solutions, outbuf, &k);
@@ -70,9 +76,9 @@ static inline bool FLUSH_BUFFER(struct context_t *context, struct solution_t * t
 	for (struct solution_t * bot = context->local_buffer; bot != top; bot++) {
 		u32 x = to_gray(bot->x + i);
 		u32 mask = bot->mask;
-
-		#pragma GCC unroll 64
-		for (int i = 0; i < LANES; i++)		
+		// possible optimization : split in two or in four.
+		#pragma GCC unroll 32
+		for (int i = 0; i < LANES; i++)
 			if (mask & MASK[i])
 				NEW_CANDIDATE(context, x, i);
 	}
@@ -81,7 +87,7 @@ static inline bool FLUSH_BUFFER(struct context_t *context, struct solution_t * t
 
 
 
-void feslite_x86_64_enum_8x16(int n, int m, const u32 * Fq, const u32 * Fl, int count, u32 * buffer, int *size)
+void feslite_avx512bw_enum_32x16(int n, int m, const u32 * Fq, const u32 * Fl, int count, u32 * buffer, int *size)
 {
 	/* verify input parameters */
 	if (count <= 0 || n < L || n > 32 || m != LANES) {
@@ -104,7 +110,7 @@ void feslite_x86_64_enum_8x16(int n, int m, const u32 * Fq, const u32 * Fl, int 
 	context.Fl_start = Fl;
 
 	setup16(n, LANES, Fq, Fl, context.Fq, context.Fl);
-
+	
 	ffs_reset(&context.ffs, n-L);
 	int k1 = context.ffs.k1 + L;
 	int k2 = context.ffs.k2 + L;
@@ -117,7 +123,7 @@ void feslite_x86_64_enum_8x16(int n, int m, const u32 * Fq, const u32 * Fl, int 
 		k2 = context.ffs.k2 + L;
 		u64 beta = 1 + k1;
 		u64 gamma = idxq(k1, k2);
-		struct solution_t *top = feslite_x86_64_asm_enum(context.Fq, context.Fl, 
+		struct solution_t *top = feslite_avx512bw_asm_enum(context.Fq, context.Fl, 
 		 	alpha, beta, gamma, context.local_buffer);
 		if (FLUSH_BUFFER(&context, top, j << L))
 			break;

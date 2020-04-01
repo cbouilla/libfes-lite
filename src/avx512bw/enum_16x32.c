@@ -1,8 +1,7 @@
 #include "fes.h"
 
-#define LANES 8
+#define LANES 16
 #define UNROLL 8
-#define VERBOSE 0
 
 struct solution_t {
 	u32 x;
@@ -12,8 +11,8 @@ struct solution_t {
 struct context_t {
 	int n;
 	int m;
-	u32 Fq[529 * LANES] __attribute__((aligned(32)));
-	u32 Fl[33 * LANES] __attribute__((aligned(32)));
+	u32 Fq[529 * LANES] __attribute__((aligned(64)));
+	u32 Fl[33 * LANES] __attribute__((aligned(64)));
 
 	int count;
 	u32 *buffer;
@@ -26,8 +25,10 @@ struct context_t {
 	struct ffs_t ffs;
 };
 
-static const u32 MASK[LANES] = { 0x0000000f, 0x000000f0, 0x00000f00, 0x0000f000,
-                                 0x000f0000, 0x00f00000, 0x0f000000, 0xf0000000 };
+static const u32 MASK[LANES] = {0x00000003, 0x0000000c, 0x00000030, 0x000000c0,
+	                        0x00000300, 0x00000c00, 0x00003000, 0x0000c000,
+	                        0x00030000, 0x000c0000, 0x00300000, 0x00c00000, 
+				0x03000000, 0x0c000000, 0x30000000, 0xc0000000};
 
 
 static inline bool NEW_SOLUTION(struct context_t *context, u32 x, int lane)
@@ -43,6 +44,9 @@ static inline bool FLUSH_BUFFER(struct context_t *context, struct solution_t * t
 	for (struct solution_t * bot = context->local_buffer; bot != top; bot++) {
 		u32 x = to_gray(bot->x + i);
 		u32 mask = bot->mask;
+
+		// printf("[DEBUG] FLUSH BUFFER got x=%08x and mask=%08x\n", x, mask);
+
 		#pragma GCC unroll 64
 		for (int lane = 0; lane < LANES; lane++) 
 			if ((mask & MASK[lane]) == MASK[lane])
@@ -52,7 +56,7 @@ static inline bool FLUSH_BUFFER(struct context_t *context, struct solution_t * t
 	return false;
 }
 
-void feslite_avx2_enum_8x32(int n, int m, const u32 * Fq, const u32 * Fl, int count, u32 * buffer, int *size)
+void feslite_avx512bw_enum_16x32(int n, int m, const u32 * Fq, const u32 * Fl, int count, u32 * buffer, int *size)
 {
 	/* verify input parameters */
 	if (count <= 0 || n < UNROLL || n > 32 || m != LANES) {
@@ -83,7 +87,7 @@ void feslite_avx2_enum_8x32(int n, int m, const u32 * Fq, const u32 * Fl, int co
 		k2 = context.ffs.k2 + UNROLL;
 		u64 beta = 1 + k1;
 		u64 gamma = idxq(k1, k2);
-		struct solution_t *top = feslite_avx2_asm_enum(context.Fq, context.Fl, 
+		struct solution_t *top = feslite_avx512bw_asm_enum(context.Fq, context.Fl, 
 		 	alpha, beta, gamma, context.local_buffer);
 
 		// printf("------------------------------\n");

@@ -1,8 +1,5 @@
 #include "fes.h"
 
-extern struct solution_t * feslite_avx2_asm_enum(const u16 * Fq, u16 * Fl, 
-	u64 alpha, u64 beta, u64 gamma, struct solution_t *local_buffer);
-
 #define L 8
 #define LANES 16
 

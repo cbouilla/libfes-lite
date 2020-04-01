@@ -12,12 +12,27 @@
 #include "generic/generic.h"
 
 #ifdef __SSE2__
-#include "x86_64/x86_64.h"
+extern struct solution_t * feslite_x86_64_asm_enum(const void * Fq, void * Fl, 
+	                                      u64 alpha, u64 beta, u64 gamma, struct solution_t *local_buffer);
+void feslite_x86_64_enum_4x32(int n, int m, const u32 * Fq, const u32 * Fl, int count, u32 * buffer, int *size);
+void feslite_x86_64_enum_8x16(int n, int m, const u32 * Fq, const u32 * Fl, int count, u32 * buffer, int *size);
 #endif
 
 #ifdef __AVX2__
-#include "avx2/avx2.h"
+extern struct solution_t * feslite_avx2_asm_enum(const void * Fq, void * Fl, 
+						u64 alpha, u64 beta, u64 gamma, struct solution_t *local_buffer);
+bool feslite_avx2_available();
+void feslite_avx2_enum_8x32(int n, int m, const u32 * Fq, const u32 * Fl, int count, u32 * buffer, int *size);
+void feslite_avx2_enum_16x16(int n, int m, const u32 * Fq, const u32 * Fl, int count, u32 * buffer, int *size);
 #endif
+
+#ifdef __AVX512BW__
+extern struct solution_t * feslite_avx512bw_asm_enum(const void * Fq, void * Fl, 
+                  u64 alpha, u64 beta, u64 gamma, struct solution_t *local_buffer);
+void feslite_avx512bw_enum_16x32(int n, int m, const u32 * Fq, const u32 * Fl, int count, u32 * buffer, int *size);
+void feslite_avx512bw_enum_32x16(int n, int m, const u32 * Fq, const u32 * Fl, int count, u32 * buffer, int *size);
+#endif
+
 
 #include "ffs.h"
 #include "monomials.h"
