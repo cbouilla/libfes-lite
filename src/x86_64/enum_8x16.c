@@ -1,7 +1,7 @@
 #include "fes.h"
 #include "ffs.h"
 #include "monomials.h"
-#include <emmintrin.h>
+#include <immintrin.h>
 
 extern struct solution_t * feslite_x86_64_asm_enum_8x16(const __m128i * Fq, __m128i * Fl, 
 	u64 alpha, u64 beta, u64 gamma, struct solution_t *local_buffer);

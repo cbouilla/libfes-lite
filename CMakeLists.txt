@@ -1,12 +1,12 @@
 cmake_minimum_required(VERSION 3.10)
 cmake_policy(SET CMP0076 NEW)
 
-include(FindPython3)
-
-enable_testing()
-
 # set the project name
 project(feslite VERSION 1.0)
+
+include(FindPython3)
+include(CTest)
+
 
 add_compile_options(-Wall -Werror -O3)
 
@@ -35,6 +35,6 @@ configure_file(src/feslite-config.h.in src/feslite-config.h)
 add_subdirectory(src)
 add_subdirectory(benchmark)
 
-#if(BUILD_TESTING)
-add_subdirectory(test)
-#endif()
+if(BUILD_TESTING)
+  add_subdirectory(test)
+endif()

@@ -2,6 +2,7 @@
 #include <stdbool.h>
 #include <immintrin.h>
 
+#include "fes.h"
 #include "avx2.h"
 
 #ifdef __AVX2__

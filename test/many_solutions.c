@@ -1,6 +1,6 @@
 #include <stdbool.h>
 #include <stdio.h>
-// #include <stdlib.h>
+#include <stdlib.h>
 
 #include "fes.h"
 #include "rand.h"
@@ -104,5 +104,5 @@ int main()
 		test_kernel(kernel);
 
 	printf("1..%d\n", ntest);
-	exit(EXIT_SUCCESS);
+	return EXIT_SUCCESS;
 }
