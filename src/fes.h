@@ -4,8 +4,9 @@
 #include <stddef.h>
 #include <stdbool.h>
 
+#include "feslite.h"
+// #include "feslite-config.h"
 
-#include "feslite-config.h"
 #include "generic/generic.h"
 
 #ifdef __SSE2__
@@ -15,11 +16,6 @@
 #ifdef __AVX2__
 #include "avx2/avx2.h"
 #endif
-
-#include "feslite.h"
-#include "cycleclock.h"
-
-typedef uint64_t u64;
 
 typedef bool (*kernel_available_f)(void);
 typedef void (*kernel_enumeration_f)(int, int, const u32 *, const uint32_t *, int, u32 *, int *);

@@ -19,8 +19,8 @@ const struct enum_kernel_t ENUM_KERNEL[] = {
 	{"generic 4x16 (64 bits, plain C)", 4, NULL, feslite_generic_enum_4x16},
 #ifdef __SSE2__
 // 	/* all running intel CPUs should have SSE2 by now... */
- 	{"x64-SSE2 8x16 (128 bits, C+asm)", 8, NULL, feslite_x86_64_enum_8x16},
  	{"x64-SSE2 4x32 (128 bits, C+asm)", 4, NULL, feslite_x86_64_enum_4x32},
+ 	{"x64-SSE2 8x16 (128 bits, C+asm)", 8, NULL, feslite_x86_64_enum_8x16},
 #endif
 // #ifdef __AVX2__
 // 	{"x64-AVX2 16x16 (256 bits, C+asm)", feslite_avx2_available, feslite_avx2_enum_16x16},

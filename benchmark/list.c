@@ -2,7 +2,6 @@
 #include <stdlib.h>
 
 #include "feslite.h"
-#include "cycleclock.h"
 	
 /* Show list of available kernels */
 
