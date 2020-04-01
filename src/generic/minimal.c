@@ -1,6 +1,4 @@
 #include "fes.h"
-#include "ffs.h"
-#include "monomials.h"
 
 void feslite_generic_minimal(int n, int m, const u32 * Fq, const u32 * Fl, int count, u32 * buffer, int *size)
 {

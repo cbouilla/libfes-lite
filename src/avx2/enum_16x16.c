@@ -1,9 +1,6 @@
 #include "fes.h"
-#include "ffs.h"
-#include "monomials.h"
-#include <immintrin.h>
 
-extern struct solution_t * feslite_avx2_asm_enum(const __m256i * Fq, __m256i * Fl, 
+extern struct solution_t * feslite_avx2_asm_enum(const u16 * Fq, u16 * Fl, 
 	u64 alpha, u64 beta, u64 gamma, struct solution_t *local_buffer);
 
 #define L 8
@@ -17,8 +14,8 @@ struct solution_t {
 struct context_t {
 	int n;
 	int m;
-	const __m256i * Fq;
-	__m256i * Fl;
+	u16 Fq[529 * LANES] __attribute__((aligned(32)));
+	u16 Fl[33 * LANES] __attribute__((aligned(32)));
 
 	const u32 * Fq_start;
 	const u32 * Fl_start;
@@ -110,27 +107,8 @@ void feslite_avx2_enum_16x16(int n, int m, const u32 * Fq, const u32 * Fl, int c
 	context.Fq_start = Fq;
 	context.Fl_start = Fl;
 
-	u16 Fq_[529][LANES];
-	u16 Fl_[33][LANES];
-
-	int N = idxq(0, n);
-	for (int i = 0; i < N; i++)
-		for (int j = 0; j < LANES; j++)
-			Fq_[i][j] = Fq[i] & 0x0000ffff;
-	for (int j = 0; j < LANES; j++)
-		Fq_[idxq(0, n)][j] = 0;
-	for (int i = 1; i < n; i++)
-		for (int j = 0; j < LANES; j++)
-			Fq_[idxq(i, n)][j] = Fq_[idxq(i-1, i)][j];
-	for (int j = 0; j < LANES; j++)
-		Fq_[idxq(n, n)][j] = 0;
-	for (int i = 0; i < n + 1; i++) {
-		for (int j = 0; j < LANES; j++)
-			Fl_[i][j] = Fl[LANES * i + j] & 0x0000ffff;
-	}
-	context.Fq = (__m256i *) Fq_;
-	context.Fl = (__m256i *) Fl_;
-
+	setup16(n, LANES, Fq, Fl, context.Fq, context.Fl);
+	
 	ffs_reset(&context.ffs, n-L);
 	int k1 = context.ffs.k1 + L;
 	int k2 = context.ffs.k2 + L;
@@ -144,7 +122,7 @@ void feslite_avx2_enum_16x16(int n, int m, const u32 * Fq, const u32 * Fl, int c
 		u64 beta = 1 + k1;
 		u64 gamma = idxq(k1, k2);
 		struct solution_t *top = feslite_avx2_asm_enum(context.Fq, context.Fl, 
-		 	32*alpha, 32*beta, 32*gamma, context.local_buffer);
+		 	alpha, beta, gamma, context.local_buffer);
 		if (FLUSH_BUFFER(&context, top, j << L))
 			break;
 	}

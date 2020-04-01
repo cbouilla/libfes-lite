@@ -1,11 +1,4 @@
-#include <stdio.h>
-#include <inttypes.h>
-#include <stdbool.h>
-#include <assert.h>
-
 #include "fes.h"
-#include "ffs.h"
-#include "monomials.h"
 
 #define L 4
 #define LANES 4
@@ -27,8 +20,8 @@ struct solution_t {
 struct context_t {
 	int n;
 	int m;
-	const u64 * Fq;
-	u64 * Fl;
+	u16 Fq[529 * LANES] __attribute__((aligned(8)));
+	u16 Fl[33 * LANES] __attribute__((aligned(8)));
 
 	const u32 * Fq_start;
 	const u32 * Fl_start;
@@ -56,15 +49,17 @@ static const u64 MASK[LANES] = {0x000000000000ffffull, 0x00000000ffff0000ull, 0x
 // this has to be as simple as possible... and as fast as possible
 static inline void STEP_2(struct context_t *context, int a, int b, u32 index)
 {
-	u64 y = context->Fl[0];
+	const u64 *Fq = (u64 *) context->Fq;
+	u64 *Fl = (u64 *) context->Fl;
+	u64 y = Fl[0];
 	if (unlikely(((y & MASK[0]) == 0) || ((y & MASK[1]) == 0)
 		  || ((y & MASK[2]) == 0) || ((y & MASK[3]) == 0))) {
 		context->local_buffer[context->local_size].mask = y;
 		context->local_buffer[context->local_size].x = index;
 		context->local_size++;
 	}
-	context->Fl[a] ^= context->Fq[b];
-	context->Fl[0] ^= context->Fl[a];
+	Fl[a] ^= Fq[b];
+	Fl[0] ^= Fl[a];
 }
 
 
@@ -100,14 +95,10 @@ static inline bool FLUSH_BUFFER(struct context_t *context)
 	for (int i = 0; i < context->local_size; i++) {
 		u32 x = to_gray(context->local_buffer[i].x);
 		u64 mask = context->local_buffer[i].mask;
-		if ((mask & MASK[0]) == 0)             // lane 0
-			NEW_CANDIDATE(context, x, 0);
-		if ((mask & MASK[1]) == 0)             // lane 1
-			NEW_CANDIDATE(context, x, 1);
-		if ((mask & MASK[2]) == 0)             // lane 2
-			NEW_CANDIDATE(context, x, 2);
-		if ((mask & MASK[3]) == 0)             // lane 3
-			NEW_CANDIDATE(context, x, 3);
+		#pragma GCC unroll 64
+		for (int j = 0; j < LANES; j++)
+			if ((mask & MASK[j]) == 0)
+				NEW_CANDIDATE(context, x, j);
 	}
 	context->local_size = 0;
 	return context->overflow;
@@ -163,27 +154,7 @@ void feslite_generic_enum_4x16(int n, int m, const u32 * Fq, const u32 * Fl, int
 	context.Fq_start = Fq;
 	context.Fl_start = Fl;
 
-	u64 Fq_[529];
-	u64 Fl_[33];
-	int N = idxq(0, n);
-	for (int i = 0; i < N; i++) {
-		u64 a = Fq[i] & 0x0000ffff;
-		Fq_[i] = a ^ (a << 16);
-		Fq_[i] ^= Fq_[i] << 32;
-	}
-	Fq_[idxq(0, n)] = 0;
-	for (int i = 1; i < n; i++)
-		Fq_[idxq(i, n)] = Fq_[idxq(i-1, i)];
-	Fq_[idxq(n, n)] = 0;
-	for (int i = 0; i < n + 1; i++) {
-		u64 a = Fl[4 * i + 0] & 0x0000ffff;
-		u64 b = Fl[4 * i + 1] & 0x0000ffff;
-		u64 c = Fl[4 * i + 2] & 0x0000ffff;
-		u64 d = Fl[4 * i + 3] & 0x0000ffff;
-		Fl_[i] = a ^ (b << 16) ^ (c << 32) ^ (d << 48);
-	}
-	context.Fq = Fq_;
-	context.Fl = Fl_;
+	setup16(n, LANES, Fq, Fl, context.Fq, context.Fl);
 
 	ffs_reset(&context.ffs, n-L);
 	int k1 = context.ffs.k1 + L;

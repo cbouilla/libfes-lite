@@ -28,6 +28,9 @@
 # Let's go
 
 feslite_x86_64_asm_enum:
+shlq $4, %rdx
+shlq $4, %rcx
+shlq $4, %r8
 pxor %xmm15, %xmm15
 movq %r9, %rax         
 

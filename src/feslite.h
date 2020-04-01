@@ -1,3 +1,5 @@
+#ifndef FESLITE_H
+#define FESLITE_H
 #include <stdint.h>
 #include <stddef.h>
 #include <stdbool.h>
@@ -44,3 +46,4 @@ int feslite_default_kernel();
 
 /* Solve a single system using the i-th kernel. The CORRECT batch size (m) must be used. */
 void feslite_kernel_solve(int i, int n, int m, const u32 * Fq, const u32 * Fl, int count, u32 * buffer, int * size);
+#endif

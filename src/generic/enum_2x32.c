@@ -1,11 +1,4 @@
-#include <stdio.h>
-#include <inttypes.h>
-#include <stdbool.h>
-#include <assert.h>
-
 #include "fes.h"
-#include "ffs.h"
-#include "monomials.h"
 
 #define L 4
 #define LANES 2
@@ -19,8 +12,8 @@ struct solution_t {
 struct context_t {
 	int n;
 	int m;
-	const u64 * Fq;
-	u64 * Fl;
+	u32 Fq[529*LANES] __attribute__((aligned(8)));;
+	u32 Fl[33*LANES] __attribute__((aligned(8)));;
 	int count;
 	u32 *buffer;
 	int *size;
@@ -38,14 +31,16 @@ static const u64 MASK[LANES] = {0x00000000ffffffffull, 0xffffffff00000000ull};
 // tests the current value (corresponding to index), then step to the next one using a/b.
 static inline void STEP_2(struct context_t *context, int a, int b, u32 index)
 {
-	u64 y = context->Fl[0];
+	const u64 *Fq = (u64 *) context->Fq;
+	u64 *Fl = (u64 *) context->Fl;
+	u64 y = Fl[0];
 	if (unlikely(((y & MASK[0]) == 0) || ((y & MASK[1]) == 0))) {
 		context->local_buffer[context->local_size].mask = y;
 		context->local_buffer[context->local_size].x = index;
 		context->local_size++;
 	}
-	context->Fl[a] ^= context->Fq[b];
-	context->Fl[0] ^= context->Fl[a];
+	Fl[a] ^= Fq[b];
+	Fl[0] ^= Fl[a];
 }
 
 
@@ -119,19 +114,7 @@ void feslite_generic_enum_2x32(int n, int m, const u32 * Fq, const u32 * Fl, int
 	 	size[i] = 0;
 	context.local_size = 0;
 
-	u64 Fq_[529];
-	u64 Fl_[33];
-	int N = idxq(0, n);
-	for (int i = 0; i < N; i++)
-		Fq_[i] = ((u64) Fq[i]) ^ (((u64) Fq[i]) << 32);
-	Fq_[idxq(0, n)] = 0;
-	for (int i = 1; i < n; i++)
-		Fq_[idxq(i, n)] = Fq_[idxq(i-1, i)];
-	Fq_[idxq(n, n)] = 0;
-	for (int i = 0; i < n + 1; i++)
-		Fl_[i] = Fl[2 * i] ^ (((u64) Fl[2 * i + 1]) << 32);
-	context.Fq = Fq_;
-	context.Fl = Fl_;
+	setup32(n, LANES, Fq, Fl, context.Fq, context.Fl);
 
 	ffs_reset(&context.ffs, n-L);
 	int k1 = context.ffs.k1 + L;

@@ -29,9 +29,9 @@ PROLOGUE = """
 # C) We will receive the arguments of the function in registers :
 #       Fq           in %rdi
 #       Fl           in %rsi
-#       32*alpha     in %rdx
-#       32*beta      in %rcx
-#       32*gamma     in %r8
+#       alpha        in %rdx
+#       beta         in %rcx
+#       gamma        in %r8
 #       local_buffer in %r9
 # D) we return local_buffer in %rax
 
@@ -45,6 +45,9 @@ PROLOGUE = """
 # Let's go
 
 feslite_avx2_asm_enum:
+shlq $5, %rdx
+shlq $5, %rcx
+shlq $5, %r8
 vpxor %ymm15, %ymm15, %ymm15
 movq %r9, %rax         
 """.format(mode=mode)

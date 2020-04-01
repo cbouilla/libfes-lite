@@ -7,8 +7,12 @@ project(feslite VERSION 1.0)
 include(FindPython3)
 include(CTest)
 
+if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
+  message(STATUS "Setting build type to 'Debug' as none was specified.")
+  set(CMAKE_BUILD_TYPE "Debug" CACHE STRING "Choose the type of build." FORCE)
+endif()
 
-add_compile_options(-Wall -Werror -O3)
+add_compile_options(-Wall -Werror -O3 -Wno-unused-function)
 
 # specify the C standard
 set(CMAKE_C_STANDARD 99)

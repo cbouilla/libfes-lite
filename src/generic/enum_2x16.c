@@ -1,6 +1,4 @@
 #include "fes.h"
-#include "ffs.h"
-#include "monomials.h"
 
 #define L 4
 #define LANES 2
@@ -21,11 +19,11 @@ struct solution_t {
 struct context_t {
 	int n;
 	int m;
-	const u32 * Fq;
+	u16 Fq[529*LANES] __attribute__((aligned(4)));
+	u16 Fl[33*LANES] __attribute__((aligned(4)));
 	const u32 * Fq_start;
 	const u32 * Fl_start;
-	u32 * Fl;
-
+	
 	int count;
 	u32 *buffer;
 	int *size;
@@ -49,14 +47,16 @@ static const u32 MASK[LANES] = {0x0000ffff, 0xffff0000};
 // this has to be as simple as possible... and as fast as possible
 static inline void STEP_2(struct context_t *context, int a, int b, u32 index)
 {
-	u32 y = context->Fl[0];
+	const u32 *Fq = (u32 *) context->Fq;
+	u32 *Fl = (u32 *) context->Fl;
+	u32 y = Fl[0];
 	if (unlikely(((y & MASK[0]) == 0) || ((y & MASK[1]) == 0))) {
 		context->local_buffer[context->local_size].mask = y;
 		context->local_buffer[context->local_size].x = index;
 		context->local_size++;
 	}
-	context->Fl[a] ^= context->Fq[b];
-	context->Fl[0] ^= context->Fl[a];
+	Fl[a] ^= Fq[b];
+	Fl[0] ^= Fl[a];
 }
 
 
@@ -64,18 +64,11 @@ static inline void STEP_2(struct context_t *context, int a, int b, u32 index)
 static inline void FLUSH_CANDIDATES(struct context_t *context, int lane)
 {
 	int max_solutions = context->count - context->size[lane];
-
-	//printf("# [DEBUG] FLUSH_CANDIDATES (lane %d) %d candidates, %d solutions, max_allowed=%d\n", 
-	//	lane, context->n_candidates[lane], context->size[lane], max_solutions);
-
 	int k;
 	u32 * outbuf = context->buffer + context->count * lane + context->size[lane];
-
 	feslite_generic_eval_32(context->n, context->Fq_start, context->Fl_start + lane, LANES, 
 				context->n_candidates[lane], context->candidates[lane], 
 				max_solutions, outbuf, &k);
-
-	// printf("# [DEBUG] FLUSH_CANDIDATES %d candidates passed for lane %d\n", k, lane);
 	context->size[lane] += k;
 	context->n_candidates[lane] = 0;
 	if (context->size[lane] == context->count)
@@ -85,14 +78,9 @@ static inline void FLUSH_CANDIDATES(struct context_t *context, int lane)
 
 static inline void NEW_CANDIDATE(struct context_t *context, u32 x, int lane)
 {
-	// u32 y = feslite_naive_evaluation(context->n, context->Fq_start, context->Fl_start + lane, 2, x);
-	// printf("# [DEBUG] candidate %08x in lane %d, with F[%d][%08x] = %08x\n", x, lane, lane, x, y);
-	// assert((y & 0x0000ffff) == 0);
-
 	int i = context->n_candidates[lane];
 	context->candidates[lane][i] = x;
 	context->n_candidates[lane] = i + 1;
-
 	if (context->n_candidates[lane] == 32)
 		FLUSH_CANDIDATES(context, lane);
 }
@@ -161,24 +149,7 @@ void feslite_generic_enum_2x16(int n, int m, const u32 * Fq, const u32 * Fl, int
 	context.Fq_start = Fq;
 	context.Fl_start = Fl;
 
-	u32 Fq_[529];
-	u32 Fl_[33];
-	int N = idxq(0, n);
-	for (int i = 0; i < N; i++) {
-		u32 a = Fq[i] & 0x0000ffff;
-		Fq_[i] = a ^ (a << 16);
-	}
-	Fq_[idxq(0, n)] = 0;
-	for (int i = 1; i < n; i++)
-		Fq_[idxq(i, n)] = Fq_[idxq(i-1, i)];
-	Fq_[idxq(n, n)] = 0;
-	for (int i = 0; i < n + 1; i++) {
-		u32 a = Fl[2 * i + 0] & 0x0000ffff;
-		u32 b = Fl[2 * i + 1] & 0x0000ffff;
-		Fl_[i] = a ^ (b << 16);
-	}
-	context.Fq = Fq_;
-	context.Fl = Fl_;
+	setup16(n, LANES, Fq, Fl, context.Fq, context.Fl);
 
 	ffs_reset(&context.ffs, n-L);
 	int k1 = context.ffs.k1 + L;

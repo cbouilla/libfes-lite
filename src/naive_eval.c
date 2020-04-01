@@ -1,5 +1,4 @@
 #include "fes.h"
-#include "monomials.h"
 
 u32 feslite_naive_evaluation(int n, const u32 * Fq, const u32 * Fl, int stride, u32 x)
 {

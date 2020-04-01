@@ -1,9 +1,6 @@
 #include "fes.h"
-#include "ffs.h"
-#include "monomials.h"
-#include <immintrin.h>
 
-extern struct solution_t * feslite_x86_64_asm_enum(const __m128i * Fq, __m128i * Fl, 
+extern struct solution_t * feslite_x86_64_asm_enum(const u16 * Fq, u16 * Fl, 
 	u64 alpha, u64 beta, u64 gamma, struct solution_t *local_buffer);
 
 #define L 8
@@ -18,8 +15,8 @@ struct solution_t {
 struct context_t {
 	int n;
 	int m;
-	const __m128i * Fq;
-	__m128i * Fl;
+	u16 Fq[529 * LANES] __attribute__((aligned(16)));
+	u16 Fl[33 * LANES] __attribute__((aligned(16)));
 
 	const u32 * Fq_start;
 	const u32 * Fl_start;
@@ -77,7 +74,7 @@ static inline bool FLUSH_BUFFER(struct context_t *context, struct solution_t * t
 		u32 x = to_gray(bot->x + i);
 		u32 mask = bot->mask;
 
-		#pragma GCC unroll 16
+		#pragma GCC unroll 64
 		for (int i = 0; i < LANES; i++)		
 			if (mask & MASK[i])
 				NEW_CANDIDATE(context, x, i);
@@ -109,29 +106,7 @@ void feslite_x86_64_enum_8x16(int n, int m, const u32 * Fq, const u32 * Fl, int 
 	context.Fq_start = Fq;
 	context.Fl_start = Fl;
 
-	__m128i Fq_[529];
-	__m128i Fl_[33];
-
-	int N = idxq(0, n);
-	for (int i = 0; i < N; i++)
-		Fq_[i] = _mm_set1_epi16(Fq[i] & 0x0000ffff);
-	Fq_[idxq(0, n)] = _mm_setzero_si128();
-	for (int i = 1; i < n; i++)
-		Fq_[idxq(i, n)] = Fq_[idxq(i-1, i)];
-	Fq_[idxq(n, n)] = _mm_setzero_si128();
-	for (int i = 0; i < n + 1; i++) {
-		u32 a = Fl[8 * i + 0] & 0x0000ffff;
-		u32 b = Fl[8 * i + 1] & 0x0000ffff;
-		u32 c = Fl[8 * i + 2] & 0x0000ffff;
-		u32 d = Fl[8 * i + 3] & 0x0000ffff;
-		u32 e = Fl[8 * i + 4] & 0x0000ffff;
-		u32 f = Fl[8 * i + 5] & 0x0000ffff;
-		u32 g = Fl[8 * i + 6] & 0x0000ffff;
-		u32 h = Fl[8 * i + 7] & 0x0000ffff;
-		Fl_[i] = _mm_set_epi16(h, g, f, e, d, c, b, a);
-	}
-	context.Fq = Fq_;
-	context.Fl = Fl_;
+	setup16(n, LANES, Fq, Fl, context.Fq, context.Fl);
 
 	ffs_reset(&context.ffs, n-L);
 	int k1 = context.ffs.k1 + L;
@@ -146,7 +121,7 @@ void feslite_x86_64_enum_8x16(int n, int m, const u32 * Fq, const u32 * Fl, int 
 		u64 beta = 1 + k1;
 		u64 gamma = idxq(k1, k2);
 		struct solution_t *top = feslite_x86_64_asm_enum(context.Fq, context.Fl, 
-		 	16*alpha, 16*beta, 16*gamma, context.local_buffer);
+		 	alpha, beta, gamma, context.local_buffer);
 		if (FLUSH_BUFFER(&context, top, j << L))
 			break;
 	}

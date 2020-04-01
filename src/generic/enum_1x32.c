@@ -1,9 +1,7 @@
 #include "fes.h"
-#include "ffs.h"
-#include "monomials.h"
 
+#define LANES 1
 #define L 4
-#define VERBOSE 0
 
 struct solution_t {
   u32 x;
@@ -12,8 +10,8 @@ struct solution_t {
 struct context_t {
 	int n;
 	int m;
-	const u32 * Fq;
-	u32 * Fl;
+	u32 Fq[529 * LANES];
+	u32 Fl[33 * LANES];
 	int count;
 	u32 *buffer;
 	int *size;
@@ -96,19 +94,7 @@ void feslite_generic_enum_1x32(int n, int m, const u32 * Fq, const u32 * Fl, int
 	context.size[0] = 0;
 	context.local_size = 0;
 
-	u32 Fq_[529];
-	u32 Fl_[33];
-	int N = idxq(0, n);
-	for (int i = 0; i < N; i++)
-		Fq_[i] = Fq[i];
-	Fq_[idxq(0, n)] = 0;
-	for (int i = 1; i < n; i++)
-		Fq_[idxq(i, n)] = Fq_[idxq(i-1, i)];
-	Fq_[idxq(n, n)] = 0;
-	for (int i = 0; i < n + 1; i++)
-		Fl_[i] = Fl[i];
-	context.Fq = Fq_;
-	context.Fl = Fl_;
+	setup32(n, LANES, Fq, Fl, context.Fq, context.Fl);
 
 	ffs_reset(&context.ffs, n-L);
 	int k1 = context.ffs.k1 + L;

@@ -1,3 +1,5 @@
+#ifndef FES_H
+#define FES_H
 #define _XOPEN_SOURCE
 
 #include <stdint.h>
@@ -16,6 +18,10 @@
 #ifdef __AVX2__
 #include "avx2/avx2.h"
 #endif
+
+#include "ffs.h"
+#include "monomials.h"
+#include "setup.h"
 
 typedef bool (*kernel_available_f)(void);
 typedef void (*kernel_enumeration_f)(int, int, const u32 *, const uint32_t *, int, u32 *, int *);
@@ -37,3 +43,4 @@ struct eval_kernel_t {
 extern const struct enum_kernel_t ENUM_KERNEL[];
 
 u32 feslite_naive_evaluation(int n, const u32 * Fq, const u32 * Fl, int stride, u32 x);
+#endif

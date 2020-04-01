@@ -1,8 +1,4 @@
-#include <assert.h>
-#include <stdio.h>
-
-#include "monomials.h"
-#include "generic.h"
+#include "fes.h"
 
 static const u32 M1_HI = 0xffff0000;
 static const u32 M1_LO = 0x0000ffff;
@@ -69,13 +65,7 @@ void feslite_generic_eval_32(int n, const u32 * Fq, const u32 * Fl, int stride,
 			     int outcount, u32 *outbuf, int *size)
 {
 	/* FIXME : consider getting rid of this. This function is internal !*/
-	assert(incount <= 32);
-	*size = 0;
-	
-	// printf("[DEBUG] eval32 : n=%d, %d input candidates, %d output slots\n", n, incount, outcount);
-	// for (int i = 0; i < incount; i++)
-	// 	printf("[DEBUG] - %08x\n", inbuf[i]);
-
+	*size = 0;	
 	if (incount == 0 || outcount == 0)
 		return;
 
