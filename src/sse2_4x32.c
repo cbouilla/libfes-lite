@@ -51,7 +51,7 @@ static inline bool FLUSH_BUFFER(struct context_t *context, struct solution_t * t
 	return false;
 }
 
-void feslite_x86_64_enum_4x32(int n, int m, const u32 * Fq, const u32 * Fl, int count, u32 * buffer, int *size)
+void feslite_sse2_enum_4x32(int n, int m, const u32 * Fq, const u32 * Fl, int count, u32 * buffer, int *size)
 {
 	/* verify input parameters */
 	if (count <= 0 || n < UNROLL || n > 32 || m != LANES) {
@@ -82,7 +82,7 @@ void feslite_x86_64_enum_4x32(int n, int m, const u32 * Fq, const u32 * Fl, int 
 		k2 = context.ffs.k2 + UNROLL;
 		u64 beta = 1 + k1;
 		u64 gamma = idxq(k1, k2);
-		struct solution_t *top = feslite_x86_64_asm_enum(context.Fq, context.Fl, 
+		struct solution_t *top = feslite_sse2_asm_enum(context.Fq, context.Fl, 
 		 	alpha, beta, gamma, context.local_buffer);
 		if (FLUSH_BUFFER(&context, top, j << UNROLL))
 			break;

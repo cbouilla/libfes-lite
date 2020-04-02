@@ -38,10 +38,10 @@ void feslite_generic_eval_32(int n, const u32 * Fq, const u32 * Fl, int stride,
 /** architecture-specific enumeration kernels **/
 
 #ifdef __SSE2__
-extern struct solution_t * feslite_x86_64_asm_enum(const void * Fq, void * Fl, 
+extern struct solution_t * feslite_sse2_asm_enum(const void * Fq, void * Fl, 
 	                                      u64 alpha, u64 beta, u64 gamma, struct solution_t *local_buffer);
-void feslite_x86_64_enum_4x32(int n, int m, const u32 * Fq, const u32 * Fl, int count, u32 * buffer, int *size);
-void feslite_x86_64_enum_8x16(int n, int m, const u32 * Fq, const u32 * Fl, int count, u32 * buffer, int *size);
+void feslite_sse2_enum_4x32(int n, int m, const u32 * Fq, const u32 * Fl, int count, u32 * buffer, int *size);
+void feslite_sse2_enum_8x16(int n, int m, const u32 * Fq, const u32 * Fl, int count, u32 * buffer, int *size);
 #endif
 
 #ifdef __AVX2__
