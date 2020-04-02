@@ -52,7 +52,7 @@ endif()
 
 if(HAVE_AVX512BW)
 	add_custom_command(
-		COMMAND ${Python3_EXECUTABLE} gen_avx512.py > ${CMAKE_CURRENT_SOURCE_DIR}/avx512_enum.s
+		COMMAND ${Python3_EXECUTABLE} avx512_codegen.py > ${CMAKE_CURRENT_SOURCE_DIR}/avx512_enum.s
 		DEPENDS avx512_codegen.py
 		OUTPUT ${CMAKE_CURRENT_SOURCE_DIR}/avx512_enum.s
 		WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}

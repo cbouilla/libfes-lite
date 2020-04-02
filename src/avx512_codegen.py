@@ -1,3 +1,4 @@
+import sys
 L = 8
 
 def ffs(i):
@@ -56,7 +57,7 @@ shlq $6, %rdx
 shlq $6, %rcx
 shlq $6, %r8
 
-vpxor %zmm31, %zmm31, %zmm31         # set %zmm31 to always-zero
+vpxord %zmm31, %zmm31, %zmm31         # set %zmm31 to always-zero
 movq %r9, %rax                       # prepare the return value
 """)
 
