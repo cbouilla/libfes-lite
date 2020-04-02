@@ -41,6 +41,7 @@ PROLOGUE = """
 # we may still use %9, %r10 and %r11
 # %r11 contains the comparison output mask 
 # %r9 and %r10 are available
+
 # Let's go
 
 feslite_avx2_asm_enum:

@@ -2,10 +2,14 @@ cmake_minimum_required(VERSION 3.10)
 cmake_policy(SET CMP0076 NEW)
 
 # set the project name
-project(feslite VERSION 1.0 LANGUAGES C HOMEPAGE_URL https://github.com/cbouilla/libfes-lite)
+project(feslite VERSION 1.0 
+	LANGUAGES C ASM
+	HOMEPAGE_URL https://github.com/cbouilla/libfes-lite)
 
 include(FindPython3)
 include(CTest)
+
+find_package (Python3 COMPONENTS Interpreter) # Development
 
 if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
   message(STATUS "Setting build type to 'Debug' as none was specified.")

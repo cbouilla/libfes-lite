@@ -63,20 +63,6 @@
 #define unlikely(x)     __builtin_expect(!!(x), 0)
 #define min(x,y) (((x) > (y)) ? (y) : (x)) 
 
-
-static inline int idx1(int i)
-{
-  assert(false);
-  return i * (i + 1) / 2 + 1;
-}
-
-static inline int idx2(int i, int j)
-{
-  // assert(i < j);
-  assert(false);
-  return idx1(j) + 1 + i;
-}
-
 static inline int idxq(int i, int j)
 {
   // assert(i < j);

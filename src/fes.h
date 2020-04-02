@@ -9,7 +9,33 @@
 #include "feslite.h"
 // #include "feslite-config.h"
 
-#include "generic/generic.h"
+/** plain-C enumeration kernels **/
+
+/* 32-bits registers only */
+void feslite_generic_minimal(int n, int m, const u32 * Fq, const u32 * Fl, int count, u32 * buffer, int *size);
+void feslite_generic_enum_1x32(int n, int m, const u32 * Fq, const u32 * Fl, int count, u32 * buffer, int *size);
+void feslite_generic_enum_2x16(int n, int m, const u32 * Fq, const u32 * Fl, int count, u32 * buffer, int *size);
+
+/* 64 bits registers */
+void feslite_generic_enum_2x32(int n, int m, const u32 * Fq, const u32 * Fl, int count, u32 * buffer, int *size);
+void feslite_generic_enum_4x16(int n, int m, const u32 * Fq, const u32 * Fl, int count, u32 * buffer, int *size);
+
+/* helper functions */
+void feslite_transpose_32(const u32 * M, u32 * T);
+
+/* evaluate a quadratic function on a single point */
+u32 feslite_naive_evaluation(int n, const u32 * Fq, const u32 * Fl, int stride, u32 x);
+
+/* batch-evaluate a quadratic function on several input vectors.
+   inputs are checked against equations [16:32]
+   inbuf must be of size 32 no matter what. */
+void feslite_generic_eval_32(int n, const u32 * Fq, const u32 * Fl, int stride, 
+              int incount, const u32 *inbuf, 
+              int outcount, u32 *outbuf, int *size);
+
+
+
+/** architecture-specific enumeration kernels **/
 
 #ifdef __SSE2__
 extern struct solution_t * feslite_x86_64_asm_enum(const void * Fq, void * Fl, 
@@ -33,6 +59,7 @@ void feslite_avx512bw_enum_16x32(int n, int m, const u32 * Fq, const u32 * Fl, i
 void feslite_avx512bw_enum_32x16(int n, int m, const u32 * Fq, const u32 * Fl, int count, u32 * buffer, int *size);
 #endif
 
+/* misc stuff */
 
 #include "ffs.h"
 #include "monomials.h"
@@ -57,5 +84,4 @@ struct eval_kernel_t {
 
 extern const struct enum_kernel_t ENUM_KERNEL[];
 
-u32 feslite_naive_evaluation(int n, const u32 * Fq, const u32 * Fl, int stride, u32 x);
 #endif

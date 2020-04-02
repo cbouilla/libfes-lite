@@ -41,6 +41,7 @@ PROLOGUE = """
 # we may still use %9, %r10 and %r11
 # %r11 contains the comparison output mask 
 # %r9 and %r10 are available
+
 # Let's go
 
 feslite_x86_64_asm_enum:
@@ -176,7 +177,6 @@ print()
 for i in range(1<<L):
     # the mask is in %r11.
     # available registers: %r9, %r10
-    # à améliorer : pourquoi contourner l'adressage?
     print('._report_solution_{i}:  # GrayCode(i + {i}) is a solution'.format(i=i))
     print('pxor %xmm15, %xmm15     # reset %xmm15 to zero')
     print('movl ${i},  0(%rax)     # buffer.x = {i}'.format(i=i))
