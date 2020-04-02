@@ -44,6 +44,9 @@ char const * feslite_kernel_name(int i);
 int feslite_kernel_batch_size(int i);
 int feslite_default_kernel();
 
+/* convenience function; returns -1 when given a bogus name) */
+int feslite_kernel_find_by_name(const char *name);
+
 /* Solve a single system using the i-th kernel. The CORRECT batch size (m) must be used. */
 void feslite_kernel_solve(int i, int n, int m, const u32 * Fq, const u32 * Fl, int count, u32 * buffer, int * size);
 #endif

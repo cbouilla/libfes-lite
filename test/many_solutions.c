@@ -89,7 +89,7 @@ void test_kernel(int kernel)
 	}
 }
 
-int main()
+int main(int argc, char **argv)
 {
 	printf("# initalizing random system with seed=0x%lx\n", random_seed);
 	mysrand(random_seed);
@@ -100,9 +100,16 @@ int main()
 	for (int i = 0; i < 33; i++)
 		Fl[i] = myrand() & mask;
 
-	for (int kernel = 0; kernel < feslite_num_kernels(); kernel++)
+	if (argc > 1) {
+		int kernel = feslite_kernel_find_by_name(argv[1]);
+		if (kernel < 0)
+			return 2;
 		test_kernel(kernel);
-
+	} else {
+		/* no argument : test everything */
+		for (int kernel = 0; kernel < feslite_num_kernels(); kernel++)
+			test_kernel(kernel);
+	}
 	printf("1..%d\n", ntest);
 	return EXIT_SUCCESS;
 }

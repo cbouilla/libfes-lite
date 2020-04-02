@@ -31,6 +31,9 @@ u32 Fq[496];
 
 void test_kernel(int kernel, int k)
 {
+	if (!feslite_kernel_is_available(kernel))
+		return;
+
 	const char *name = feslite_kernel_name(kernel);
 
 	int m = feslite_kernel_batch_size(kernel);
@@ -71,7 +74,7 @@ void test_kernel(int kernel, int k)
 			++ntest, name, test_cases[k]);
 }
 
-int main()
+int main(int argc, char **argv)
 {
 	printf("# initalizing random systems with seed=0x%lx\n", random_seed);
 	mysrand(random_seed);
@@ -79,18 +82,20 @@ int main()
 	for (int i = 0; i < 496; i++)
 		Fq[i] = myrand();
 
-	/******************** go *******************/
-	for (int kernel = 0; kernel < feslite_num_kernels(); kernel++) {
-		const char *name = feslite_kernel_name(kernel);
-	
-		if (!feslite_kernel_is_available(kernel)) {
-			printf("ok %d - SKIP kernel [%s] not available\n", ++ntest, name);
-			continue;
-		}
-
-		printf("# testing kernel [%s]\n", name);
+	if (argc > 1) {
+		int kernel = feslite_kernel_find_by_name(argv[1]);
+		if (kernel < 0)
+			return 2;
 		for (int i = 0; i < N; i++)
 			test_kernel(kernel, i);
+	} else {
+		/* no argument : test everything */
+		for (int kernel = 0; kernel < feslite_num_kernels(); kernel++) {
+			const char *name = feslite_kernel_name(kernel);		
+			printf("# testing kernel [%s]\n", name);
+			for (int i = 0; i < N; i++)
+				test_kernel(kernel, i);
+		}
 	}
 
 	printf("1..%d\n", ntest);
