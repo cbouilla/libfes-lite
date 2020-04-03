@@ -22,6 +22,9 @@ add_compile_options(-Wall -Werror -O3 -Wno-unused-function)
 set(CMAKE_C_STANDARD 99)
 set(CMAKE_C_STANDARD_REQUIRED True)
 
+# OpenMP ?
+find_package(OpenMP)
+
 #####################################################################
 # Obtain information from the host (copied from CADO-NFS).
 
