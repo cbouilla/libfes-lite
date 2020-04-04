@@ -1,5 +1,6 @@
 #include <stdint.h>
 #include <stdbool.h>
+
 #if defined(_MSC_VER)
 # include <intrin.h>
 #endif
@@ -37,37 +38,6 @@ bool feslite_avx512_available()
 
 #else /* non-Intel compiler */
 
-static int check_xcr0_ymm() 
-{
-#if HAVE_XGETBV
-    uint32_t xcr0;
-#if defined(_MSC_VER)
-    xcr0 = (uint32_t)_xgetbv(0);  /* min VS2010 SP1 compiler is required */
-#else
-    __asm__ ("xgetbv" : "=a" (xcr0) : "c" (0) : "%edx" );
-#endif
-    return ((xcr0 & 6) == 6); /* checking if xmm and ymm state are enabled in XCR0 */
-#else
-    return 0;
-#endif
-}
-
-static int check_xcr0_zmm()
-{
-#if HAVE_XGETBV
-    uint32_t xcr0;
-    uint32_t zmm_ymm_xmm = (7U << 5) | (1U << 2) | (1U << 1);
-#if defined(_MSC_VER)
-    xcr0 = (uint32_t)_xgetbv(0);  /* min VS2010 SP1 compiler is required */
-#else
-    __asm__ ("xgetbv" : "=a" (xcr0) : "c" (0) : "%edx" );
-#endif
-    return ((xcr0 & zmm_ymm_xmm) == zmm_ymm_xmm); /* check if xmm, zmm and zmm state are enabled in XCR0 */
-#else
-    return 0;
-#endif
-}
-
 bool feslite_avx2_available()
 {
     uint32_t abcd[4];
@@ -79,9 +49,6 @@ bool feslite_avx2_available()
        CPUID.(EAX=01H, ECX=0H):ECX.OSXSAVE[bit 27]==1 */
     run_cpuid( 1, 0, abcd );
     if ( (abcd[2] & fma_movbe_osxsave_mask) != fma_movbe_osxsave_mask ) 
-        return 0;
-
-    if ( ! check_xcr0_ymm() )
         return 0;
 
     /*  CPUID.(EAX=07H, ECX=0H):EBX.AVX2[bit 5]==1  &&
@@ -107,9 +74,6 @@ bool feslite_avx512_available() {
     /* CPUID.(EAX=01H, ECX=0H):ECX.OSXSAVE[bit 27]==1 */
     run_cpuid( 1, 0, abcd );
     if ( (abcd[2] & osxsave_mask) != osxsave_mask ) 
-        return 0;
-
-    if ( ! check_xcr0_zmm() )
         return 0;
 
     /*  CPUID.(EAX=07H, ECX=0H):EBX.AVX-512F [bit 16]==1  &&

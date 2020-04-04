@@ -86,10 +86,6 @@ void feslite_avx2_enum_8x32(int n, int m, const u32 * Fq, const u32 * Fl, int co
 		struct solution_t *top = feslite_avx2_asm_enum(context.Fq, context.Fl, 
 		 	alpha, beta, gamma, context.local_buffer);
 
-		// printf("------------------------------\n");
-		// for (int k = 0; k < n +1; k++)
-		// 	printf("Fl[%2d][0] = %08x\n", k, context.Fl[LANES * k]);
-
 		if (FLUSH_BUFFER(&context, top, j << UNROLL))
 			break;
 	}

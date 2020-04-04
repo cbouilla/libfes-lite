@@ -1,4 +1,5 @@
 #include "fes.h"
+#include <immintrin.h>
 
 #define L 8
 #define LANES 16
@@ -33,12 +34,6 @@ struct context_t {
 	struct ffs_t ffs;
 };
 
-static const u32 MASK[LANES] = {0x00000003, 0x0000000c, 0x00000030, 0x000000c0,
-	                        0x00000300, 0x00000c00, 0x00003000, 0x0000c000,
-	                        0x00030000, 0x000c0000, 0x00300000, 0x00c00000, 
-				0x03000000, 0x0c000000, 0x30000000, 0xc0000000};
-
-
 /* batch-eval all the candidates */
 static inline void FLUSH_CANDIDATES(struct context_t *context, int lane)
 {
@@ -66,16 +61,18 @@ static inline void NEW_CANDIDATE(struct context_t *context, u32 x, int lane)
 }
 
 
+
 static inline bool FLUSH_BUFFER(struct context_t *context, struct solution_t * top, u64 i)
 {	
 	for (struct solution_t * bot = context->local_buffer; bot != top; bot++) {
 		u32 x = to_gray(bot->x + i);
 		u32 mask = bot->mask;
-		// possible optimization : split in two or in four.
-		#pragma GCC unroll 32
-		for (int i = 0; i < LANES; i++)
-			if (mask & MASK[i])
-				NEW_CANDIDATE(context, x, i);
+		do {
+			int i = __builtin_ctzl(mask);
+			NEW_CANDIDATE(context, x, i / 2);	
+			mask = mask & (mask - 1);
+			mask = mask & (mask - 1);
+		} while(mask);
 	}
 	return context->overflow;
 }				
