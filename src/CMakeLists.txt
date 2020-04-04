@@ -57,11 +57,20 @@ if(HAVE_AVX512BW)
 		OUTPUT ${CMAKE_CURRENT_SOURCE_DIR}/avx512_enum.s
 		WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
 		COMMENT "Generating code for avx512_enum.s"
+	)
+	add_custom_command(
+		COMMAND ${Python3_EXECUTABLE} avx512x2_codegen.py > ${CMAKE_CURRENT_SOURCE_DIR}/avx512x2_enum.s
+		DEPENDS avx512x2_codegen.py
+		OUTPUT ${CMAKE_CURRENT_SOURCE_DIR}/avx512x2_enum.s
+		WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+		COMMENT "Generating code for avx512x2_enum.s"
 	)   
 	target_sources(feslite PRIVATE 
 		avx512_enum.s
 		avx512_16x32.c
 		avx512_32x16.c
+		avx512x2_enum.s
+		avx512_64x16.c
 	)
 endif()
 

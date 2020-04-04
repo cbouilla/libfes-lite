@@ -44,6 +44,12 @@ print("""
 # %r11 contains the comparison output mask 
 # %r9 and %r10 are available
 
+# Scheduling on Haswell : each step is 6 instructions ;
+#   dependency chain of length 4
+#   measure 2 cycles per step ---> OPTIMAL
+#
+# Hyper-threading gives a 10% speedup
+
 ### extern struct solution_t * UNROLLED_CHUNK(const __m256i * Fq, __m256i * Fl, u64 alpha, 
 ###                                           u64 beta, u64 gamma, struct solution_t *local_buffer)
 
@@ -82,19 +88,45 @@ Fq[idxq(0, 4)] = "%ymm13" # 1/32
 
 assert Fl[0] == "%ymm0"
 
-def output_comparison(i):
+def output_comparison(i, between_cmp_msk=None, between_msk_test=None, between_test_jmp=None):
     # before the XORs, the comparison
-    #if mode == "8x32":
-    #    print('vpcmpeqd %ymm0, %ymm15, %ymm15'.format())
-    #elif mode == "16x16":
     print('vpcmpeqw %ymm0, %ymm15, %ymm15'.format())
-    #else:
-    #    raise ValueError("bad mode!")
+    if between_cmp_msk:
+        print(between_cmp_msk)
     print('vpmovmskb %ymm15, %r11d')
+    if between_msk_test:
+        print(between_msk_test)
     print('test %r11d, %r11d')
+    if between_test_jmp:
+        print(between_test_jmp)
     print('jne ._report_solution_{0}'.format(i))
-    print()
     print('._step_{0}_end:'.format(i))
+
+def compute_update(i, a, b):
+    # There are 3 possible cases :
+    # 1a. Fq in register, Fl in register
+    # 1b. Fq in memory,   Fl in register
+    #  2. Fq in memory,   Fl in memory
+    if a in Fl:
+        if b in Fq: # reg / reg
+            xor1 = "vpxor {src}, {dst}, {dst}".format(src=Fq[b], dst=Fl[a])
+        elif Fq_memref is None: # mem / reg
+            xor1 = "vpxor {offset}(%rdi), {dst}, {dst}".format(offset=32*b, dst=Fl[a])
+        else: # mem(alpha) / reg
+            xor1 = "vpxor {src}, {dst}, {dst}".format(src=Fq_memref, dst=Fl[a])
+        xor2 = "vpxor {src}, %ymm0, %ymm0".format(src=Fl[a])
+        return (xor1, xor2)
+
+    else:             # (a not in Fl)
+        assert b not in Fq
+        xor1a = "vmovdqa {offset}(%rsi), %ymm14".format(offset=32*a) # load Fl[a]
+        if Fq_memref is None: 
+            xor1b = "vpxor {offset}(%rdi), %ymm14, %ymm14".format(offset=32*b)
+        else:
+            xor1b = "vpxor {src}, %ymm14, %ymm14".format(src=Fq_memref)
+        xor1c = "vmovdqa %ymm14, {offset}(%rsi)".format(offset=32*a) # store Fl[a]
+        xor2 = "vpxor %ymm14, %ymm0, %ymm0"
+        return ("\n".join([xor1a, xor1b, xor1c]), xor2)
 
 ###################""
 
@@ -120,36 +152,14 @@ for i in range((1 << L) - 1):
     else:
         assert idx1 < idx2
         b = idxq(idx1, idx2)                  # offset dans Fq
-    
+
     print()
     print('##### step {:3d} : Fl[0] ^= (Fl[{}] ^= Fq[{}])'.format(i, a, b))
     print()
+    xor1, xor2 = compute_update(i, a, b)
     output_comparison(i)
-
-
-    # There are 3 possible cases :
-    # 1a. Fq in register, Fl in register
-    # 1b. Fq in memory,   Fl in register
-    #  2. Fq in memory,   Fl in memory
-
-    if a in Fl:
-        if b in Fq: # reg / reg
-            print("vpxor {src}, {dst}, {dst}".format(src=Fq[b], dst=Fl[a]))
-        elif Fq_memref is None: # mem / reg
-            print("vpxor {offset}(%rdi), {dst}, {dst}".format(offset=32*b, dst=Fl[a]))
-        else: # mem(alpha) / reg
-            print("vpxor {src}, {dst}, {dst}".format(src=Fq_memref, dst=Fl[a]))
-        print("vpxor {src}, %ymm0, %ymm0".format(src=Fl[a]))
-    
-    elif a not in Fl:
-        assert b not in Fq
-        print("vmovdqa {offset}(%rsi), %ymm14".format(offset=32*a)) # load Fl[a]
-        if Fq_memref is None: 
-            print("vpxor {offset}(%rdi), %ymm14, %ymm14".format(offset=32*b))
-        else:
-            print("vpxor {src}, %ymm14, %ymm14".format(src=Fq_memref))
-        print("vmovdqa %ymm14, {offset}(%rsi)".format(offset=32*a)) # store Fl[a]
-        print("vpxor %ymm14, %ymm0, %ymm0")
+    print(xor1)
+    print(xor2)
     print()
 
 ####### ne pas oublier le dernier tour special

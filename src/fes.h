@@ -57,6 +57,10 @@ extern struct solution_t * feslite_avx512bw_asm_enum(const void * Fq, void * Fl,
                   u64 alpha, u64 beta, u64 gamma, struct solution_t *local_buffer);
 void feslite_avx512bw_enum_16x32(int n, int m, const u32 * Fq, const u32 * Fl, int count, u32 * buffer, int *size);
 void feslite_avx512bw_enum_32x16(int n, int m, const u32 * Fq, const u32 * Fl, int count, u32 * buffer, int *size);
+
+extern struct solution_t * feslite_avx512x2bw_asm_enum(const void * Fq, void * Fl, 
+                  u64 alpha, u64 beta, u64 gamma, struct solution_t *local_buffer);
+void feslite_avx512bw_enum_64x16(int n, int m, const u32 * Fq, const u32 * Fl, int count, u32 * buffer, int *size);
 #endif
 
 /* misc stuff */

@@ -11,6 +11,7 @@ set(KERNELS
 	avx2_16x16
 	avx512bw_16x32
 	avx512bw_32x16
+    avx512bw_64x16
 )
 
 # declare a test that: 

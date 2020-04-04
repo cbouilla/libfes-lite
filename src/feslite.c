@@ -30,6 +30,7 @@ const struct enum_kernel_t ENUM_KERNEL[] = {
 #ifdef __AVX512BW__
  	{"avx512bw_16x32", 16, feslite_avx2_available, feslite_avx512bw_enum_16x32},
  	{"avx512bw_32x16", 32, feslite_avx2_available, feslite_avx512bw_enum_32x16},
+ 	{"avx512bw_64x16", 64, feslite_avx2_available, feslite_avx512bw_enum_64x16},
 #endif
 	{NULL, 0, NULL, NULL}
 };
