@@ -14,6 +14,7 @@ target_sources(feslite PRIVATE
 	generic_2x16.c 
 	generic_2x32.c 
 	generic_4x16.c
+	x86_cpuid.c
 )
 
 if(HAVE_SSE2)
@@ -42,7 +43,6 @@ if(HAVE_AVX2)
 	)   
 
 	target_sources(feslite PRIVATE 
-		avx2_available.c
 		avx2_enum.s
 		avx2_8x32.c  
 		avx2_16x16.c

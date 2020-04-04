@@ -20,17 +20,17 @@ const struct enum_kernel_t ENUM_KERNEL[] = {
 	{"generic_4x16", 4, NULL, feslite_generic_enum_4x16},
 #ifdef __SSE2__
 // 	/* all running intel CPUs should have SSE2 by now... */
- 	{"sse2_4x32", 4, NULL, feslite_sse2_enum_4x32},
- 	{"sse2_8x16", 8, NULL, feslite_sse2_enum_8x16},
+ 	{"sse2_4x32", 4, feslite_sse2_available, feslite_sse2_enum_4x32},
+ 	{"sse2_8x16", 8, feslite_sse2_available, feslite_sse2_enum_8x16},
 #endif
 #ifdef __AVX2__
  	{"avx2_8x32", 8, feslite_avx2_available, feslite_avx2_enum_8x32},
  	{"avx2_16x16", 16, feslite_avx2_available, feslite_avx2_enum_16x16},
 #endif
 #ifdef __AVX512BW__
- 	{"avx512bw_16x32", 16, feslite_avx2_available, feslite_avx512bw_enum_16x32},
- 	{"avx512bw_32x16", 32, feslite_avx2_available, feslite_avx512bw_enum_32x16},
- 	{"avx512bw_64x16", 64, feslite_avx2_available, feslite_avx512bw_enum_64x16},
+ 	{"avx512bw_16x32", 16, feslite_avx512_available, feslite_avx512bw_enum_16x32},
+ 	{"avx512bw_32x16", 32, feslite_avx512_available, feslite_avx512bw_enum_32x16},
+ 	{"avx512bw_64x16", 64, feslite_avx512_available, feslite_avx512bw_enum_64x16},
 #endif
 	{NULL, 0, NULL, NULL}
 };
