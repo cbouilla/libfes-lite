@@ -14,9 +14,8 @@ typedef uint64_t u64;
 #define FESLITE_EBUG      -3  /* internal bug ; email maintainer */
 
 /* 
- * There is ONE entry points to the library:
+ * There is ONE entry point to the library:
  * - feslite_solve : solve related systems.
- *
  *
  * Arguments:
  *  - n      : [IN]  number of variables
@@ -28,7 +27,7 @@ typedef uint64_t u64;
  *  - size   : [OUT] the number of solutions of each system, size m
  *
  * n must be less than or equal to 32.
- * Fq has size n * (n + 1) / 2
+ * Fq has size n * (n + 1) / 2. This is upper-bounded by 529 in all cases.
  * Fl has size (n + 1) * m
  *
  * The number of solutions of the i-th system is written in size[i]
@@ -53,6 +52,8 @@ int feslite_default_kernel();
 /* convenience function; returns FESLITE_EINVAL when given a bogus name) */
 int feslite_kernel_find_by_name(const char *name);
 
-/* Solve a single system using the i-th kernel. The CORRECT batch size (m) must be used. */
+/* Solve a single system using the i-th kernel. 
+ * The CORRECT batch size (m) must be used.
+ * n must be larger than the value given by feslite_kernel_min_variables(). */
 int feslite_kernel_solve(int i, int n, int m, const u32 * Fq, const u32 * Fl, int count, u32 * buffer, int * size);
 #endif

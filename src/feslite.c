@@ -19,7 +19,7 @@ const struct enum_kernel_t ENUM_KERNEL[] = {
 	{"generic_2x32", 3.22, 4, 2, NULL, feslite_generic_enum_2x32},
 	{"generic_4x16", 5.57, 4, 4, NULL, feslite_generic_enum_4x16},
 #ifdef __SSE2__
-// 	/* all running intel CPUs should have SSE2 by now... */
+ 	/* all running intel CPUs should have SSE2 by now... */
  	{"sse2_4x32", 2.18, 8, 4, feslite_sse2_available, feslite_sse2_enum_4x32},
  	{"sse2_8x16", 2.36, 8, 8, feslite_sse2_available, feslite_sse2_enum_8x16},
 #endif

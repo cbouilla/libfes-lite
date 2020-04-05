@@ -46,7 +46,9 @@ print("""
 
 # Scheduling on Haswell : each step is 6 instructions ;
 #   dependency chain of length 4
-#   measure 2 cycles per step ---> OPTIMAL
+#   two steps send 3 uops to ports 0,1,5,6 (in the best case)
+#   two steps thus take at least 2 cycles
+#   measured 3 cycles per step ---> potential 33% speedup ?
 #
 # Hyper-threading gives a 10% speedup
 

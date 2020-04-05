@@ -43,6 +43,11 @@ print("""
 # %r11 contains the comparison output mask 
 # %r9 and %r10 are available
 
+# Lower-bound = 2 cycles per step (two uops in port 0, two in port 5, one in port 6)
+# Measured : 3.0 cycles with 1 thread/Core 
+#            2.3 cycles with HT.
+# potential problem: latency of vpcmpequw (3 cycles)?
+
 ### extern struct solution_t * UNROLLED_CHUNK(const __m512i * Fq, __m512i * Fl, u64 alpha, 
 ###                                           u64 beta, u64 gamma, struct solution_t *local_buffer)
 

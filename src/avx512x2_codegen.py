@@ -43,11 +43,10 @@ print("""
 # %r11 contains the comparison output mask 
 # %r9 and %r10 are available
 
-# One step = 5 instructions
-#  Dependency chain of length 4
-#  Lower-bound = 2 cycles (two in port 0, two in port 5, on in port 6)
-#  Measured : 3 cycles with 1 thread/Core vs 2.3 cycles with HT.
-#  Probably hit by the latency of VPCMPEQW (3 cycles)
+# One step = 8 instructions
+# Lower-bound = 7 cycles for two steps (7 uops in port 0 and 5, two in port 6)
+# Measured : 9 cycles for 2 steps with 1 thread/Core
+#            8 cycles for 2 steps with HyperThreading
 
 ### extern struct solution_t * UNROLLED_CHUNK(const __m512i * Fq, __m512i * Fl, u64 alpha, 
 ###                                           u64 beta, u64 gamma, struct solution_t *local_buffer)
