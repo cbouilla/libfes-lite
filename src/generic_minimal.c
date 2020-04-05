@@ -1,15 +1,13 @@
 #include "fes.h"
 
-void feslite_generic_minimal(int n, int m, const u32 * Fq, const u32 * Fl, int count, u32 * buffer, int *size)
+int feslite_generic_minimal(int n, int m, const u32 * Fq, const u32 * Fl, int count, u32 * buffer, int *size)
 {
 	/* verify input parameters */
-	if (count <= 0 || n <= 0 || n > 32 || m != 1) {
-		*size = -1;
-		return;
-	}
-	
-	u32 Fq_[NQUAD];
-	u32 Fl_[NLIN];
+	if (count <= 0 || n <= 0 || n > 32 || m != 1)
+		return FESLITE_EINVAL;
+
+	u32 Fq_[529];
+	u32 Fl_[33];
 	int N = idxq(0, n);
 	for (int i = 0; i < N; i++)
 		Fq_[i] = Fq[i];
@@ -48,4 +46,5 @@ void feslite_generic_minimal(int n, int m, const u32 * Fq, const u32 * Fl, int c
 			break;
 		i++;
 	}
+	return FESLITE_OK;
 }

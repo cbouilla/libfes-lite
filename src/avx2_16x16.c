@@ -1,5 +1,4 @@
 #include "fes.h"
-#include <immintrin.h>
 
 #define L 8
 #define LANES 16
@@ -79,13 +78,11 @@ static inline bool FLUSH_BUFFER(struct context_t *context, struct solution_t * t
 
 
 
-void feslite_avx2_enum_16x16(int n, int m, const u32 * Fq, const u32 * Fl, int count, u32 * buffer, int *size)
+int feslite_avx2_enum_16x16(int n, int m, const u32 * Fq, const u32 * Fl, int count, u32 * buffer, int *size)
 {
 	/* verify input parameters */
-	if (count <= 0 || n < L || n > 32 || m != LANES) {
-		size[0] = -1;
-		return;
-	}
+	if (count <= 0 || n < L || n > 32 || m != LANES)
+		return FESLITE_EINVAL;
 
 	struct context_t context;
 	context.n = n;
@@ -122,4 +119,5 @@ void feslite_avx2_enum_16x16(int n, int m, const u32 * Fq, const u32 * Fl, int c
 	}
 	for (int i = 0; i < LANES; i++)
 		FLUSH_CANDIDATES(&context, i);
+	return FESLITE_OK;
 }

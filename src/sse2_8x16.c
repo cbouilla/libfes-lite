@@ -2,7 +2,6 @@
 
 #define L 8
 #define LANES 8
-#define VERBOSE 0
 
 struct solution_t {
 	u32 x;
@@ -79,15 +78,11 @@ static inline bool FLUSH_BUFFER(struct context_t *context, struct solution_t * t
 	return context->overflow;
 }				
 
-
-
-void feslite_sse2_enum_8x16(int n, int m, const u32 * Fq, const u32 * Fl, int count, u32 * buffer, int *size)
+int feslite_sse2_enum_8x16(int n, int m, const u32 * Fq, const u32 * Fl, int count, u32 * buffer, int *size)
 {
 	/* verify input parameters */
-	if (count <= 0 || n < L || n > 32 || m != LANES) {
-		size[0] = -1;
-		return;
-	}
+	if (count <= 0 || n < L || n > 32 || m != LANES)
+		return FESLITE_EINVAL;
 
 	struct context_t context;
 	context.n = n;
@@ -124,4 +119,5 @@ void feslite_sse2_enum_8x16(int n, int m, const u32 * Fq, const u32 * Fl, int co
 	}
 	for (int i = 0; i < LANES; i++)
 		FLUSH_CANDIDATES(&context, i);
+	return FESLITE_OK;
 }

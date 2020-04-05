@@ -8,6 +8,11 @@ typedef uint16_t u16;
 typedef uint32_t u32;
 typedef uint64_t u64;
 
+#define FESLITE_OK         0
+#define FESLITE_EINVAL    -1  /* invalid arguments */
+#define FESLITE_ENOTAVAIL -2  /* requested kernel not available on this machine */
+#define FESLITE_EBUG      -3  /* internal bug ; email maintainer */
+
 /* 
  * There is ONE entry points to the library:
  * - feslite_solve : solve related systems.
@@ -30,23 +35,23 @@ typedef uint64_t u64;
  * The solutions of the i-th system can be found in buffer at index i*m.
  *
  * The enumeration stops if it fills one of the solution buffers.
- * It returns size == -1 when invalid parameters are submitted.
+ * return value: FESLITE_OK or an error code.
  */
-void feslite_solve(int n, int m, const u32 * Fq, const u32 * Fl, int count, u32 * buffer, int * size);
+int feslite_solve(int n, int m, const u32 * Fq, const u32 * Fl, int count, u32 * buffer, int * size);
 
 /* For tuning : return the optimal number of related subsystems to give to feslite_solve */
 int feslite_preferred_batch_size();
 
 /* for experts, probing the state of the library is possible */
 int feslite_num_kernels();
-bool feslite_kernel_is_available(int i);
+int feslite_kernel_is_available(int i);
 char const * feslite_kernel_name(int i);
 int feslite_kernel_batch_size(int i);
 int feslite_default_kernel();
 
-/* convenience function; returns -1 when given a bogus name) */
+/* convenience function; returns FESLITE_EINVAL when given a bogus name) */
 int feslite_kernel_find_by_name(const char *name);
 
 /* Solve a single system using the i-th kernel. The CORRECT batch size (m) must be used. */
-void feslite_kernel_solve(int i, int n, int m, const u32 * Fq, const u32 * Fl, int count, u32 * buffer, int * size);
+int feslite_kernel_solve(int i, int n, int m, const u32 * Fq, const u32 * Fl, int count, u32 * buffer, int * size);
 #endif

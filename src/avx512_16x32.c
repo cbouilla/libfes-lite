@@ -45,8 +45,6 @@ static inline bool FLUSH_BUFFER(struct context_t *context, struct solution_t * t
 		u32 x = to_gray(bot->x + i);
 		u32 mask = bot->mask;
 
-		// printf("[DEBUG] FLUSH BUFFER got x=%08x and mask=%08x\n", x, mask);
-
 		#pragma GCC unroll 64
 		for (int lane = 0; lane < LANES; lane++) 
 			if ((mask & MASK[lane]) == MASK[lane])
@@ -56,13 +54,11 @@ static inline bool FLUSH_BUFFER(struct context_t *context, struct solution_t * t
 	return false;
 }
 
-void feslite_avx512bw_enum_16x32(int n, int m, const u32 * Fq, const u32 * Fl, int count, u32 * buffer, int *size)
+int feslite_avx512bw_enum_16x32(int n, int m, const u32 * Fq, const u32 * Fl, int count, u32 * buffer, int *size)
 {
 	/* verify input parameters */
-	if (count <= 0 || n < UNROLL || n > 32 || m != LANES) {
-		size[0] = -1;
-		return;
-	}
+	if (count <= 0 || n < UNROLL || n > 32 || m != LANES)
+		return FESLITE_EINVAL;
 
 	struct context_t context;
 	context.n = n;
@@ -89,12 +85,8 @@ void feslite_avx512bw_enum_16x32(int n, int m, const u32 * Fq, const u32 * Fl, i
 		u64 gamma = idxq(k1, k2);
 		struct solution_t *top = feslite_avx512bw_asm_enum(context.Fq, context.Fl, 
 		 	alpha, beta, gamma, context.local_buffer);
-
-		// printf("------------------------------\n");
-		// for (int k = 0; k < n +1; k++)
-		// 	printf("Fl[%2d][0] = %08x\n", k, context.Fl[LANES * k]);
-
 		if (FLUSH_BUFFER(&context, top, j << UNROLL))
 			break;
 	}
+	return FESLITE_OK;
 }

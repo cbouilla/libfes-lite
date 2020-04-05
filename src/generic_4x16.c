@@ -131,13 +131,11 @@ static inline void UNROLLED_CHUNK(struct context_t *context, int alpha, int beta
 }
 
 
-void feslite_generic_enum_4x16(int n, int m, const u32 * Fq, const u32 * Fl, int count, u32 * buffer, int *size)
+int feslite_generic_enum_4x16(int n, int m, const u32 * Fq, const u32 * Fl, int count, u32 * buffer, int *size)
 {
 	/* verify input parameters */
-	if (count <= 0 || n < L || n > 32 || m != LANES) {
-		size[0] = -1;
-		return;
-	}
+	if (count <= 0 || n < L || n > 32 || m != LANES)
+		return FESLITE_EINVAL;
 
 	struct context_t context;
 	context.n = n;
@@ -175,4 +173,5 @@ void feslite_generic_enum_4x16(int n, int m, const u32 * Fq, const u32 * Fl, int
 	}
 	for (int i = 0; i < LANES; i++)
 		FLUSH_CANDIDATES(&context, i);
+	return FESLITE_OK;
 }

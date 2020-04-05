@@ -101,10 +101,6 @@ static inline bool FLUSH_BUFFER(struct context_t *context)
 }				
 
 
-/* 
- * k1,  k2  computed from i   --> alpha == idxq(0, k1). 
- * k1', k2' computed from i+1 --> beta == 1 + k1', gamma = idxq(k1', k2')
- */
 static inline void UNROLLED_CHUNK(struct context_t *context, int alpha, int beta, int gamma, u32 i)
 {
 	STEP_2(context, 1, alpha + 0, i + 0);
@@ -126,13 +122,11 @@ static inline void UNROLLED_CHUNK(struct context_t *context, int alpha, int beta
 }
 
 
-void feslite_generic_enum_2x16(int n, int m, const u32 * Fq, const u32 * Fl, int count, u32 * buffer, int *size)
+int feslite_generic_enum_2x16(int n, int m, const u32 * Fq, const u32 * Fl, int count, u32 * buffer, int *size)
 {
 	/* verify input parameters */
-	if (count <= 0 || n < L || n > 32 || m != LANES) {
-		size[0] = -1;
-		return;
-	}
+	if (count <= 0 || n < L || n > 32 || m != LANES)
+		return FESLITE_EINVAL;
 
 	struct context_t context;
 	context.n = n;
@@ -170,4 +164,5 @@ void feslite_generic_enum_2x16(int n, int m, const u32 * Fq, const u32 * Fl, int
 	}
 	FLUSH_CANDIDATES(&context, 0);
 	FLUSH_CANDIDATES(&context, 1);
+	return FESLITE_OK;
 }

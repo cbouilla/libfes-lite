@@ -47,6 +47,7 @@ endmacro()
 fes_test(naive_eval naive_eval.c)
 fes_test(transpose_32 transpose_32.c)
 fes_test(batch_eval_32 batch_eval_32.c)
+fes_test(interface interface.c)
 
 # kernel tests
 fes_kernel_test(zero zero.c)
