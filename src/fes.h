@@ -86,7 +86,7 @@ int feslite_avx512bw_enum_64x16(int n, int m, const u32 * Fq, const u32 * Fl, in
 struct enum_kernel_t {
    const char *name;
    double latency;
-   int minimum_variables;
+   int min_variables;
    int batch_size;
    kernel_available_f available;
    kernel_enumeration_f run;

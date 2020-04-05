@@ -15,6 +15,7 @@ void test_kernel_run(int kernel)
 
 	const char *name = feslite_kernel_name(kernel);
 	int m = feslite_kernel_batch_size(kernel);
+	int nmin = feslite_kernel_min_variables(kernel);
 
 	u32 Fl[33 * m];
 	u32 Fq[529];
@@ -27,12 +28,18 @@ void test_kernel_run(int kernel)
 		Fl[i] = 0;
 	
 	/* should run OK */
-	int rc = feslite_kernel_solve(kernel, 16, m, Fq, Fl, count, buffer, size);
+	int rc = feslite_kernel_solve(kernel, nmin, m, Fq, Fl, count, buffer, size);
 	if (rc == FESLITE_OK)
 		printf("ok %d - kernel [%s] succeeded\n", ++ntest, name);
 	else
 		printf("not ok %d - kernel [%s] failed\n", ++ntest, name);
-		
+	
+	if (size[0] > 0)
+		printf("ok %d - kernel [%s] found something\n", ++ntest, name);
+	else
+		printf("not ok %d - kernel [%s] found nothing on lane 0\n", ++ntest, name);
+	
+
 	/* bad n */
 	rc = feslite_kernel_solve(kernel, 45, m, Fq, Fl, count, buffer, size);
 	if (rc == FESLITE_EINVAL)
@@ -41,7 +48,7 @@ void test_kernel_run(int kernel)
 		printf("not ok %d - kernel [%s] with n=45\n", ++ntest, name);
 
 	/* bad n */
-	rc = feslite_kernel_solve(kernel, 0, m, Fq, Fl, count, buffer, size);
+	rc = feslite_kernel_solve(kernel, nmin-1, m, Fq, Fl, count, buffer, size);
 	if (rc == FESLITE_EINVAL)
 		printf("ok %d - kernel [%s] with n=0\n", ++ntest, name);
 	else
@@ -138,7 +145,6 @@ void test_kernel_available()
 }
 
 
-
 void test_kernel_batch_size()
 {
 	/* inexistent kernel */
@@ -160,6 +166,32 @@ void test_kernel_batch_size()
 			printf("ok %d - feslite_kernel_batch_size w/ good kernel\n", ++ntest);
 		else
 			printf("not ok %d - feslite_kernel_batch_size w/ good kernel\n", ++ntest);
+	}
+}
+
+
+
+void test_kernel_min_variables()
+{
+	/* inexistent kernel */
+	int rc = feslite_kernel_min_variables(1337);
+	if (rc == FESLITE_EINVAL)
+		printf("ok %d - feslite_kernel_min_variables w/ bad kernel\n", ++ntest);
+	else
+		printf("not ok %d - feslite_kernel_min_variables w/ bad kernel\n", ++ntest);
+
+	rc = feslite_kernel_min_variables(-1);
+	if (rc == FESLITE_EINVAL)
+		printf("ok %d - feslite_kernel_min_variables w/ bad kernel\n", ++ntest);
+	else
+		printf("not ok %d - feslite_kernel_min_variables w/ bad kernel\n", ++ntest);
+
+	for (int kernel = 0; kernel < feslite_num_kernels(); kernel++) {
+		int rc = feslite_kernel_min_variables(kernel);		
+		if (rc >= 1)
+			printf("ok %d - feslite_kernel_min_variables w/ good kernel\n", ++ntest);
+		else
+			printf("not ok %d - feslite_kernel_min_variables w/ good kernel\n", ++ntest);
 	}
 }
 

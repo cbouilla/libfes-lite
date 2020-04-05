@@ -47,6 +47,7 @@ int feslite_num_kernels();
 int feslite_kernel_is_available(int i);
 char const * feslite_kernel_name(int i);
 int feslite_kernel_batch_size(int i);
+int feslite_kernel_min_variables(int i);
 int feslite_default_kernel();
 
 /* convenience function; returns FESLITE_EINVAL when given a bogus name) */

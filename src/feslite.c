@@ -77,6 +77,13 @@ int feslite_kernel_batch_size(int i)
 	return ENUM_KERNEL[i].batch_size;
 }
 
+int feslite_kernel_min_variables(int i)
+{
+	if (i < 0 || i >= feslite_num_kernels())
+		return FESLITE_EINVAL;
+	return ENUM_KERNEL[i].min_variables;
+}
+
 int feslite_default_kernel()
 {
 	for (int i = feslite_num_kernels() - 1; i >= 0 ; i--)
