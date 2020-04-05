@@ -44,6 +44,7 @@ print("""
 # %r11 contains the comparison output mask 
 # %r9 and %r10 are available
 
+# This uses only "light" AVX2 instructions (no FP, no MUL). But cores runs at "AVX2" speed.
 # Scheduling on Haswell : each step is 6 instructions ;
 #   dependency chain of length 4
 #   two steps send 3 uops to ports 0,1,5,6 (in the best case)

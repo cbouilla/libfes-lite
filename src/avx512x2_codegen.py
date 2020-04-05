@@ -43,6 +43,7 @@ print("""
 # %r11 contains the comparison output mask 
 # %r9 and %r10 are available
 
+# This uses only "light" AVX512 instructions (no FP, no MUL). So cores runs at "AVX2" speed.
 # One step = 8 instructions
 # Lower-bound = 7 cycles for two steps (7 uops in port 0 and 5, two in port 6)
 # Measured : 9 cycles for 2 steps with 1 thread/Core
