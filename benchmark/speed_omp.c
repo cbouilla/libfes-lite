@@ -58,7 +58,6 @@ void bench_kernel(int kernel)
 
 int main(int argc, char **argv)
 {
-	printf("WARNING : for accurate measurement, disable turbo-boost!\n");
 	T = omp_get_max_threads();
 	printf("INFO    : running with %d threads\n", T);
 	int nkernels = feslite_num_kernels();

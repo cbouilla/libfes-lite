@@ -11,7 +11,7 @@
 #include "feslite.h"
 
 /* Try to solve a large system as fast as possible. */
-int n = 48;
+int n = 45;
 
 	
 static inline int idxq(int i, int j)
@@ -130,7 +130,7 @@ void process_bundle(struct bundle_t *ready_bundle)
 
 	#pragma omp critical
 	{
-		printf("\rcreated: %d\t Solved: %d\t In-flight: %d", created, solved, in_flight);
+		printf("\rcreated: %d\t Solved: %d\t In-flight: %d    ", created, solved, in_flight);
 		fflush(stdout);
 	}
 }
@@ -177,8 +177,11 @@ void specialize(int n, const u32 * Fl, u32 prefix)
 
 
 
-int main()
+int main(int argc, char **argv)
 {
+	if (argc > 1)
+		n = atoi(argv[1]);
+
 	m = feslite_preferred_batch_size();	
 	printf("n = %d\n", n);
 	printf("Using %d lane(s)...\n", m);
