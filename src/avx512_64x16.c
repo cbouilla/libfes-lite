@@ -11,8 +11,8 @@ struct solution_t {
 struct context_t {
 	int n;
 	int m;
-	u16 Fq[529 * 32] __attribute__((aligned(64)));
-	u16 Fl[33 * 64] __attribute__((aligned(64)));
+	u16 Fq[561 * 32] __attribute__((aligned(64)));
+	u16 Fl[34 * 64] __attribute__((aligned(64)));
 
 	const u32 * Fq_start;
 	const u32 * Fl_start;

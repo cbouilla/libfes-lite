@@ -7,6 +7,8 @@
 #include "fes.h"
 #include "rand.h"
 
+int n = 24; // fast version
+
 u32 test_cases[] = {
         0x80000000, 0x40000000, 0x20000000, 0x10000000,
         0x08000000, 0x04000000, 0x02000000, 0x01000000,
@@ -40,7 +42,7 @@ u32 test_cases[] = {
         0x55555555, 0xcccccccc
 };
 
-int n = 24; // fast version
+
 unsigned long random_seed = 1337;
 int ntest = 0;
 u32 Fq[496];
@@ -93,6 +95,7 @@ void test_kernel(int kernel, int k)
 
 int main(int argc, char **argv)
 {
+	printf("# testing with n = %d\n", n);
 	printf("# initalizing random systems with seed=0x%lx\n", random_seed);
 	mysrand(random_seed);
 

@@ -11,16 +11,16 @@ u32 feslite_naive_evaluation(int n, const u32 * Fq, const u32 * Fl, int stride, 
 
 	u32 y = Fl[0];
 
-	for (int idx_0 = 0; idx_0 < n; idx_0++) {
+	for (int i = 0; i < n; i++) {
 		// computes the contribution of degree-1 terms
-		u32 v_0 = v[idx_0];
-		u32 l = Fl[stride * (1 + idx_0)];   // FIXME : get rid of this multiplication
+		u32 v_0 = v[i];
+		u32 l = Fl[stride * (1 + i)];   // FIXME : get rid of this multiplication
 		y ^= l & v_0;
 
-		for (int idx_1 = 0; idx_1 < idx_0; idx_1++) {
+		for (int j = 0; j < i; j++) {
 			// computes the contribution of degree-2 terms
-			u32 v_1 = v_0 & v[idx_1];
-			u32 q = Fq[idxq(idx_1, idx_0)];
+			u32 v_1 = v_0 & v[j];
+			u32 q = Fq[idxq(j, i)];
 			y ^= q & v_1;
 		}
 	}

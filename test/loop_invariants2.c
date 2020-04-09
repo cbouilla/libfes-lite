@@ -1,0 +1,170 @@
+#include <stdio.h>
+#include <assert.h>
+
+/* 
+ * check that we are capable of undoing/redoing the effect of a bunch of steps
+ * at once. 
+ */		
+
+
+#include "rand.h"
+#include "fes.h"
+
+#define L 4
+
+
+static inline void UNROLLED_CHUNK(const u32 *Fq, u32 * Fl, int alpha, int beta, int gamma)
+{
+	Fl[0] ^= (Fl[1] ^= Fq[alpha + 0]);
+	Fl[0] ^= (Fl[2] ^= Fq[alpha + 1]);
+	Fl[0] ^= (Fl[1] ^= Fq[0]);
+	Fl[0] ^= (Fl[3] ^= Fq[alpha + 2]);
+	Fl[0] ^= (Fl[1] ^= Fq[1]);
+	Fl[0] ^= (Fl[2] ^= Fq[2]);
+	Fl[0] ^= (Fl[1] ^= Fq[0]);
+	Fl[0] ^= (Fl[4] ^= Fq[alpha + 3]);
+	Fl[0] ^= (Fl[1] ^= Fq[3]);
+	Fl[0] ^= (Fl[2] ^= Fq[4]);
+	Fl[0] ^= (Fl[1] ^= Fq[0]);
+	Fl[0] ^= (Fl[3] ^= Fq[5]);
+	Fl[0] ^= (Fl[1] ^= Fq[1]);
+	Fl[0] ^= (Fl[2] ^= Fq[2]);
+	Fl[0] ^= (Fl[1] ^= Fq[0]);
+	Fl[0] ^= (Fl[beta] ^= Fq[gamma]);
+}
+
+
+static inline void FAST_FORWARD(const u32 *Fq, u32 *Fl, int alpha, int beta, int gamma)
+{
+	/* update the derivatives */
+	Fl[1] ^= Fq[alpha];
+	Fl[2] ^= Fq[alpha + 1];
+	Fl[3] ^= Fq[alpha + 2];
+	Fl[4] ^= Fq[alpha + 3];
+	Fl[1] ^= Fq[3];
+	Fl[2] ^= Fq[4];
+	Fl[3] ^= Fq[5];
+	Fl[beta] ^= Fq[gamma];
+}
+
+
+static u32 gemv(int n, const u32 * M, u32 x)
+{
+	u32 r = M[0];
+	for (int i = 0; i < n; i++)
+		if (x & (1 << i))
+			r ^= M[i + 1];
+	return r;
+}
+
+// u32 bilinear(int n, const u32 * Fq, u32 x, u32 y)
+// {
+// 	u32 r = 0;
+// 	for (int i = 1; i < n; i++) {
+// 		u32 xi = (x & (1 << i)) ? 0xffffffff : 0;
+// 		u32 yi = (y & (1 << i)) ? 0xffffffff : 0;
+// 		for (int j = 0; j < i; j++) {
+// 			u32 xj = (x & (1 << j)) ? 0xffffffff : 0;
+// 			u32 yj = (y & (1 << j)) ? 0xffffffff : 0;
+// 			r ^= Fq[idxq(j, i)] & ((xi & yj) ^ (xj & yi));
+// 		}
+// 	}
+// 	return r;
+// }
+
+
+void simple_kernel_simulation(int n, const u32 * original_Fq, const u32 * original_Fl)
+{
+	u32 Fq[561];
+	u32 Fl[34];
+	
+	setup32(n, 1, original_Fq, original_Fl, Fq, Fl);
+
+	/* precompute "derivatives" */
+	u32 D[33][33];
+	for (int k = L; k < n+1; k++) {
+		// constant term
+		D[k][0] = Fl[L] ^ Fl[k + 1] ^ Fq[idxq(L-1, k)];
+
+		for (int i = 0; i < L-1; i++)
+			D[k][i+1] = Fq[idxq(i, L-1)];
+		D[k][L] = 0;
+		for (int i = L; i < n; i++)
+			D[k][i+1] = Fq[idxq(L-1, i)];
+		
+		for (int i = 0; i < k; i++)
+			D[k][i+1] ^= Fq[idxq(i, k)];
+		for (int i = k+1; i < n; i++)
+			D[k][i+1] ^= Fq[idxq(k, i)];
+	}
+
+	/* check computation of "derivatives" */
+	// for (int k = L; k < n; k++) {
+	// 	u32 x = 0x1337;
+	// 	u32 fx = feslite_naive_evaluation(n+1, Fq, Fl, 1, x);
+	// 	u32 y = (1 << (L-1)) ^ (1 << k);
+	// 	u32 fy = feslite_naive_evaluation(n+1, Fq, Fl, 1, y);
+	// 	u32 fxy = feslite_naive_evaluation(n+1, Fq, Fl, 1, x ^ y);
+	// 	assert(D[k][0] == (fy ^ Fl[0]));
+	// 	assert(fxy == (fx ^ fy ^ Fl[0] ^ bilinear(n+1, Fq, x, y)));
+	// 	assert(gemv(n+2, D[k], x) == (fy ^ Fl[0] ^ bilinear(n+1, Fq, x, y)));
+	// 	assert(fxy == (fx ^ gemv(n, D[k], x)));
+	// }
+
+	struct ffs_t ffs;
+	ffs_reset(&ffs, n-L);
+	int k1 = ffs.k1 + L;
+	int k2 = ffs.k2 + L;
+
+	assert(k1 == n+1);
+
+	u32 iterations = 1ul << (n - L);
+	for (u32 j = 0; j < iterations; j++) {
+		u32 i = j << L;
+
+		// save state
+		u32 backup[33];
+		for (int k = 0; k < n + 1; k++)
+			backup[k] = Fl[k];
+		
+		int alpha = idxq(0, k1);
+		ffs_step(&ffs);	
+		k1 = ffs.k1 + L;
+		k2 = ffs.k2 + L;
+		int beta = 1 + k1;
+		int gamma = idxq(k1, k2);
+	
+		UNROLLED_CHUNK(Fq, Fl, alpha, beta, gamma);
+
+		/* check that x has advanced as planned */
+		// u32 y = (1 << (L-1)) ^ (1 << k1);
+		// assert(to_gray((j+1) << L) == (x ^ y));
+
+		assert(backup[0] == (Fl[0] ^ gemv(n+1, D[k1], to_gray(i))));
+		
+		// now, check that we can recompute backup from Fl
+		FAST_FORWARD(Fq, backup, alpha, beta, gamma);
+		for (int i = 1; i < n+1; i++)
+			assert(backup[i] == Fl[i]);
+	}
+}
+
+
+int main()
+{
+	int n = 24;
+	mysrand(42);
+	u32 Fl[33];
+	u32 Fq[496];
+	for (int i = 0; i < 496; i++)
+		Fq[i] = myrand();
+	for (int i = 0; i < 33 ; i++)
+		Fl[i] = myrand();
+		
+	simple_kernel_simulation(n, Fq, Fl);
+
+	printf("1..1\n");
+	printf("ok 1 - I did not crash!\n");
+
+	return 0;
+}

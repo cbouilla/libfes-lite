@@ -17,6 +17,8 @@ target_sources(feslite PRIVATE
 	x86_cpuid.c
 )
 
+set_property(SOURCE generic_eval32.c PROPERTY COMPILE_OPTIONS -funroll-loops)
+
 if(HAVE_SSE2)
 	add_custom_command(
 		COMMAND ${Python3_EXECUTABLE} sse2_codegen.py > ${CMAKE_CURRENT_SOURCE_DIR}/sse2_enum.s

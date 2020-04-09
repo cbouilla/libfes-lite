@@ -1,3 +1,5 @@
+#include <assert.h>
+#include <stdio.h>
 #include "fes.h"
 
 int feslite_generic_minimal(int n, int m, const u32 * Fq, const u32 * Fl, int count, u32 * buffer, int *size)
@@ -6,18 +8,11 @@ int feslite_generic_minimal(int n, int m, const u32 * Fq, const u32 * Fl, int co
 	if (count <= 0 || n <= 0 || n > 32 || m != 1)
 		return FESLITE_EINVAL;
 
-	u32 Fq_[529];
-	u32 Fl_[33];
-	int N = idxq(0, n);
-	for (int i = 0; i < N; i++)
-		Fq_[i] = Fq[i];
-	Fq_[idxq(0, n)] = 0;
-	for (int i = 1; i < n; i++)
-		Fq_[idxq(i, n)] = Fq[idxq(i-1, i)];
-	Fq_[idxq(n, n)] = 0;
-	for (int i = 0; i < n + 1; i++)
-		Fl_[i] = Fl[i];
 	size[0] = 0;
+	u32 Fq_[561];
+	u32 Fl_[34];
+	
+	setup32(n, 1, Fq, Fl, Fq_, Fl_);
 
 	struct ffs_t ffs;
 	ffs_reset(&ffs, n);
@@ -37,6 +32,8 @@ int feslite_generic_minimal(int n, int m, const u32 * Fq, const u32 * Fl, int co
 		/* step */
 		int a = 1 + ffs.k1;
 		int b = idxq(ffs.k1, ffs.k2);
+
+		// printf("step %d : k1 = %d, k2 = %d\n", i, ffs.k1, ffs.k2);
 
 		Fl_[a] ^= Fq_[b];
 		Fl_[0] ^= Fl_[a];

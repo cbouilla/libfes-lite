@@ -1,3 +1,5 @@
+#include <stdio.h>
+#include <assert.h>
 #include "fes.h"
 
 #define LANES 1
@@ -10,8 +12,8 @@ struct solution_t {
 struct context_t {
 	int n;
 	int m;
-	u32 Fq[529 * LANES];
-	u32 Fl[33 * LANES];
+	u32 Fq[561 * LANES];
+	u32 Fl[34 * LANES];
 	int count;
 	u32 *buffer;
 	int *size;
@@ -70,6 +72,20 @@ static inline void UNROLLED_CHUNK(struct context_t *context, int alpha, int beta
 	STEP_2(context, beta, gamma, i + 15);
 }
 
+#if 0
+static inline void FAST_FORWARD(const u32 *Fq, u32 Fl, int alpha, int beta, int gamma)
+{
+	/* update the derivatives */
+	Fl[1] ^= Fq[alpha];
+	Fl[2] ^= Fq[alpha + 1]
+	Fl[3] ^= Fq[alpha + 2]
+	Fl[4] ^= Fq[alpha + 3]
+	Fl[1] ^= Fq[3];
+	Fl[2] ^= Fq[4];
+	Fl[3] ^= Fq[5];
+	Fl[beta] ^= Fq[gamma];
+}
+#endif
 
 int feslite_generic_enum_1x32(int n, int m, const u32 * Fq, const u32 * Fl, int count, u32 * buffer, int *size)
 {
@@ -94,14 +110,13 @@ int feslite_generic_enum_1x32(int n, int m, const u32 * Fq, const u32 * Fl, int 
 
 	u32 iterations = 1ul << (n - L);
 	for (u32 j = 0; j < iterations; j++) {
-		u32 i = j << L;
 		int alpha = idxq(0, k1);
 		ffs_step(&context.ffs);	
 		k1 = context.ffs.k1 + L;
 		k2 = context.ffs.k2 + L;
 		int beta = 1 + k1;
 		int gamma = idxq(k1, k2);
-		UNROLLED_CHUNK(&context, alpha, beta, gamma, i);
+		UNROLLED_CHUNK(&context, alpha, beta, gamma, j << L);
 		if (FLUSH_BUFFER(&context))
 			break;
 	}

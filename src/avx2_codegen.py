@@ -48,13 +48,26 @@ print("""
 # Scheduling on Haswell : each step is 6 instructions ;
 #   dependency chain of length 4
 #   two steps send 3 uops to ports 0,1,5,6 (in the best case)
-#   two steps thus take at least 2 cycles
-#   measured 3 cycles per step ---> potential 33% speedup ?
+#   two steps thus take at least 3 cycles
+#   measured 2 cycles per step ---> potential 33% speedup ?
 #
 # Hyper-threading gives a 10% speedup
 
+#       vptest %ymm15, %ymm15
+#       jne ....
+# is apparently inferior to
+#       vpmovmskb %ymm15, %r11d'
+#       test %r11d, %r11d
+#       jne ...
+# (2.15 cycle/step vs 2.00 cycle/step without hyperthreading in both case)
+# plus vptest does not benefit from hyperthreading...
+
 ### extern struct solution_t * UNROLLED_CHUNK(const __m256i * Fq, __m256i * Fl, u64 alpha, 
 ###                                           u64 beta, u64 gamma, struct solution_t *local_buffer)
+
+# with L=256, the unrolled chunk is 6500-byte long.
+#
+#
 
 .text
 .p2align 5

@@ -12,8 +12,8 @@ struct context_t {
 	int n;
 	int m;
 
-	u32 Fq[529 * LANES] __attribute__((aligned(32)));
-	u32 Fl[33 * LANES] __attribute__((aligned(32)));
+	u32 Fq[561 * LANES] __attribute__((aligned(32)));
+	u32 Fl[34 * LANES] __attribute__((aligned(32)));
 
 	int count;
 	u32 *buffer;

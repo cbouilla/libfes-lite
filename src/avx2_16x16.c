@@ -1,3 +1,4 @@
+#include <stdio.h>
 #include "fes.h"
 
 #define L 8
@@ -11,8 +12,8 @@ struct solution_t {
 struct context_t {
 	int n;
 	int m;
-	u16 Fq[529 * LANES] __attribute__((aligned(32)));
-	u16 Fl[33 * LANES] __attribute__((aligned(32)));
+	u16 Fq[561 * LANES] __attribute__((aligned(32)));
+	u16 Fl[34 * LANES] __attribute__((aligned(32)));
 
 	const u32 * Fq_start;
 	const u32 * Fl_start;
@@ -104,6 +105,7 @@ int feslite_avx2_enum_16x16(int n, int m, const u32 * Fq, const u32 * Fl, int co
 	int k1 = context.ffs.k1 + L;
 	int k2 = context.ffs.k2 + L;
 
+	// int npositive = 0;
 	u64 iterations = 1ul << (n - L);
 	for (u64 j = 0; j < iterations; j++) {
 		u64 alpha = idxq(0, k1);
@@ -112,12 +114,19 @@ int feslite_avx2_enum_16x16(int n, int m, const u32 * Fq, const u32 * Fl, int co
 		k2 = context.ffs.k2 + L;
 		u64 beta = 1 + k1;
 		u64 gamma = idxq(k1, k2);
+		//u32 mask = feslite_avx2_asm_enum_batch(context.Fq, context.Fl, alpha, beta, gamma);
+		//if (mask) {
+		//	// printf("FOUD MASK = %08x for i = %016lx\n", mask, j << L);
+		//	npositive++;
+		//}
 		struct solution_t *top = feslite_avx2_asm_enum(context.Fq, context.Fl, 
 		 	alpha, beta, gamma, context.local_buffer);
+		//struct solution_t *top = context.local_buffer;
 		if (FLUSH_BUFFER(&context, top, j << L))
 			break;
 	}
 	for (int i = 0; i < LANES; i++)
 		FLUSH_CANDIDATES(&context, i);
+	// printf("FOUD %d positive for %ld iterations\n", npositive, iterations);
 	return FESLITE_OK;
 }

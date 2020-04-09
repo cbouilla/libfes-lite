@@ -20,8 +20,8 @@ struct solution_t {
 struct context_t {
 	int n;
 	int m;
-	u16 Fq[529 * LANES] __attribute__((aligned(8)));
-	u16 Fl[33 * LANES] __attribute__((aligned(8)));
+	u16 Fq[561 * LANES] __attribute__((aligned(8)));
+	u16 Fl[34 * LANES] __attribute__((aligned(8)));
 
 	const u32 * Fq_start;
 	const u32 * Fl_start;
