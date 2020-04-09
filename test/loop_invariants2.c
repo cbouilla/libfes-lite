@@ -10,7 +10,7 @@
 #include "rand.h"
 #include "fes.h"
 
-#define L 4
+#define L 8
 
 
 static inline void UNROLLED_CHUNK(const u32 *Fq, u32 * Fl, int alpha, int beta, int gamma)
@@ -30,6 +30,246 @@ static inline void UNROLLED_CHUNK(const u32 *Fq, u32 * Fl, int alpha, int beta, 
 	Fl[0] ^= (Fl[1] ^= Fq[1]);
 	Fl[0] ^= (Fl[2] ^= Fq[2]);
 	Fl[0] ^= (Fl[1] ^= Fq[0]);
+	Fl[0] ^= (Fl[5] ^= Fq[alpha + 4]);
+	Fl[0] ^= (Fl[1] ^= Fq[6]);
+	Fl[0] ^= (Fl[2] ^= Fq[7]);
+	Fl[0] ^= (Fl[1] ^= Fq[0]);
+	Fl[0] ^= (Fl[3] ^= Fq[8]);
+	Fl[0] ^= (Fl[1] ^= Fq[1]);
+	Fl[0] ^= (Fl[2] ^= Fq[2]);
+	Fl[0] ^= (Fl[1] ^= Fq[0]);
+	Fl[0] ^= (Fl[4] ^= Fq[9]);
+	Fl[0] ^= (Fl[1] ^= Fq[3]);
+	Fl[0] ^= (Fl[2] ^= Fq[4]);
+	Fl[0] ^= (Fl[1] ^= Fq[0]);
+	Fl[0] ^= (Fl[3] ^= Fq[5]);
+	Fl[0] ^= (Fl[1] ^= Fq[1]);
+	Fl[0] ^= (Fl[2] ^= Fq[2]);
+	Fl[0] ^= (Fl[1] ^= Fq[0]);
+	Fl[0] ^= (Fl[6] ^= Fq[alpha + 5]);
+	Fl[0] ^= (Fl[1] ^= Fq[10]);
+	Fl[0] ^= (Fl[2] ^= Fq[11]);
+	Fl[0] ^= (Fl[1] ^= Fq[0]);
+	Fl[0] ^= (Fl[3] ^= Fq[12]);
+	Fl[0] ^= (Fl[1] ^= Fq[1]);
+	Fl[0] ^= (Fl[2] ^= Fq[2]);
+	Fl[0] ^= (Fl[1] ^= Fq[0]);
+	Fl[0] ^= (Fl[4] ^= Fq[13]);
+	Fl[0] ^= (Fl[1] ^= Fq[3]);
+	Fl[0] ^= (Fl[2] ^= Fq[4]);
+	Fl[0] ^= (Fl[1] ^= Fq[0]);
+	Fl[0] ^= (Fl[3] ^= Fq[5]);
+	Fl[0] ^= (Fl[1] ^= Fq[1]);
+	Fl[0] ^= (Fl[2] ^= Fq[2]);
+	Fl[0] ^= (Fl[1] ^= Fq[0]);
+	Fl[0] ^= (Fl[5] ^= Fq[14]);
+	Fl[0] ^= (Fl[1] ^= Fq[6]);
+	Fl[0] ^= (Fl[2] ^= Fq[7]);
+	Fl[0] ^= (Fl[1] ^= Fq[0]);
+	Fl[0] ^= (Fl[3] ^= Fq[8]);
+	Fl[0] ^= (Fl[1] ^= Fq[1]);
+	Fl[0] ^= (Fl[2] ^= Fq[2]);
+	Fl[0] ^= (Fl[1] ^= Fq[0]);
+	Fl[0] ^= (Fl[4] ^= Fq[9]);
+	Fl[0] ^= (Fl[1] ^= Fq[3]);
+	Fl[0] ^= (Fl[2] ^= Fq[4]);
+	Fl[0] ^= (Fl[1] ^= Fq[0]);
+	Fl[0] ^= (Fl[3] ^= Fq[5]);
+	Fl[0] ^= (Fl[1] ^= Fq[1]);
+	Fl[0] ^= (Fl[2] ^= Fq[2]);
+	Fl[0] ^= (Fl[1] ^= Fq[0]);
+	Fl[0] ^= (Fl[7] ^= Fq[alpha + 6]);
+	Fl[0] ^= (Fl[1] ^= Fq[15]);
+	Fl[0] ^= (Fl[2] ^= Fq[16]);
+	Fl[0] ^= (Fl[1] ^= Fq[0]);
+	Fl[0] ^= (Fl[3] ^= Fq[17]);
+	Fl[0] ^= (Fl[1] ^= Fq[1]);
+	Fl[0] ^= (Fl[2] ^= Fq[2]);
+	Fl[0] ^= (Fl[1] ^= Fq[0]);
+	Fl[0] ^= (Fl[4] ^= Fq[18]);
+	Fl[0] ^= (Fl[1] ^= Fq[3]);
+	Fl[0] ^= (Fl[2] ^= Fq[4]);
+	Fl[0] ^= (Fl[1] ^= Fq[0]);
+	Fl[0] ^= (Fl[3] ^= Fq[5]);
+	Fl[0] ^= (Fl[1] ^= Fq[1]);
+	Fl[0] ^= (Fl[2] ^= Fq[2]);
+	Fl[0] ^= (Fl[1] ^= Fq[0]);
+	Fl[0] ^= (Fl[5] ^= Fq[19]);
+	Fl[0] ^= (Fl[1] ^= Fq[6]);
+	Fl[0] ^= (Fl[2] ^= Fq[7]);
+	Fl[0] ^= (Fl[1] ^= Fq[0]);
+	Fl[0] ^= (Fl[3] ^= Fq[8]);
+	Fl[0] ^= (Fl[1] ^= Fq[1]);
+	Fl[0] ^= (Fl[2] ^= Fq[2]);
+	Fl[0] ^= (Fl[1] ^= Fq[0]);
+	Fl[0] ^= (Fl[4] ^= Fq[9]);
+	Fl[0] ^= (Fl[1] ^= Fq[3]);
+	Fl[0] ^= (Fl[2] ^= Fq[4]);
+	Fl[0] ^= (Fl[1] ^= Fq[0]);
+	Fl[0] ^= (Fl[3] ^= Fq[5]);
+	Fl[0] ^= (Fl[1] ^= Fq[1]);
+	Fl[0] ^= (Fl[2] ^= Fq[2]);
+	Fl[0] ^= (Fl[1] ^= Fq[0]);
+	Fl[0] ^= (Fl[6] ^= Fq[20]);
+	Fl[0] ^= (Fl[1] ^= Fq[10]);
+	Fl[0] ^= (Fl[2] ^= Fq[11]);
+	Fl[0] ^= (Fl[1] ^= Fq[0]);
+	Fl[0] ^= (Fl[3] ^= Fq[12]);
+	Fl[0] ^= (Fl[1] ^= Fq[1]);
+	Fl[0] ^= (Fl[2] ^= Fq[2]);
+	Fl[0] ^= (Fl[1] ^= Fq[0]);
+	Fl[0] ^= (Fl[4] ^= Fq[13]);
+	Fl[0] ^= (Fl[1] ^= Fq[3]);
+	Fl[0] ^= (Fl[2] ^= Fq[4]);
+	Fl[0] ^= (Fl[1] ^= Fq[0]);
+	Fl[0] ^= (Fl[3] ^= Fq[5]);
+	Fl[0] ^= (Fl[1] ^= Fq[1]);
+	Fl[0] ^= (Fl[2] ^= Fq[2]);
+	Fl[0] ^= (Fl[1] ^= Fq[0]);
+	Fl[0] ^= (Fl[5] ^= Fq[14]);
+	Fl[0] ^= (Fl[1] ^= Fq[6]);
+	Fl[0] ^= (Fl[2] ^= Fq[7]);
+	Fl[0] ^= (Fl[1] ^= Fq[0]);
+	Fl[0] ^= (Fl[3] ^= Fq[8]);
+	Fl[0] ^= (Fl[1] ^= Fq[1]);
+	Fl[0] ^= (Fl[2] ^= Fq[2]);
+	Fl[0] ^= (Fl[1] ^= Fq[0]);
+	Fl[0] ^= (Fl[4] ^= Fq[9]);
+	Fl[0] ^= (Fl[1] ^= Fq[3]);
+	Fl[0] ^= (Fl[2] ^= Fq[4]);
+	Fl[0] ^= (Fl[1] ^= Fq[0]);
+	Fl[0] ^= (Fl[3] ^= Fq[5]);
+	Fl[0] ^= (Fl[1] ^= Fq[1]);
+	Fl[0] ^= (Fl[2] ^= Fq[2]);
+	Fl[0] ^= (Fl[1] ^= Fq[0]);
+	Fl[0] ^= (Fl[8] ^= Fq[alpha + 7]);
+	Fl[0] ^= (Fl[1] ^= Fq[21]);
+	Fl[0] ^= (Fl[2] ^= Fq[22]);
+	Fl[0] ^= (Fl[1] ^= Fq[0]);
+	Fl[0] ^= (Fl[3] ^= Fq[23]);
+	Fl[0] ^= (Fl[1] ^= Fq[1]);
+	Fl[0] ^= (Fl[2] ^= Fq[2]);
+	Fl[0] ^= (Fl[1] ^= Fq[0]);
+	Fl[0] ^= (Fl[4] ^= Fq[24]);
+	Fl[0] ^= (Fl[1] ^= Fq[3]);
+	Fl[0] ^= (Fl[2] ^= Fq[4]);
+	Fl[0] ^= (Fl[1] ^= Fq[0]);
+	Fl[0] ^= (Fl[3] ^= Fq[5]);
+	Fl[0] ^= (Fl[1] ^= Fq[1]);
+	Fl[0] ^= (Fl[2] ^= Fq[2]);
+	Fl[0] ^= (Fl[1] ^= Fq[0]);
+	Fl[0] ^= (Fl[5] ^= Fq[25]);
+	Fl[0] ^= (Fl[1] ^= Fq[6]);
+	Fl[0] ^= (Fl[2] ^= Fq[7]);
+	Fl[0] ^= (Fl[1] ^= Fq[0]);
+	Fl[0] ^= (Fl[3] ^= Fq[8]);
+	Fl[0] ^= (Fl[1] ^= Fq[1]);
+	Fl[0] ^= (Fl[2] ^= Fq[2]);
+	Fl[0] ^= (Fl[1] ^= Fq[0]);
+	Fl[0] ^= (Fl[4] ^= Fq[9]);
+	Fl[0] ^= (Fl[1] ^= Fq[3]);
+	Fl[0] ^= (Fl[2] ^= Fq[4]);
+	Fl[0] ^= (Fl[1] ^= Fq[0]);
+	Fl[0] ^= (Fl[3] ^= Fq[5]);
+	Fl[0] ^= (Fl[1] ^= Fq[1]);
+	Fl[0] ^= (Fl[2] ^= Fq[2]);
+	Fl[0] ^= (Fl[1] ^= Fq[0]);
+	Fl[0] ^= (Fl[6] ^= Fq[26]);
+	Fl[0] ^= (Fl[1] ^= Fq[10]);
+	Fl[0] ^= (Fl[2] ^= Fq[11]);
+	Fl[0] ^= (Fl[1] ^= Fq[0]);
+	Fl[0] ^= (Fl[3] ^= Fq[12]);
+	Fl[0] ^= (Fl[1] ^= Fq[1]);
+	Fl[0] ^= (Fl[2] ^= Fq[2]);
+	Fl[0] ^= (Fl[1] ^= Fq[0]);
+	Fl[0] ^= (Fl[4] ^= Fq[13]);
+	Fl[0] ^= (Fl[1] ^= Fq[3]);
+	Fl[0] ^= (Fl[2] ^= Fq[4]);
+	Fl[0] ^= (Fl[1] ^= Fq[0]);
+	Fl[0] ^= (Fl[3] ^= Fq[5]);
+	Fl[0] ^= (Fl[1] ^= Fq[1]);
+	Fl[0] ^= (Fl[2] ^= Fq[2]);
+	Fl[0] ^= (Fl[1] ^= Fq[0]);
+	Fl[0] ^= (Fl[5] ^= Fq[14]);
+	Fl[0] ^= (Fl[1] ^= Fq[6]);
+	Fl[0] ^= (Fl[2] ^= Fq[7]);
+	Fl[0] ^= (Fl[1] ^= Fq[0]);
+	Fl[0] ^= (Fl[3] ^= Fq[8]);
+	Fl[0] ^= (Fl[1] ^= Fq[1]);
+	Fl[0] ^= (Fl[2] ^= Fq[2]);
+	Fl[0] ^= (Fl[1] ^= Fq[0]);
+	Fl[0] ^= (Fl[4] ^= Fq[9]);
+	Fl[0] ^= (Fl[1] ^= Fq[3]);
+	Fl[0] ^= (Fl[2] ^= Fq[4]);
+	Fl[0] ^= (Fl[1] ^= Fq[0]);
+	Fl[0] ^= (Fl[3] ^= Fq[5]);
+	Fl[0] ^= (Fl[1] ^= Fq[1]);
+	Fl[0] ^= (Fl[2] ^= Fq[2]);
+	Fl[0] ^= (Fl[1] ^= Fq[0]);
+	Fl[0] ^= (Fl[7] ^= Fq[27]);
+	Fl[0] ^= (Fl[1] ^= Fq[15]);
+	Fl[0] ^= (Fl[2] ^= Fq[16]);
+	Fl[0] ^= (Fl[1] ^= Fq[0]);
+	Fl[0] ^= (Fl[3] ^= Fq[17]);
+	Fl[0] ^= (Fl[1] ^= Fq[1]);
+	Fl[0] ^= (Fl[2] ^= Fq[2]);
+	Fl[0] ^= (Fl[1] ^= Fq[0]);
+	Fl[0] ^= (Fl[4] ^= Fq[18]);
+	Fl[0] ^= (Fl[1] ^= Fq[3]);
+	Fl[0] ^= (Fl[2] ^= Fq[4]);
+	Fl[0] ^= (Fl[1] ^= Fq[0]);
+	Fl[0] ^= (Fl[3] ^= Fq[5]);
+	Fl[0] ^= (Fl[1] ^= Fq[1]);
+	Fl[0] ^= (Fl[2] ^= Fq[2]);
+	Fl[0] ^= (Fl[1] ^= Fq[0]);
+	Fl[0] ^= (Fl[5] ^= Fq[19]);
+	Fl[0] ^= (Fl[1] ^= Fq[6]);
+	Fl[0] ^= (Fl[2] ^= Fq[7]);
+	Fl[0] ^= (Fl[1] ^= Fq[0]);
+	Fl[0] ^= (Fl[3] ^= Fq[8]);
+	Fl[0] ^= (Fl[1] ^= Fq[1]);
+	Fl[0] ^= (Fl[2] ^= Fq[2]);
+	Fl[0] ^= (Fl[1] ^= Fq[0]);
+	Fl[0] ^= (Fl[4] ^= Fq[9]);
+	Fl[0] ^= (Fl[1] ^= Fq[3]);
+	Fl[0] ^= (Fl[2] ^= Fq[4]);
+	Fl[0] ^= (Fl[1] ^= Fq[0]);
+	Fl[0] ^= (Fl[3] ^= Fq[5]);
+	Fl[0] ^= (Fl[1] ^= Fq[1]);
+	Fl[0] ^= (Fl[2] ^= Fq[2]);
+	Fl[0] ^= (Fl[1] ^= Fq[0]);
+	Fl[0] ^= (Fl[6] ^= Fq[20]);
+	Fl[0] ^= (Fl[1] ^= Fq[10]);
+	Fl[0] ^= (Fl[2] ^= Fq[11]);
+	Fl[0] ^= (Fl[1] ^= Fq[0]);
+	Fl[0] ^= (Fl[3] ^= Fq[12]);
+	Fl[0] ^= (Fl[1] ^= Fq[1]);
+	Fl[0] ^= (Fl[2] ^= Fq[2]);
+	Fl[0] ^= (Fl[1] ^= Fq[0]);
+	Fl[0] ^= (Fl[4] ^= Fq[13]);
+	Fl[0] ^= (Fl[1] ^= Fq[3]);
+	Fl[0] ^= (Fl[2] ^= Fq[4]);
+	Fl[0] ^= (Fl[1] ^= Fq[0]);
+	Fl[0] ^= (Fl[3] ^= Fq[5]);
+	Fl[0] ^= (Fl[1] ^= Fq[1]);
+	Fl[0] ^= (Fl[2] ^= Fq[2]);
+	Fl[0] ^= (Fl[1] ^= Fq[0]);
+	Fl[0] ^= (Fl[5] ^= Fq[14]);
+	Fl[0] ^= (Fl[1] ^= Fq[6]);
+	Fl[0] ^= (Fl[2] ^= Fq[7]);
+	Fl[0] ^= (Fl[1] ^= Fq[0]);
+	Fl[0] ^= (Fl[3] ^= Fq[8]);
+	Fl[0] ^= (Fl[1] ^= Fq[1]);
+	Fl[0] ^= (Fl[2] ^= Fq[2]);
+	Fl[0] ^= (Fl[1] ^= Fq[0]);
+	Fl[0] ^= (Fl[4] ^= Fq[9]);
+	Fl[0] ^= (Fl[1] ^= Fq[3]);
+	Fl[0] ^= (Fl[2] ^= Fq[4]);
+	Fl[0] ^= (Fl[1] ^= Fq[0]);
+	Fl[0] ^= (Fl[3] ^= Fq[5]);
+	Fl[0] ^= (Fl[1] ^= Fq[1]);
+	Fl[0] ^= (Fl[2] ^= Fq[2]);
+	Fl[0] ^= (Fl[1] ^= Fq[0]);
 	Fl[0] ^= (Fl[beta] ^= Fq[gamma]);
 }
 
@@ -37,13 +277,10 @@ static inline void UNROLLED_CHUNK(const u32 *Fq, u32 * Fl, int alpha, int beta, 
 static inline void FAST_FORWARD(const u32 *Fq, u32 *Fl, int alpha, int beta, int gamma)
 {
 	/* update the derivatives */
-	Fl[1] ^= Fq[alpha];
-	Fl[2] ^= Fq[alpha + 1];
-	Fl[3] ^= Fq[alpha + 2];
-	Fl[4] ^= Fq[alpha + 3];
-	Fl[1] ^= Fq[3];
-	Fl[2] ^= Fq[4];
-	Fl[3] ^= Fq[5];
+	for (int i = 0; i < L; i++)
+		Fl[1 + i] ^= Fq[alpha + i];
+	for (int i = 0; i < L - 1; i++)
+		Fl[1 + i] ^= Fq[idxq(i, L-1)];
 	Fl[beta] ^= Fq[gamma];
 }
 
@@ -152,7 +389,7 @@ void simple_kernel_simulation(int n, const u32 * original_Fq, const u32 * origin
 
 int main()
 {
-	int n = 24;
+	int n = 32;
 	mysrand(42);
 	u32 Fl[33];
 	u32 Fq[496];
@@ -160,7 +397,8 @@ int main()
 		Fq[i] = myrand();
 	for (int i = 0; i < 33 ; i++)
 		Fl[i] = myrand();
-		
+
+	printf("# testing with n=%d and L=%d\n", n, L);
 	simple_kernel_simulation(n, Fq, Fl);
 
 	printf("1..1\n");

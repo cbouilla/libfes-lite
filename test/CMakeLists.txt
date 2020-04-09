@@ -50,6 +50,7 @@ fes_test(batch_eval_32 batch_eval_32.c)
 fes_test(interface interface.c)
 fes_test(loop_invariants loop_invariants.c)
 fes_test(loop_invariants2 loop_invariants2.c)
+fes_test(loop_invariants3 loop_invariants3.c)
 
 # kernel tests
 fes_kernel_test(zero zero.c)
