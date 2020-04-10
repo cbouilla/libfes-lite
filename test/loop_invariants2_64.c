@@ -11,7 +11,7 @@
 #include "fes.h"
 
 #define L 8
-
+#define LANES 2
 
 static inline void UNROLLED_CHUNK(const u32 *_Fq, u32 * _Fl, int alpha, int beta, int gamma)
 {
@@ -277,20 +277,6 @@ static inline void UNROLLED_CHUNK(const u32 *_Fq, u32 * _Fl, int alpha, int beta
 }
 
 
-static inline void FAST_FORWARD(const u32 *_Fq, u32 *_Fl, int alpha, int beta, int gamma)
-{
-	const u64 *Fq = (u64 *) _Fq;
-	u64 *Fl = (u64 *) _Fl;
-
-	/* update the derivatives */
-	for (int i = 0; i < L; i++)
-		Fl[1 + i] ^= Fq[alpha + i];
-	for (int i = 0; i < L - 1; i++)
-		Fl[1 + i] ^= Fq[idxq(i, L-1)];
-	Fl[beta] ^= Fq[gamma];
-}
-
-
 static u32 gemv(int n, const u32 * M, u32 x)
 {
 	u32 r = M[0];
@@ -298,6 +284,28 @@ static u32 gemv(int n, const u32 * M, u32 x)
 		if (x & (1 << i))
 			r ^= M[i + 1];
 	return r;
+}
+
+
+static inline void FAST_FORWARD(int n, const u32 *Fq, u32 *Fl, const u32 *original_Fl, const u32 (*D)[33], 
+				int alpha, int beta, int gamma, u32 i)
+{
+	for (int i = 0; i < LANES; i++)
+		assert(original_Fl[LANES*(n+1) + i] == 0);
+
+	u32 mv = gemv(n+1, D[beta-1], to_gray(i));
+	for (int i = 0; i < LANES; i++)
+		Fl[i] ^= original_Fl[LANES*L + i] ^ original_Fl[LANES*beta + i] ^ mv;
+
+	/* update the derivatives */
+	for (int i = 0; i < LANES * L; i++)
+		Fl[LANES + i] ^= Fq[LANES*alpha + i];
+
+	for (int i = 0; i < LANES * (L - 1); i++)
+		Fl[LANES + i] ^= Fq[LANES*idxq(0, L-1) + i];
+
+	for (int i = 0; i < LANES; i++)
+		Fl[LANES * beta + i] ^= Fq[LANES * gamma + i];
 }
 
 
@@ -347,10 +355,6 @@ void simple_kernel_simulation(int n, const u32 * original_Fq, const u32 * origin
 	int k2 = ffs.k2 + L;
 
 	assert(k1 == n+1);
-	// save state
-	u32 pre_run[34*2];
-	for (int k = 0; k < 2*(n + 2); k++)
-		pre_run[k] = Fl[k];
 
 	u32 iterations = 1ul << (n - L);
 	for (u32 j = 0; j < iterations; j++) {
@@ -373,14 +377,9 @@ void simple_kernel_simulation(int n, const u32 * original_Fq, const u32 * origin
 		/* check that x has advanced as planned */
 		// u32 y = (1 << (L-1)) ^ (1 << k1);
 		// assert(to_gray((j+1) << L) == (x ^ y));
-
-		u32 mv = gemv(n+1, D[k1], to_gray(i));
-		assert(backup[0] == (Fl[0] ^ pre_run[2*L] ^ pre_run[2*beta] ^ mv));
-		assert(backup[1] == (Fl[1] ^ pre_run[2*L+1] ^ pre_run[2*beta+1] ^ mv));
-
 		// now, check that we can recompute backup from Fl
-		FAST_FORWARD(Fq, backup, alpha, beta, gamma);
-		for (int i = 2; i < 2*(n+2); i++)
+		FAST_FORWARD(n, Fq, backup, original_Fl, D, alpha, beta, gamma, i);
+		for (int i = 0; i < 2*(n+2); i++)
 			assert(backup[i] == Fl[i]);
 	}
 }
@@ -390,10 +389,12 @@ int main()
 {
 	int n = 32;
 	mysrand(42);
-	u32 Fl[33 * 2];
+	u32 Fl[34 * 2];
 	u32 Fq[496];
 	for (int i = 0; i < 496; i++)
 		Fq[i] = myrand();
+	for (int i = 0; i < 2*34 ; i++)
+		Fl[i] = 0;
 	for (int i = 0; i < 2*33 ; i++)
 		Fl[i] = myrand();
 

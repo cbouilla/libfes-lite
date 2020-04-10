@@ -274,17 +274,6 @@ static inline void UNROLLED_CHUNK(const u32 *Fq, u32 * Fl, int alpha, int beta, 
 }
 
 
-static inline void FAST_FORWARD(const u32 *Fq, u32 *Fl, int alpha, int beta, int gamma)
-{
-	/* update the derivatives */
-	for (int i = 0; i < L; i++)
-		Fl[1 + i] ^= Fq[alpha + i];
-	for (int i = 0; i < L - 1; i++)
-		Fl[1 + i] ^= Fq[idxq(i, L-1)];
-	Fl[beta] ^= Fq[gamma];
-}
-
-
 static u32 gemv(int n, const u32 * M, u32 x)
 {
 	u32 r = M[0];
@@ -293,6 +282,21 @@ static u32 gemv(int n, const u32 * M, u32 x)
 			r ^= M[i + 1];
 	return r;
 }
+
+static inline void FAST_FORWARD(int n, const u32 *Fq, u32 *Fl, const u32 * original_Fl, const u32 (*D)[33],
+	int alpha, int beta, int gamma, u32 i)
+{
+	u32 mv = gemv(n+1, D[beta-1], to_gray(i));
+	Fl[0] ^= original_Fl[L] ^ original_Fl[beta] ^ mv;
+		
+	/* update the derivatives */
+	for (int i = 0; i < L; i++)
+		Fl[1 + i] ^= Fq[alpha + i];
+	for (int i = 0; i < L - 1; i++)
+		Fl[1 + i] ^= Fq[idxq(0, L-1) + i];
+	Fl[beta] ^= Fq[gamma];
+}
+
 
 
 void simple_kernel_simulation(int n, const u32 * original_Fq, const u32 * original_Fl)
@@ -362,11 +366,8 @@ void simple_kernel_simulation(int n, const u32 * original_Fq, const u32 * origin
 		// u32 y = (1 << (L-1)) ^ (1 << k1);
 		// assert(to_gray((j+1) << L) == (x ^ y));
 
-		u32 Delta = original_Fl[L] ^ original_Fl[beta] ^ gemv(n+1, D[k1], to_gray(i));
-		assert(backup[0] == (Fl[0] ^ Delta));
-		
 		// now, check that we can recompute backup from Fl
-		FAST_FORWARD(Fq, backup, alpha, beta, gamma);
+		FAST_FORWARD(n, Fq, backup, original_Fl, D, alpha, beta, gamma, i);
 		for (int i = 1; i < n+1; i++)
 			assert(backup[i] == Fl[i]);
 	}
