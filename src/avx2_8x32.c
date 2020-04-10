@@ -1,3 +1,5 @@
+#include <assert.h>
+#include <stdio.h>
 #include "fes.h"
 
 #define LANES 8
@@ -51,6 +53,59 @@ static inline bool FLUSH_BUFFER(struct context_t *context, struct solution_t * t
 	return false;
 }
 
+
+static u32 gemv(int n, const u32 * M, u32 x)
+{
+	u32 r = M[0];
+	for (int i = 0; i < n; i++)
+		if (x & (1 << i))
+			r ^= M[i + 1];
+	return r;
+}
+
+
+static inline void REWIND(int n, const u32 *Fq, u32 *Fl, const u32 *original_Fl, const u32 (*D)[33], 
+				int alpha, int beta, int gamma, u32 i)
+{
+	for (int i = 0; i < LANES; i++)
+		assert(original_Fl[LANES*(n+1) + i] == 0);
+
+	u32 mv = gemv(n+1, D[beta-1], to_gray(i));
+	for (int i = 0; i < LANES; i++)
+		Fl[i] ^= original_Fl[LANES*UNROLL + i] ^ original_Fl[LANES*beta + i] ^ mv;
+
+	/* update the derivatives */
+	for (int i = 0; i < LANES * UNROLL; i++)
+		Fl[LANES + i] ^= Fq[LANES*alpha + i];
+
+	for (int i = 0; i < LANES * (UNROLL - 1); i++)
+		Fl[LANES + i] ^= Fq[LANES*idxq(0, UNROLL-1) + i];
+
+	for (int i = 0; i < LANES; i++)
+		Fl[LANES * beta + i] ^= Fq[LANES * gamma + i];
+}
+
+
+/* The Fq argument must be the output of setup32 */
+void setup_derivative(int n, int L, const u32 *Fq, u32 (*D)[33])
+{
+	for (int k = L; k < n+1; k++) {
+		// constant term
+		D[k][0] = Fq[idxq(L-1, k)];
+
+		for (int i = 0; i < L-1; i++)
+			D[k][i+1] = Fq[idxq(i, L-1)];
+		D[k][L] = 0;
+		for (int i = L; i < n; i++)
+			D[k][i+1] = Fq[idxq(L-1, i)];
+		
+		for (int i = 0; i < k; i++)
+			D[k][i+1] ^= Fq[idxq(i, k)];
+		for (int i = k+1; i < n; i++)
+			D[k][i+1] ^= Fq[idxq(k, i)];
+	}
+}
+
 int feslite_avx2_enum_8x32(int n, int m, const u32 * Fq, const u32 * Fl, int count, u32 * buffer, int *size)
 {
 	/* verify input parameters */
@@ -70,11 +125,16 @@ int feslite_avx2_enum_8x32(int n, int m, const u32 * Fq, const u32 * Fl, int cou
 	setup32(n, LANES, Fq, Fl, Fq_tmp, context.Fl);
 	broadcast32(n, LANES, Fq_tmp, context.Fq);
 	
-	ffs_reset(&context.ffs, n-UNROLL);
+	/* precompute "derivatives" */
+	u32 D[33][33];
+	setup_derivative(n, UNROLL, Fq_tmp, D);
+
+	ffs_reset(&context.ffs, n - UNROLL);
 	int k1 = context.ffs.k1 + UNROLL;
 	int k2 = context.ffs.k2 + UNROLL;
 
 	u64 iterations = 1ul << (n - UNROLL);
+	int n_positive = 0;
 	for (u64 j = 0; j < iterations; j++) {
 		u64 alpha = idxq(0, k1);
 		ffs_step(&context.ffs);	
@@ -82,12 +142,25 @@ int feslite_avx2_enum_8x32(int n, int m, const u32 * Fq, const u32 * Fl, int cou
 		k2 = context.ffs.k2 + UNROLL;
 		u64 beta = 1 + k1;
 		u64 gamma = idxq(k1, k2);
+		u32 i = j << UNROLL;
 		
-		struct solution_t *top = feslite_avx2_asm_enum(context.Fq, context.Fl, 
-		 	alpha, beta, gamma, context.local_buffer);
+		u32 mask = feslite_avx2_asm_enum_batch(context.Fq, context.Fl, alpha, beta, gamma);
+		if (mask) {
+			// printf("FOUD MASK = %08x for i = %016lx\n", mask, i);
+			n_positive++;
+			REWIND(n, context.Fq, context.Fl, Fl, D, alpha, beta, gamma, i);
 
-		if (FLUSH_BUFFER(&context, top, j << UNROLL))
-			break;
+			struct solution_t *top = feslite_avx2_asm_enum(context.Fq, context.Fl, 
+		 					alpha, beta, gamma, context.local_buffer);
+			if (FLUSH_BUFFER(&context, top, i))
+				break;
+		}
+
+		// struct solution_t *top = feslite_avx2_asm_enum(context.Fq, context.Fl, 
+		// 	alpha, beta, gamma, context.local_buffer);
+		// if (FLUSH_BUFFER(&context, top, j << UNROLL))
+		// 	break;
 	}
+	printf("FOUD %d positive for %ld iterations\n", n_positive, iterations);
 	return FESLITE_OK;
 }

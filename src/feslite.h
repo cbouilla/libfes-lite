@@ -28,7 +28,8 @@ typedef uint64_t u64;
  *
  * n must be less than or equal to 32.
  * Fq has size n * (n + 1) / 2. This is upper-bounded by 529 in all cases.
- * Fl has size (n + 1) * m
+ * Fl has size (n + 2) * m
+ * Fl[(n+1)*m:(n+2)*m] must be zero.
  *
  * The number of solutions of the i-th system is written in size[i]
  * The solutions of the i-th system can be found in buffer at index i*m.

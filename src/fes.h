@@ -64,6 +64,7 @@ int feslite_sse2_enum_8x16(int n, int m, const u32 * Fq, const u32 * Fl, int cou
 #ifdef __AVX2__
 extern struct solution_t * feslite_avx2_asm_enum(const void * Fq, void * Fl, 
 						u64 alpha, u64 beta, u64 gamma, struct solution_t *local_buffer);
+extern u32 feslite_avx2_asm_enum_batch(const void * Fq, void * Fl, u64 alpha, u64 beta, u64 gamma);
 int feslite_avx2_enum_8x32(int n, int m, const u32 * Fq, const u32 * Fl, int count, u32 * buffer, int *size);
 int feslite_avx2_enum_16x16(int n, int m, const u32 * Fq, const u32 * Fl, int count, u32 * buffer, int *size);
 #endif

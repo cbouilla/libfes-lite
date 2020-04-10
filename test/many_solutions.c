@@ -14,7 +14,7 @@ int n = 22;
 int k = 16;
 unsigned long random_seed = 1;
 u32 Fq[496];
-u32 Fl[33];
+u32 Fl[34];
 
 
 void test_kernel(int kernel)
@@ -97,8 +97,9 @@ int main(int argc, char **argv)
 	u32 mask = ((1ull << k) - 1) & 0xffffffff;
 	for (int i = 0; i < 496; i++)
 		Fq[i] = myrand() & mask;
-	for (int i = 0; i < 33; i++)
+	for (int i = 0; i < n + 1; i++)
 		Fl[i] = myrand() & mask;
+	Fl[n + 1] = 0;
 
 	if (argc > 1) {
 		int kernel = feslite_kernel_find_by_name(argv[1]);

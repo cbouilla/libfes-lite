@@ -43,8 +43,16 @@ if(HAVE_AVX2)
 		WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
 		COMMENT "Generating code for avx2_enum.s"
 	)   
+	add_custom_command(
+		COMMAND ${Python3_EXECUTABLE} avx2_codegen_batch.py > ${CMAKE_CURRENT_SOURCE_DIR}/avx2_enum_batch.s
+		DEPENDS avx2_codegen_batch.py
+		OUTPUT ${CMAKE_CURRENT_SOURCE_DIR}/avx2_enum_batch.s
+		WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+		COMMENT "Generating code for avx2_enum_batch.s"
+	)   
 
 	target_sources(feslite PRIVATE 
+		avx2_enum_batch.s
 		avx2_enum.s
 		avx2_8x32.c  
 		avx2_16x16.c

@@ -56,14 +56,17 @@ void test_kernel(int kernel, int k)
 	const char *name = feslite_kernel_name(kernel);
 
 	int m = feslite_kernel_batch_size(kernel);
-	u32 Fl[33 * m];
+	u32 Fl[34 * m];
 	int count = 256;
 	u32 buffer[count * m];
 	int size[m];
 
 	// prepare system with special solution on lane 0
-	for (int i = 0; i < 33 * m; i++)
+	for (int i = 0; i < 34 * m; i++)
+		Fl[i] = 0;
+	for (int i = 0; i < (n+1) * m; i++)
 		Fl[i] = myrand();
+	
 	u32 x = test_cases[k] & ((1ull << n) - 1);
 	Fl[0] = 0;
 	Fl[0] = feslite_naive_evaluation(n, Fq, Fl, m, x);

@@ -23,12 +23,14 @@ void test_kernel(int kernel)
 	printf("# testing kernel [%s], batch_size=%d\n", name, m);
 
 		
-	u32 Fl[33 * m];
+	u32 Fl[34 * m];
+	for (int i = 0; i < 34*m; i++)
+		Fl[i] = 0;
 	u32 x[m];
 	
 	mysrand(1337);
 	for (int k = 0; k < m; k++) {
-		for (int i = 1; i < 33 ; i++)
+		for (int i = 1; i < n+1 ; i++)
 			Fl[k + m*i] = myrand();
 		
 		Fl[k] = 0;

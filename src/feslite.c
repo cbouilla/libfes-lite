@@ -97,8 +97,45 @@ int feslite_preferred_batch_size()
 	return feslite_kernel_batch_size(feslite_default_kernel());
 }
 
+
 int feslite_solve(int n, int m, const u32 * Fq, const u32 * Fl, int count, u32 * buffer, int *size)
 {
-	// ici introduire un mécanisme qui gère le fait que m n'a pas la bonne taille
+#if 0
+	int candidate = -1;
+	double latency = INFINITY;
+	for (int i = feslite_num_kernels() - 1; i >= 0 ; i--) {
+		if (ENUM_KERNEL[i].min_variables >= n && feslite_kernel_is_available(i)) {
+			double n_iter = ceil(m / ENUM_KERNEL[i].batch_size);
+			double candidate_lat = ENUM_KERNEL[i].latency * n_iter;
+			if (candidate_lat < latency) {
+				candidate = i;
+				latency = candidate_lat;
+			}
+		}
+	}
+	if (candidate < 0)
+		return FESLITE_EBUG;
+
+	/* use the chosen kernel with the right batch size */
+	int batch_size = ENUM_KERNEL[i].batch_size;
+	while (m >= batch_size) {
+		int rc = feslite_kernel_solve(candidate, n, m, Fq, Fl, count, buffer, size);
+		if (rc != FESLITE_OK)
+			return rc;
+		buffer += batch_size * count;
+		size += batch_size;
+		Fl += batch_size;
+		m -= batch_size;
+	}
+
+	if (m > 0) {
+		/* one last pass with an incomplete batch */
+		u32 Fl_[33 * batch_size];
+		for (int i = 0; i < n + 1; i++)
+			for (int j = 0; j < batch_size; j++)
+				Fl_[i * batch_size + j] = (j < m) ? Fl[]
+
+	}
+#endif
 	return feslite_kernel_solve(feslite_default_kernel(), n, m, Fq, Fl, count, buffer, size);
 }
