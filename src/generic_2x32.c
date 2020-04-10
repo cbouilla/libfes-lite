@@ -112,7 +112,9 @@ int feslite_generic_enum_2x32(int n, int m, const u32 * Fq, const u32 * Fl, int 
 	 	size[i] = 0;
 	context.local_size = 0;
 
-	setup32(n, LANES, Fq, Fl, context.Fq, context.Fl);
+	u32 Fq_tmp[561];
+	setup32(n, LANES, Fq, Fl, Fq_tmp, context.Fl);
+	broadcast32(n, LANES, Fq_tmp, context.Fq);
 
 	ffs_reset(&context.ffs, n-L);
 	int k1 = context.ffs.k1 + L;

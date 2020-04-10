@@ -69,7 +69,10 @@ int feslite_avx512bw_enum_16x32(int n, int m, const u32 * Fq, const u32 * Fl, in
 	for (int i = 0; i < LANES; i++)
 		context.size[i] = 0;
 
-	setup32(n, LANES, Fq, Fl, context.Fq, context.Fl);
+	u32 Fq_tmp[561];
+	setup32(n, LANES, Fq, Fl, Fq_tmp, context.Fl);
+	broadcast32(n, LANES, Fq_tmp, context.Fq);
+
 	
 	ffs_reset(&context.ffs, n-UNROLL);
 	int k1 = context.ffs.k1 + UNROLL;

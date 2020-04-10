@@ -66,7 +66,9 @@ int feslite_avx2_enum_8x32(int n, int m, const u32 * Fq, const u32 * Fl, int cou
 	for (int i = 0; i < LANES; i++)
 		context.size[i] = 0;
 
-	setup32(n, LANES, Fq, Fl, context.Fq, context.Fl);
+	u32 Fq_tmp[561];
+	setup32(n, LANES, Fq, Fl, Fq_tmp, context.Fl);
+	broadcast32(n, LANES, Fq_tmp, context.Fq);
 	
 	ffs_reset(&context.ffs, n-UNROLL);
 	int k1 = context.ffs.k1 + UNROLL;
@@ -80,6 +82,7 @@ int feslite_avx2_enum_8x32(int n, int m, const u32 * Fq, const u32 * Fl, int cou
 		k2 = context.ffs.k2 + UNROLL;
 		u64 beta = 1 + k1;
 		u64 gamma = idxq(k1, k2);
+		
 		struct solution_t *top = feslite_avx2_asm_enum(context.Fq, context.Fl, 
 		 	alpha, beta, gamma, context.local_buffer);
 

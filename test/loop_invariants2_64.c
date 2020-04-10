@@ -3,7 +3,7 @@
 
 /* 
  * check that we are capable of undoing/redoing the effect of a bunch of steps
- * at once. 
+ * at once (on two parallel lanes). 
  */		
 
 
@@ -13,8 +13,11 @@
 #define L 8
 
 
-static inline void UNROLLED_CHUNK(const u32 *Fq, u32 * Fl, int alpha, int beta, int gamma)
+static inline void UNROLLED_CHUNK(const u32 *_Fq, u32 * _Fl, int alpha, int beta, int gamma)
 {
+	const u64 *Fq = (u64 *) _Fq;
+	u64 *Fl = (u64 *) _Fl;
+
 	Fl[0] ^= (Fl[1] ^= Fq[alpha + 0]);
 	Fl[0] ^= (Fl[2] ^= Fq[alpha + 1]);
 	Fl[0] ^= (Fl[1] ^= Fq[0]);
@@ -274,8 +277,11 @@ static inline void UNROLLED_CHUNK(const u32 *Fq, u32 * Fl, int alpha, int beta, 
 }
 
 
-static inline void FAST_FORWARD(const u32 *Fq, u32 *Fl, int alpha, int beta, int gamma)
+static inline void FAST_FORWARD(const u32 *_Fq, u32 *_Fl, int alpha, int beta, int gamma)
 {
+	const u64 *Fq = (u64 *) _Fq;
+	u64 *Fl = (u64 *) _Fl;
+
 	/* update the derivatives */
 	for (int i = 0; i < L; i++)
 		Fl[1 + i] ^= Fq[alpha + i];
@@ -297,27 +303,29 @@ static u32 gemv(int n, const u32 * M, u32 x)
 
 void simple_kernel_simulation(int n, const u32 * original_Fq, const u32 * original_Fl)
 {
-	u32 Fq[561];
-	u32 Fl[34];
+	u32 Fq[561 * 2];
+	u32 Fl[34 * 2];
 	
-	setup32(n, 1, original_Fq, original_Fl, Fq, Fl);
+	u32 tmp_Fq[561];
+	setup32(n, 2, original_Fq, original_Fl, tmp_Fq, Fl);
+	broadcast32(n, 2, tmp_Fq, Fq);
 
 	/* precompute "derivatives" */
 	u32 D[33][33];
 	for (int k = L; k < n+1; k++) {
 		// constant term
-		D[k][0] = Fq[idxq(L-1, k)];
+		D[k][0] = tmp_Fq[idxq(L-1, k)];
 
 		for (int i = 0; i < L-1; i++)
-			D[k][i+1] = Fq[idxq(i, L-1)];
+			D[k][i+1] = tmp_Fq[idxq(i, L-1)];
 		D[k][L] = 0;
 		for (int i = L; i < n; i++)
-			D[k][i+1] = Fq[idxq(L-1, i)];
+			D[k][i+1] = tmp_Fq[idxq(L-1, i)];
 		
 		for (int i = 0; i < k; i++)
-			D[k][i+1] ^= Fq[idxq(i, k)];
+			D[k][i+1] ^= tmp_Fq[idxq(i, k)];
 		for (int i = k+1; i < n; i++)
-			D[k][i+1] ^= Fq[idxq(k, i)];
+			D[k][i+1] ^= tmp_Fq[idxq(k, i)];
 	}
 
 	/* check computation of "derivatives" */
@@ -339,14 +347,18 @@ void simple_kernel_simulation(int n, const u32 * original_Fq, const u32 * origin
 	int k2 = ffs.k2 + L;
 
 	assert(k1 == n+1);
+	// save state
+	u32 pre_run[34*2];
+	for (int k = 0; k < 2*(n + 2); k++)
+		pre_run[k] = Fl[k];
 
 	u32 iterations = 1ul << (n - L);
 	for (u32 j = 0; j < iterations; j++) {
 		u32 i = j << L;
 
 		// save state
-		u32 backup[33];
-		for (int k = 0; k < n + 1; k++)
+		u32 backup[33*2];
+		for (int k = 0; k < 2*(n + 2); k++)
 			backup[k] = Fl[k];
 		
 		int alpha = idxq(0, k1);
@@ -362,12 +374,13 @@ void simple_kernel_simulation(int n, const u32 * original_Fq, const u32 * origin
 		// u32 y = (1 << (L-1)) ^ (1 << k1);
 		// assert(to_gray((j+1) << L) == (x ^ y));
 
-		u32 Delta = original_Fl[L] ^ original_Fl[beta] ^ gemv(n+1, D[k1], to_gray(i));
-		assert(backup[0] == (Fl[0] ^ Delta));
-		
+		u32 mv = gemv(n+1, D[k1], to_gray(i));
+		assert(backup[0] == (Fl[0] ^ pre_run[2*L] ^ pre_run[2*beta] ^ mv));
+		assert(backup[1] == (Fl[1] ^ pre_run[2*L+1] ^ pre_run[2*beta+1] ^ mv));
+
 		// now, check that we can recompute backup from Fl
 		FAST_FORWARD(Fq, backup, alpha, beta, gamma);
-		for (int i = 1; i < n+1; i++)
+		for (int i = 2; i < 2*(n+2); i++)
 			assert(backup[i] == Fl[i]);
 	}
 }
@@ -377,11 +390,11 @@ int main()
 {
 	int n = 32;
 	mysrand(42);
-	u32 Fl[33];
+	u32 Fl[33 * 2];
 	u32 Fq[496];
 	for (int i = 0; i < 496; i++)
 		Fq[i] = myrand();
-	for (int i = 0; i < 33 ; i++)
+	for (int i = 0; i < 2*33 ; i++)
 		Fl[i] = myrand();
 
 	printf("# testing with n=%d and L=%d\n", n, L);
