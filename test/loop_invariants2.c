@@ -297,6 +297,24 @@ static inline void FAST_FORWARD(int n, const u32 *Fq, u32 *Fl, const u32 * origi
 	Fl[beta] ^= Fq[gamma];
 }
 
+void setup_derivative(int n, int UNROLL, const u32 *Fq, u32 (*D)[33])
+{
+	for (int k = UNROLL; k < n+1; k++) {
+		// constant term
+		D[k][0] = Fq[idxq(UNROLL-1, k)];
+
+		for (int i = 0; i < UNROLL-1; i++)
+			D[k][i+1] = Fq[idxq(i, UNROLL-1)];
+		D[k][UNROLL] = 0;
+		for (int i = UNROLL; i < n; i++)
+			D[k][i+1] = Fq[idxq(UNROLL-1, i)];
+		
+		for (int i = 0; i < k; i++)
+			D[k][i+1] ^= Fq[idxq(i, k)];
+		for (int i = k+1; i < n; i++)
+			D[k][i+1] ^= Fq[idxq(k, i)];
+	}
+}
 
 
 void simple_kernel_simulation(int n, const u32 * original_Fq, const u32 * original_Fl)
@@ -308,21 +326,7 @@ void simple_kernel_simulation(int n, const u32 * original_Fq, const u32 * origin
 
 	/* precompute "derivatives" */
 	u32 D[33][33];
-	for (int k = L; k < n+1; k++) {
-		// constant term
-		D[k][0] = Fq[idxq(L-1, k)];
-
-		for (int i = 0; i < L-1; i++)
-			D[k][i+1] = Fq[idxq(i, L-1)];
-		D[k][L] = 0;
-		for (int i = L; i < n; i++)
-			D[k][i+1] = Fq[idxq(L-1, i)];
-		
-		for (int i = 0; i < k; i++)
-			D[k][i+1] ^= Fq[idxq(i, k)];
-		for (int i = k+1; i < n; i++)
-			D[k][i+1] ^= Fq[idxq(k, i)];
-	}
+	setup_derivative(n, L, Fq, D);
 
 	/* check computation of "derivatives" */
 	// for (int k = L; k < n; k++) {
