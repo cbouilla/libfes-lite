@@ -1,0 +1,8 @@
+// the configured options and settings for Tutorial
+#define feslite_VERSION_MAJOR @feslite_VERSION_MAJOR@
+#define feslite_VERSION_MINOR @feslite_VERSION_MINOR@
+
+#cmakedefine HAVE_SSE2
+#cmakedefine HAVE_AVX2
+#cmakedefine HAVE_AVX512
+#cmakedefine HAVE_NEON

@@ -37,8 +37,10 @@ void bench_kernel(int kernel)
 	#pragma omp parallel
 	{
 		assert(omp_get_num_threads() == T);
-		u32 Fl[33 * m];
-		for (int i = 0; i < 33 * m; i++)
+		u32 Fl[34 * m];
+		for (int i = 0; i < 34 * m; i++)
+			Fl[i] = 0;
+		for (int i = 0; i < (n+1) * m; i++)
 			Fl[i] = lrand48();
 		u32 buffer[count * m];
 		int size[m];
@@ -47,11 +49,13 @@ void bench_kernel(int kernel)
 	u64 stop = Now();
 	double stop_wt = omp_get_wtime();
 
+	double freq = 2.6; // in GHz
 	double cycles = stop - start;
 	double seconds = stop_wt - start_wt;
-	double rate = cycles / m / (1ll << n);
+	double rate = cycles / m / (1ll << n) / 2;
 	printf("\t---> %.2f s\n", stop_wt - start_wt);
-	printf("\t---> %.2f cycles/candidate || %.2f candidate/cycle\n", rate, 1/rate);
+	printf("\t---> %.2f cycles/candidate || %.2f candidate/cycle/thread\n", rate, 1/rate);
+	printf("\t---> %.2f cycles/3-steps/core (at %.1fGHz)\n", (seconds * freq * 1e9 / 2) / 1431655765.3, freq);
 	printf("\t---> 2^%.2f candidate/s on all threads\n", log2(m) + n + log2(T) - log2(seconds));
 }
 
