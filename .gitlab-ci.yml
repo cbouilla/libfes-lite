@@ -1,0 +1,29 @@
+#image: debian
+image: gcc
+
+before_script:
+  - apt update
+  - apt -y install cmake
+
+stages:
+  - build
+  - bench
+
+compile:
+  stage: build
+  script:
+    - mkdir build
+    - cd build
+    - cmake ..
+    - make
+    - make check
+
+
+run_test:
+    stage: bench
+    script:
+    - mkdir build
+    - cd build
+    - cmake ..
+    - make
+    - benchmarks/speed
