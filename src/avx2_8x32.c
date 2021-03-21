@@ -4,6 +4,7 @@
 
 #define LANES 8
 #define UNROLL 8
+#define BATCH_MODE
 
 struct solution_t {
 	u32 x;
@@ -67,9 +68,6 @@ static u32 gemv(int n, const u32 * M, u32 x)
 static inline void REWIND(int n, const u32 *Fq, u32 *Fl, const u32 *original_Fl, const u32 (*D)[33], 
 				int alpha, int beta, int gamma, u32 i)
 {
-	for (int i = 0; i < LANES; i++)
-		assert(original_Fl[LANES*(n+1) + i] == 0);
-
 	u32 mv = gemv(n+1, D[beta-1], to_gray(i));
 	for (int i = 0; i < LANES; i++)
 		Fl[i] ^= original_Fl[LANES*UNROLL + i] ^ original_Fl[LANES*beta + i] ^ mv;
@@ -112,6 +110,10 @@ int feslite_avx2_enum_8x32(int n, int m, const u32 * Fq, const u32 * Fl, int cou
 	if (count <= 0 || n < UNROLL || n > 32 || m != LANES)
 		return FESLITE_EINVAL;
 
+	for (int i = 0; i < LANES; i++)
+		assert(Fl[LANES*(n+1) + i] == 0);
+
+
 	struct context_t context;
 	context.n = n;
 	context.m = m;
@@ -144,6 +146,7 @@ int feslite_avx2_enum_8x32(int n, int m, const u32 * Fq, const u32 * Fl, int cou
 		u64 gamma = idxq(k1, k2);
 		u32 i = j << UNROLL;
 		
+#ifdef BATCH_MODE
 		u32 mask = feslite_avx2_asm_enum_batch(context.Fq, context.Fl, alpha, beta, gamma);
 		if (mask) {
 			// printf("FOUD MASK = %08x for i = %016lx\n", mask, i);
@@ -155,12 +158,13 @@ int feslite_avx2_enum_8x32(int n, int m, const u32 * Fq, const u32 * Fl, int cou
 			if (FLUSH_BUFFER(&context, top, i))
 				break;
 		}
-
-		// struct solution_t *top = feslite_avx2_asm_enum(context.Fq, context.Fl, 
-		// 	alpha, beta, gamma, context.local_buffer);
-		// if (FLUSH_BUFFER(&context, top, j << UNROLL))
-		// 	break;
+#else
+		struct solution_t *top = feslite_avx2_asm_enum(context.Fq, context.Fl, 
+							 	alpha, beta, gamma, context.local_buffer);
+		if (FLUSH_BUFFER(&context, top, i))
+		 	break;
+#endif
 	}
-	printf("FOUD %d positive for %ld iterations\n", n_positive, iterations);
+	printf("Found %d positive for %ld iterations\n", n_positive, iterations);
 	return FESLITE_OK;
 }

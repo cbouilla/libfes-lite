@@ -49,6 +49,7 @@ print("""
 # Scheduling on Haswell : each step is 4 instructions ;
 #   three steps send 4 uops to ports 0,1,5  (in the best case)
 #   three steps thus take at least 4 cycles
+#   peak performance is then 16x3 candidates in 4 cycles --> 12 candidates/cycle
 # 
 # Measured : 5.75 cycles for three steps without hyperthreading
 # Measured : 4.45 cycles for three steps with hyperthreading
@@ -95,7 +96,7 @@ assert Fl[0] == "%ymm0"
 
 def output_comparison(i, between_cmp_or=None):
     # before the XORs, the comparison
-    print('vpcmpeqw %ymm0, %ymm15, %ymm15'.format())
+    print('vpcmpeqd %ymm0, %ymm15, %ymm15'.format())
     if between_cmp_or:
         print(between_cmp_or)
     print('vpor %ymm15, %ymm13, %ymm13')

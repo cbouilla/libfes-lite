@@ -30,6 +30,7 @@
 # Scheduling on Haswell : each step is 4 instructions ;
 #   three steps send 4 uops to ports 0,1,5  (in the best case)
 #   three steps thus take at least 4 cycles
+#   peak performance is then 16x3 candidates in 4 cycles --> 12 candidates/cycle
 # 
 # Measured : 5.75 cycles for three steps without hyperthreading
 # Measured : 4.45 cycles for three steps with hyperthreading
@@ -73,7 +74,7 @@ vmovdqa 160(%rdi), %ymm12   ## %ymm12 = Fq[5]
 
 ##### step   0 : Fl[0] ^= (Fl[1] ^= Fq[alpha + 0])
 
-vpcmpeqw %ymm0, %ymm15, %ymm15
+vpcmpeqd %ymm0, %ymm15, %ymm15
 vpor %ymm15, %ymm13, %ymm13
 vpxor 0(%rdi, %rdx), %ymm1, %ymm1
 vpxor %ymm1, %ymm0, %ymm0
@@ -81,7 +82,7 @@ vpxor %ymm1, %ymm0, %ymm0
 
 ##### step   1 : Fl[0] ^= (Fl[2] ^= Fq[alpha + 1])
 
-vpcmpeqw %ymm0, %ymm15, %ymm15
+vpcmpeqd %ymm0, %ymm15, %ymm15
 vpor %ymm15, %ymm13, %ymm13
 vpxor 32(%rdi, %rdx), %ymm2, %ymm2
 vpxor %ymm2, %ymm0, %ymm0
@@ -89,7 +90,7 @@ vpxor %ymm2, %ymm0, %ymm0
 
 ##### step   2 : Fl[0] ^= (Fl[1] ^= Fq[0])
 
-vpcmpeqw %ymm0, %ymm15, %ymm15
+vpcmpeqd %ymm0, %ymm15, %ymm15
 vpor %ymm15, %ymm13, %ymm13
 vpxor %ymm7, %ymm1, %ymm1
 vpxor %ymm1, %ymm0, %ymm0
@@ -97,7 +98,7 @@ vpxor %ymm1, %ymm0, %ymm0
 
 ##### step   3 : Fl[0] ^= (Fl[3] ^= Fq[alpha + 2])
 
-vpcmpeqw %ymm0, %ymm15, %ymm15
+vpcmpeqd %ymm0, %ymm15, %ymm15
 vpor %ymm15, %ymm13, %ymm13
 vpxor 64(%rdi, %rdx), %ymm3, %ymm3
 vpxor %ymm3, %ymm0, %ymm0
@@ -105,7 +106,7 @@ vpxor %ymm3, %ymm0, %ymm0
 
 ##### step   4 : Fl[0] ^= (Fl[1] ^= Fq[1])
 
-vpcmpeqw %ymm0, %ymm15, %ymm15
+vpcmpeqd %ymm0, %ymm15, %ymm15
 vpor %ymm15, %ymm13, %ymm13
 vpxor %ymm8, %ymm1, %ymm1
 vpxor %ymm1, %ymm0, %ymm0
@@ -113,7 +114,7 @@ vpxor %ymm1, %ymm0, %ymm0
 
 ##### step   5 : Fl[0] ^= (Fl[2] ^= Fq[2])
 
-vpcmpeqw %ymm0, %ymm15, %ymm15
+vpcmpeqd %ymm0, %ymm15, %ymm15
 vpor %ymm15, %ymm13, %ymm13
 vpxor %ymm9, %ymm2, %ymm2
 vpxor %ymm2, %ymm0, %ymm0
@@ -121,7 +122,7 @@ vpxor %ymm2, %ymm0, %ymm0
 
 ##### step   6 : Fl[0] ^= (Fl[1] ^= Fq[0])
 
-vpcmpeqw %ymm0, %ymm15, %ymm15
+vpcmpeqd %ymm0, %ymm15, %ymm15
 vpor %ymm15, %ymm13, %ymm13
 vpxor %ymm7, %ymm1, %ymm1
 vpxor %ymm1, %ymm0, %ymm0
@@ -129,7 +130,7 @@ vpxor %ymm1, %ymm0, %ymm0
 
 ##### step   7 : Fl[0] ^= (Fl[4] ^= Fq[alpha + 3])
 
-vpcmpeqw %ymm0, %ymm15, %ymm15
+vpcmpeqd %ymm0, %ymm15, %ymm15
 vpor %ymm15, %ymm13, %ymm13
 vpxor 96(%rdi, %rdx), %ymm4, %ymm4
 vpxor %ymm4, %ymm0, %ymm0
@@ -137,7 +138,7 @@ vpxor %ymm4, %ymm0, %ymm0
 
 ##### step   8 : Fl[0] ^= (Fl[1] ^= Fq[3])
 
-vpcmpeqw %ymm0, %ymm15, %ymm15
+vpcmpeqd %ymm0, %ymm15, %ymm15
 vpor %ymm15, %ymm13, %ymm13
 vpxor %ymm10, %ymm1, %ymm1
 vpxor %ymm1, %ymm0, %ymm0
@@ -145,7 +146,7 @@ vpxor %ymm1, %ymm0, %ymm0
 
 ##### step   9 : Fl[0] ^= (Fl[2] ^= Fq[4])
 
-vpcmpeqw %ymm0, %ymm15, %ymm15
+vpcmpeqd %ymm0, %ymm15, %ymm15
 vpor %ymm15, %ymm13, %ymm13
 vpxor %ymm11, %ymm2, %ymm2
 vpxor %ymm2, %ymm0, %ymm0
@@ -153,7 +154,7 @@ vpxor %ymm2, %ymm0, %ymm0
 
 ##### step  10 : Fl[0] ^= (Fl[1] ^= Fq[0])
 
-vpcmpeqw %ymm0, %ymm15, %ymm15
+vpcmpeqd %ymm0, %ymm15, %ymm15
 vpor %ymm15, %ymm13, %ymm13
 vpxor %ymm7, %ymm1, %ymm1
 vpxor %ymm1, %ymm0, %ymm0
@@ -161,7 +162,7 @@ vpxor %ymm1, %ymm0, %ymm0
 
 ##### step  11 : Fl[0] ^= (Fl[3] ^= Fq[5])
 
-vpcmpeqw %ymm0, %ymm15, %ymm15
+vpcmpeqd %ymm0, %ymm15, %ymm15
 vpor %ymm15, %ymm13, %ymm13
 vpxor %ymm12, %ymm3, %ymm3
 vpxor %ymm3, %ymm0, %ymm0
@@ -169,7 +170,7 @@ vpxor %ymm3, %ymm0, %ymm0
 
 ##### step  12 : Fl[0] ^= (Fl[1] ^= Fq[1])
 
-vpcmpeqw %ymm0, %ymm15, %ymm15
+vpcmpeqd %ymm0, %ymm15, %ymm15
 vpor %ymm15, %ymm13, %ymm13
 vpxor %ymm8, %ymm1, %ymm1
 vpxor %ymm1, %ymm0, %ymm0
@@ -177,7 +178,7 @@ vpxor %ymm1, %ymm0, %ymm0
 
 ##### step  13 : Fl[0] ^= (Fl[2] ^= Fq[2])
 
-vpcmpeqw %ymm0, %ymm15, %ymm15
+vpcmpeqd %ymm0, %ymm15, %ymm15
 vpor %ymm15, %ymm13, %ymm13
 vpxor %ymm9, %ymm2, %ymm2
 vpxor %ymm2, %ymm0, %ymm0
@@ -185,7 +186,7 @@ vpxor %ymm2, %ymm0, %ymm0
 
 ##### step  14 : Fl[0] ^= (Fl[1] ^= Fq[0])
 
-vpcmpeqw %ymm0, %ymm15, %ymm15
+vpcmpeqd %ymm0, %ymm15, %ymm15
 vpor %ymm15, %ymm13, %ymm13
 vpxor %ymm7, %ymm1, %ymm1
 vpxor %ymm1, %ymm0, %ymm0
@@ -193,7 +194,7 @@ vpxor %ymm1, %ymm0, %ymm0
 
 ##### step  15 : Fl[0] ^= (Fl[5] ^= Fq[alpha + 4])
 
-vpcmpeqw %ymm0, %ymm15, %ymm15
+vpcmpeqd %ymm0, %ymm15, %ymm15
 vpor %ymm15, %ymm13, %ymm13
 vpxor 128(%rdi, %rdx), %ymm5, %ymm5
 vpxor %ymm5, %ymm0, %ymm0
@@ -201,7 +202,7 @@ vpxor %ymm5, %ymm0, %ymm0
 
 ##### step  16 : Fl[0] ^= (Fl[1] ^= Fq[6])
 
-vpcmpeqw %ymm0, %ymm15, %ymm15
+vpcmpeqd %ymm0, %ymm15, %ymm15
 vpor %ymm15, %ymm13, %ymm13
 vpxor 192(%rdi), %ymm1, %ymm1
 vpxor %ymm1, %ymm0, %ymm0
@@ -209,7 +210,7 @@ vpxor %ymm1, %ymm0, %ymm0
 
 ##### step  17 : Fl[0] ^= (Fl[2] ^= Fq[7])
 
-vpcmpeqw %ymm0, %ymm15, %ymm15
+vpcmpeqd %ymm0, %ymm15, %ymm15
 vpor %ymm15, %ymm13, %ymm13
 vpxor 224(%rdi), %ymm2, %ymm2
 vpxor %ymm2, %ymm0, %ymm0
@@ -217,7 +218,7 @@ vpxor %ymm2, %ymm0, %ymm0
 
 ##### step  18 : Fl[0] ^= (Fl[1] ^= Fq[0])
 
-vpcmpeqw %ymm0, %ymm15, %ymm15
+vpcmpeqd %ymm0, %ymm15, %ymm15
 vpor %ymm15, %ymm13, %ymm13
 vpxor %ymm7, %ymm1, %ymm1
 vpxor %ymm1, %ymm0, %ymm0
@@ -225,7 +226,7 @@ vpxor %ymm1, %ymm0, %ymm0
 
 ##### step  19 : Fl[0] ^= (Fl[3] ^= Fq[8])
 
-vpcmpeqw %ymm0, %ymm15, %ymm15
+vpcmpeqd %ymm0, %ymm15, %ymm15
 vpor %ymm15, %ymm13, %ymm13
 vpxor 256(%rdi), %ymm3, %ymm3
 vpxor %ymm3, %ymm0, %ymm0
@@ -233,7 +234,7 @@ vpxor %ymm3, %ymm0, %ymm0
 
 ##### step  20 : Fl[0] ^= (Fl[1] ^= Fq[1])
 
-vpcmpeqw %ymm0, %ymm15, %ymm15
+vpcmpeqd %ymm0, %ymm15, %ymm15
 vpor %ymm15, %ymm13, %ymm13
 vpxor %ymm8, %ymm1, %ymm1
 vpxor %ymm1, %ymm0, %ymm0
@@ -241,7 +242,7 @@ vpxor %ymm1, %ymm0, %ymm0
 
 ##### step  21 : Fl[0] ^= (Fl[2] ^= Fq[2])
 
-vpcmpeqw %ymm0, %ymm15, %ymm15
+vpcmpeqd %ymm0, %ymm15, %ymm15
 vpor %ymm15, %ymm13, %ymm13
 vpxor %ymm9, %ymm2, %ymm2
 vpxor %ymm2, %ymm0, %ymm0
@@ -249,7 +250,7 @@ vpxor %ymm2, %ymm0, %ymm0
 
 ##### step  22 : Fl[0] ^= (Fl[1] ^= Fq[0])
 
-vpcmpeqw %ymm0, %ymm15, %ymm15
+vpcmpeqd %ymm0, %ymm15, %ymm15
 vpor %ymm15, %ymm13, %ymm13
 vpxor %ymm7, %ymm1, %ymm1
 vpxor %ymm1, %ymm0, %ymm0
@@ -257,7 +258,7 @@ vpxor %ymm1, %ymm0, %ymm0
 
 ##### step  23 : Fl[0] ^= (Fl[4] ^= Fq[9])
 
-vpcmpeqw %ymm0, %ymm15, %ymm15
+vpcmpeqd %ymm0, %ymm15, %ymm15
 vpor %ymm15, %ymm13, %ymm13
 vpxor 288(%rdi), %ymm4, %ymm4
 vpxor %ymm4, %ymm0, %ymm0
@@ -265,7 +266,7 @@ vpxor %ymm4, %ymm0, %ymm0
 
 ##### step  24 : Fl[0] ^= (Fl[1] ^= Fq[3])
 
-vpcmpeqw %ymm0, %ymm15, %ymm15
+vpcmpeqd %ymm0, %ymm15, %ymm15
 vpor %ymm15, %ymm13, %ymm13
 vpxor %ymm10, %ymm1, %ymm1
 vpxor %ymm1, %ymm0, %ymm0
@@ -273,7 +274,7 @@ vpxor %ymm1, %ymm0, %ymm0
 
 ##### step  25 : Fl[0] ^= (Fl[2] ^= Fq[4])
 
-vpcmpeqw %ymm0, %ymm15, %ymm15
+vpcmpeqd %ymm0, %ymm15, %ymm15
 vpor %ymm15, %ymm13, %ymm13
 vpxor %ymm11, %ymm2, %ymm2
 vpxor %ymm2, %ymm0, %ymm0
@@ -281,7 +282,7 @@ vpxor %ymm2, %ymm0, %ymm0
 
 ##### step  26 : Fl[0] ^= (Fl[1] ^= Fq[0])
 
-vpcmpeqw %ymm0, %ymm15, %ymm15
+vpcmpeqd %ymm0, %ymm15, %ymm15
 vpor %ymm15, %ymm13, %ymm13
 vpxor %ymm7, %ymm1, %ymm1
 vpxor %ymm1, %ymm0, %ymm0
@@ -289,7 +290,7 @@ vpxor %ymm1, %ymm0, %ymm0
 
 ##### step  27 : Fl[0] ^= (Fl[3] ^= Fq[5])
 
-vpcmpeqw %ymm0, %ymm15, %ymm15
+vpcmpeqd %ymm0, %ymm15, %ymm15
 vpor %ymm15, %ymm13, %ymm13
 vpxor %ymm12, %ymm3, %ymm3
 vpxor %ymm3, %ymm0, %ymm0
@@ -297,7 +298,7 @@ vpxor %ymm3, %ymm0, %ymm0
 
 ##### step  28 : Fl[0] ^= (Fl[1] ^= Fq[1])
 
-vpcmpeqw %ymm0, %ymm15, %ymm15
+vpcmpeqd %ymm0, %ymm15, %ymm15
 vpor %ymm15, %ymm13, %ymm13
 vpxor %ymm8, %ymm1, %ymm1
 vpxor %ymm1, %ymm0, %ymm0
@@ -305,7 +306,7 @@ vpxor %ymm1, %ymm0, %ymm0
 
 ##### step  29 : Fl[0] ^= (Fl[2] ^= Fq[2])
 
-vpcmpeqw %ymm0, %ymm15, %ymm15
+vpcmpeqd %ymm0, %ymm15, %ymm15
 vpor %ymm15, %ymm13, %ymm13
 vpxor %ymm9, %ymm2, %ymm2
 vpxor %ymm2, %ymm0, %ymm0
@@ -313,7 +314,7 @@ vpxor %ymm2, %ymm0, %ymm0
 
 ##### step  30 : Fl[0] ^= (Fl[1] ^= Fq[0])
 
-vpcmpeqw %ymm0, %ymm15, %ymm15
+vpcmpeqd %ymm0, %ymm15, %ymm15
 vpor %ymm15, %ymm13, %ymm13
 vpxor %ymm7, %ymm1, %ymm1
 vpxor %ymm1, %ymm0, %ymm0
@@ -321,7 +322,7 @@ vpxor %ymm1, %ymm0, %ymm0
 
 ##### step  31 : Fl[0] ^= (Fl[6] ^= Fq[alpha + 5])
 
-vpcmpeqw %ymm0, %ymm15, %ymm15
+vpcmpeqd %ymm0, %ymm15, %ymm15
 vpor %ymm15, %ymm13, %ymm13
 vpxor 160(%rdi, %rdx), %ymm6, %ymm6
 vpxor %ymm6, %ymm0, %ymm0
@@ -329,7 +330,7 @@ vpxor %ymm6, %ymm0, %ymm0
 
 ##### step  32 : Fl[0] ^= (Fl[1] ^= Fq[10])
 
-vpcmpeqw %ymm0, %ymm15, %ymm15
+vpcmpeqd %ymm0, %ymm15, %ymm15
 vpor %ymm15, %ymm13, %ymm13
 vpxor 320(%rdi), %ymm1, %ymm1
 vpxor %ymm1, %ymm0, %ymm0
@@ -337,7 +338,7 @@ vpxor %ymm1, %ymm0, %ymm0
 
 ##### step  33 : Fl[0] ^= (Fl[2] ^= Fq[11])
 
-vpcmpeqw %ymm0, %ymm15, %ymm15
+vpcmpeqd %ymm0, %ymm15, %ymm15
 vpor %ymm15, %ymm13, %ymm13
 vpxor 352(%rdi), %ymm2, %ymm2
 vpxor %ymm2, %ymm0, %ymm0
@@ -345,7 +346,7 @@ vpxor %ymm2, %ymm0, %ymm0
 
 ##### step  34 : Fl[0] ^= (Fl[1] ^= Fq[0])
 
-vpcmpeqw %ymm0, %ymm15, %ymm15
+vpcmpeqd %ymm0, %ymm15, %ymm15
 vpor %ymm15, %ymm13, %ymm13
 vpxor %ymm7, %ymm1, %ymm1
 vpxor %ymm1, %ymm0, %ymm0
@@ -353,7 +354,7 @@ vpxor %ymm1, %ymm0, %ymm0
 
 ##### step  35 : Fl[0] ^= (Fl[3] ^= Fq[12])
 
-vpcmpeqw %ymm0, %ymm15, %ymm15
+vpcmpeqd %ymm0, %ymm15, %ymm15
 vpor %ymm15, %ymm13, %ymm13
 vpxor 384(%rdi), %ymm3, %ymm3
 vpxor %ymm3, %ymm0, %ymm0
@@ -361,7 +362,7 @@ vpxor %ymm3, %ymm0, %ymm0
 
 ##### step  36 : Fl[0] ^= (Fl[1] ^= Fq[1])
 
-vpcmpeqw %ymm0, %ymm15, %ymm15
+vpcmpeqd %ymm0, %ymm15, %ymm15
 vpor %ymm15, %ymm13, %ymm13
 vpxor %ymm8, %ymm1, %ymm1
 vpxor %ymm1, %ymm0, %ymm0
@@ -369,7 +370,7 @@ vpxor %ymm1, %ymm0, %ymm0
 
 ##### step  37 : Fl[0] ^= (Fl[2] ^= Fq[2])
 
-vpcmpeqw %ymm0, %ymm15, %ymm15
+vpcmpeqd %ymm0, %ymm15, %ymm15
 vpor %ymm15, %ymm13, %ymm13
 vpxor %ymm9, %ymm2, %ymm2
 vpxor %ymm2, %ymm0, %ymm0
@@ -377,7 +378,7 @@ vpxor %ymm2, %ymm0, %ymm0
 
 ##### step  38 : Fl[0] ^= (Fl[1] ^= Fq[0])
 
-vpcmpeqw %ymm0, %ymm15, %ymm15
+vpcmpeqd %ymm0, %ymm15, %ymm15
 vpor %ymm15, %ymm13, %ymm13
 vpxor %ymm7, %ymm1, %ymm1
 vpxor %ymm1, %ymm0, %ymm0
@@ -385,7 +386,7 @@ vpxor %ymm1, %ymm0, %ymm0
 
 ##### step  39 : Fl[0] ^= (Fl[4] ^= Fq[13])
 
-vpcmpeqw %ymm0, %ymm15, %ymm15
+vpcmpeqd %ymm0, %ymm15, %ymm15
 vpor %ymm15, %ymm13, %ymm13
 vpxor 416(%rdi), %ymm4, %ymm4
 vpxor %ymm4, %ymm0, %ymm0
@@ -393,7 +394,7 @@ vpxor %ymm4, %ymm0, %ymm0
 
 ##### step  40 : Fl[0] ^= (Fl[1] ^= Fq[3])
 
-vpcmpeqw %ymm0, %ymm15, %ymm15
+vpcmpeqd %ymm0, %ymm15, %ymm15
 vpor %ymm15, %ymm13, %ymm13
 vpxor %ymm10, %ymm1, %ymm1
 vpxor %ymm1, %ymm0, %ymm0
@@ -401,7 +402,7 @@ vpxor %ymm1, %ymm0, %ymm0
 
 ##### step  41 : Fl[0] ^= (Fl[2] ^= Fq[4])
 
-vpcmpeqw %ymm0, %ymm15, %ymm15
+vpcmpeqd %ymm0, %ymm15, %ymm15
 vpor %ymm15, %ymm13, %ymm13
 vpxor %ymm11, %ymm2, %ymm2
 vpxor %ymm2, %ymm0, %ymm0
@@ -409,7 +410,7 @@ vpxor %ymm2, %ymm0, %ymm0
 
 ##### step  42 : Fl[0] ^= (Fl[1] ^= Fq[0])
 
-vpcmpeqw %ymm0, %ymm15, %ymm15
+vpcmpeqd %ymm0, %ymm15, %ymm15
 vpor %ymm15, %ymm13, %ymm13
 vpxor %ymm7, %ymm1, %ymm1
 vpxor %ymm1, %ymm0, %ymm0
@@ -417,7 +418,7 @@ vpxor %ymm1, %ymm0, %ymm0
 
 ##### step  43 : Fl[0] ^= (Fl[3] ^= Fq[5])
 
-vpcmpeqw %ymm0, %ymm15, %ymm15
+vpcmpeqd %ymm0, %ymm15, %ymm15
 vpor %ymm15, %ymm13, %ymm13
 vpxor %ymm12, %ymm3, %ymm3
 vpxor %ymm3, %ymm0, %ymm0
@@ -425,7 +426,7 @@ vpxor %ymm3, %ymm0, %ymm0
 
 ##### step  44 : Fl[0] ^= (Fl[1] ^= Fq[1])
 
-vpcmpeqw %ymm0, %ymm15, %ymm15
+vpcmpeqd %ymm0, %ymm15, %ymm15
 vpor %ymm15, %ymm13, %ymm13
 vpxor %ymm8, %ymm1, %ymm1
 vpxor %ymm1, %ymm0, %ymm0
@@ -433,7 +434,7 @@ vpxor %ymm1, %ymm0, %ymm0
 
 ##### step  45 : Fl[0] ^= (Fl[2] ^= Fq[2])
 
-vpcmpeqw %ymm0, %ymm15, %ymm15
+vpcmpeqd %ymm0, %ymm15, %ymm15
 vpor %ymm15, %ymm13, %ymm13
 vpxor %ymm9, %ymm2, %ymm2
 vpxor %ymm2, %ymm0, %ymm0
@@ -441,7 +442,7 @@ vpxor %ymm2, %ymm0, %ymm0
 
 ##### step  46 : Fl[0] ^= (Fl[1] ^= Fq[0])
 
-vpcmpeqw %ymm0, %ymm15, %ymm15
+vpcmpeqd %ymm0, %ymm15, %ymm15
 vpor %ymm15, %ymm13, %ymm13
 vpxor %ymm7, %ymm1, %ymm1
 vpxor %ymm1, %ymm0, %ymm0
@@ -449,7 +450,7 @@ vpxor %ymm1, %ymm0, %ymm0
 
 ##### step  47 : Fl[0] ^= (Fl[5] ^= Fq[14])
 
-vpcmpeqw %ymm0, %ymm15, %ymm15
+vpcmpeqd %ymm0, %ymm15, %ymm15
 vpor %ymm15, %ymm13, %ymm13
 vpxor 448(%rdi), %ymm5, %ymm5
 vpxor %ymm5, %ymm0, %ymm0
@@ -457,7 +458,7 @@ vpxor %ymm5, %ymm0, %ymm0
 
 ##### step  48 : Fl[0] ^= (Fl[1] ^= Fq[6])
 
-vpcmpeqw %ymm0, %ymm15, %ymm15
+vpcmpeqd %ymm0, %ymm15, %ymm15
 vpor %ymm15, %ymm13, %ymm13
 vpxor 192(%rdi), %ymm1, %ymm1
 vpxor %ymm1, %ymm0, %ymm0
@@ -465,7 +466,7 @@ vpxor %ymm1, %ymm0, %ymm0
 
 ##### step  49 : Fl[0] ^= (Fl[2] ^= Fq[7])
 
-vpcmpeqw %ymm0, %ymm15, %ymm15
+vpcmpeqd %ymm0, %ymm15, %ymm15
 vpor %ymm15, %ymm13, %ymm13
 vpxor 224(%rdi), %ymm2, %ymm2
 vpxor %ymm2, %ymm0, %ymm0
@@ -473,7 +474,7 @@ vpxor %ymm2, %ymm0, %ymm0
 
 ##### step  50 : Fl[0] ^= (Fl[1] ^= Fq[0])
 
-vpcmpeqw %ymm0, %ymm15, %ymm15
+vpcmpeqd %ymm0, %ymm15, %ymm15
 vpor %ymm15, %ymm13, %ymm13
 vpxor %ymm7, %ymm1, %ymm1
 vpxor %ymm1, %ymm0, %ymm0
@@ -481,7 +482,7 @@ vpxor %ymm1, %ymm0, %ymm0
 
 ##### step  51 : Fl[0] ^= (Fl[3] ^= Fq[8])
 
-vpcmpeqw %ymm0, %ymm15, %ymm15
+vpcmpeqd %ymm0, %ymm15, %ymm15
 vpor %ymm15, %ymm13, %ymm13
 vpxor 256(%rdi), %ymm3, %ymm3
 vpxor %ymm3, %ymm0, %ymm0
@@ -489,7 +490,7 @@ vpxor %ymm3, %ymm0, %ymm0
 
 ##### step  52 : Fl[0] ^= (Fl[1] ^= Fq[1])
 
-vpcmpeqw %ymm0, %ymm15, %ymm15
+vpcmpeqd %ymm0, %ymm15, %ymm15
 vpor %ymm15, %ymm13, %ymm13
 vpxor %ymm8, %ymm1, %ymm1
 vpxor %ymm1, %ymm0, %ymm0
@@ -497,7 +498,7 @@ vpxor %ymm1, %ymm0, %ymm0
 
 ##### step  53 : Fl[0] ^= (Fl[2] ^= Fq[2])
 
-vpcmpeqw %ymm0, %ymm15, %ymm15
+vpcmpeqd %ymm0, %ymm15, %ymm15
 vpor %ymm15, %ymm13, %ymm13
 vpxor %ymm9, %ymm2, %ymm2
 vpxor %ymm2, %ymm0, %ymm0
@@ -505,7 +506,7 @@ vpxor %ymm2, %ymm0, %ymm0
 
 ##### step  54 : Fl[0] ^= (Fl[1] ^= Fq[0])
 
-vpcmpeqw %ymm0, %ymm15, %ymm15
+vpcmpeqd %ymm0, %ymm15, %ymm15
 vpor %ymm15, %ymm13, %ymm13
 vpxor %ymm7, %ymm1, %ymm1
 vpxor %ymm1, %ymm0, %ymm0
@@ -513,7 +514,7 @@ vpxor %ymm1, %ymm0, %ymm0
 
 ##### step  55 : Fl[0] ^= (Fl[4] ^= Fq[9])
 
-vpcmpeqw %ymm0, %ymm15, %ymm15
+vpcmpeqd %ymm0, %ymm15, %ymm15
 vpor %ymm15, %ymm13, %ymm13
 vpxor 288(%rdi), %ymm4, %ymm4
 vpxor %ymm4, %ymm0, %ymm0
@@ -521,7 +522,7 @@ vpxor %ymm4, %ymm0, %ymm0
 
 ##### step  56 : Fl[0] ^= (Fl[1] ^= Fq[3])
 
-vpcmpeqw %ymm0, %ymm15, %ymm15
+vpcmpeqd %ymm0, %ymm15, %ymm15
 vpor %ymm15, %ymm13, %ymm13
 vpxor %ymm10, %ymm1, %ymm1
 vpxor %ymm1, %ymm0, %ymm0
@@ -529,7 +530,7 @@ vpxor %ymm1, %ymm0, %ymm0
 
 ##### step  57 : Fl[0] ^= (Fl[2] ^= Fq[4])
 
-vpcmpeqw %ymm0, %ymm15, %ymm15
+vpcmpeqd %ymm0, %ymm15, %ymm15
 vpor %ymm15, %ymm13, %ymm13
 vpxor %ymm11, %ymm2, %ymm2
 vpxor %ymm2, %ymm0, %ymm0
@@ -537,7 +538,7 @@ vpxor %ymm2, %ymm0, %ymm0
 
 ##### step  58 : Fl[0] ^= (Fl[1] ^= Fq[0])
 
-vpcmpeqw %ymm0, %ymm15, %ymm15
+vpcmpeqd %ymm0, %ymm15, %ymm15
 vpor %ymm15, %ymm13, %ymm13
 vpxor %ymm7, %ymm1, %ymm1
 vpxor %ymm1, %ymm0, %ymm0
@@ -545,7 +546,7 @@ vpxor %ymm1, %ymm0, %ymm0
 
 ##### step  59 : Fl[0] ^= (Fl[3] ^= Fq[5])
 
-vpcmpeqw %ymm0, %ymm15, %ymm15
+vpcmpeqd %ymm0, %ymm15, %ymm15
 vpor %ymm15, %ymm13, %ymm13
 vpxor %ymm12, %ymm3, %ymm3
 vpxor %ymm3, %ymm0, %ymm0
@@ -553,7 +554,7 @@ vpxor %ymm3, %ymm0, %ymm0
 
 ##### step  60 : Fl[0] ^= (Fl[1] ^= Fq[1])
 
-vpcmpeqw %ymm0, %ymm15, %ymm15
+vpcmpeqd %ymm0, %ymm15, %ymm15
 vpor %ymm15, %ymm13, %ymm13
 vpxor %ymm8, %ymm1, %ymm1
 vpxor %ymm1, %ymm0, %ymm0
@@ -561,7 +562,7 @@ vpxor %ymm1, %ymm0, %ymm0
 
 ##### step  61 : Fl[0] ^= (Fl[2] ^= Fq[2])
 
-vpcmpeqw %ymm0, %ymm15, %ymm15
+vpcmpeqd %ymm0, %ymm15, %ymm15
 vpor %ymm15, %ymm13, %ymm13
 vpxor %ymm9, %ymm2, %ymm2
 vpxor %ymm2, %ymm0, %ymm0
@@ -569,7 +570,7 @@ vpxor %ymm2, %ymm0, %ymm0
 
 ##### step  62 : Fl[0] ^= (Fl[1] ^= Fq[0])
 
-vpcmpeqw %ymm0, %ymm15, %ymm15
+vpcmpeqd %ymm0, %ymm15, %ymm15
 vpor %ymm15, %ymm13, %ymm13
 vpxor %ymm7, %ymm1, %ymm1
 vpxor %ymm1, %ymm0, %ymm0
@@ -577,7 +578,7 @@ vpxor %ymm1, %ymm0, %ymm0
 
 ##### step  63 : Fl[0] ^= (Fl[7] ^= Fq[alpha + 6])
 
-vpcmpeqw %ymm0, %ymm15, %ymm15
+vpcmpeqd %ymm0, %ymm15, %ymm15
 vpor %ymm15, %ymm13, %ymm13
 vmovdqa 224(%rsi), %ymm14
 vpxor 192(%rdi, %rdx), %ymm14, %ymm14
@@ -587,7 +588,7 @@ vpxor %ymm14, %ymm0, %ymm0
 
 ##### step  64 : Fl[0] ^= (Fl[1] ^= Fq[15])
 
-vpcmpeqw %ymm0, %ymm15, %ymm15
+vpcmpeqd %ymm0, %ymm15, %ymm15
 vpor %ymm15, %ymm13, %ymm13
 vpxor 480(%rdi), %ymm1, %ymm1
 vpxor %ymm1, %ymm0, %ymm0
@@ -595,7 +596,7 @@ vpxor %ymm1, %ymm0, %ymm0
 
 ##### step  65 : Fl[0] ^= (Fl[2] ^= Fq[16])
 
-vpcmpeqw %ymm0, %ymm15, %ymm15
+vpcmpeqd %ymm0, %ymm15, %ymm15
 vpor %ymm15, %ymm13, %ymm13
 vpxor 512(%rdi), %ymm2, %ymm2
 vpxor %ymm2, %ymm0, %ymm0
@@ -603,7 +604,7 @@ vpxor %ymm2, %ymm0, %ymm0
 
 ##### step  66 : Fl[0] ^= (Fl[1] ^= Fq[0])
 
-vpcmpeqw %ymm0, %ymm15, %ymm15
+vpcmpeqd %ymm0, %ymm15, %ymm15
 vpor %ymm15, %ymm13, %ymm13
 vpxor %ymm7, %ymm1, %ymm1
 vpxor %ymm1, %ymm0, %ymm0
@@ -611,7 +612,7 @@ vpxor %ymm1, %ymm0, %ymm0
 
 ##### step  67 : Fl[0] ^= (Fl[3] ^= Fq[17])
 
-vpcmpeqw %ymm0, %ymm15, %ymm15
+vpcmpeqd %ymm0, %ymm15, %ymm15
 vpor %ymm15, %ymm13, %ymm13
 vpxor 544(%rdi), %ymm3, %ymm3
 vpxor %ymm3, %ymm0, %ymm0
@@ -619,7 +620,7 @@ vpxor %ymm3, %ymm0, %ymm0
 
 ##### step  68 : Fl[0] ^= (Fl[1] ^= Fq[1])
 
-vpcmpeqw %ymm0, %ymm15, %ymm15
+vpcmpeqd %ymm0, %ymm15, %ymm15
 vpor %ymm15, %ymm13, %ymm13
 vpxor %ymm8, %ymm1, %ymm1
 vpxor %ymm1, %ymm0, %ymm0
@@ -627,7 +628,7 @@ vpxor %ymm1, %ymm0, %ymm0
 
 ##### step  69 : Fl[0] ^= (Fl[2] ^= Fq[2])
 
-vpcmpeqw %ymm0, %ymm15, %ymm15
+vpcmpeqd %ymm0, %ymm15, %ymm15
 vpor %ymm15, %ymm13, %ymm13
 vpxor %ymm9, %ymm2, %ymm2
 vpxor %ymm2, %ymm0, %ymm0
@@ -635,7 +636,7 @@ vpxor %ymm2, %ymm0, %ymm0
 
 ##### step  70 : Fl[0] ^= (Fl[1] ^= Fq[0])
 
-vpcmpeqw %ymm0, %ymm15, %ymm15
+vpcmpeqd %ymm0, %ymm15, %ymm15
 vpor %ymm15, %ymm13, %ymm13
 vpxor %ymm7, %ymm1, %ymm1
 vpxor %ymm1, %ymm0, %ymm0
@@ -643,7 +644,7 @@ vpxor %ymm1, %ymm0, %ymm0
 
 ##### step  71 : Fl[0] ^= (Fl[4] ^= Fq[18])
 
-vpcmpeqw %ymm0, %ymm15, %ymm15
+vpcmpeqd %ymm0, %ymm15, %ymm15
 vpor %ymm15, %ymm13, %ymm13
 vpxor 576(%rdi), %ymm4, %ymm4
 vpxor %ymm4, %ymm0, %ymm0
@@ -651,7 +652,7 @@ vpxor %ymm4, %ymm0, %ymm0
 
 ##### step  72 : Fl[0] ^= (Fl[1] ^= Fq[3])
 
-vpcmpeqw %ymm0, %ymm15, %ymm15
+vpcmpeqd %ymm0, %ymm15, %ymm15
 vpor %ymm15, %ymm13, %ymm13
 vpxor %ymm10, %ymm1, %ymm1
 vpxor %ymm1, %ymm0, %ymm0
@@ -659,7 +660,7 @@ vpxor %ymm1, %ymm0, %ymm0
 
 ##### step  73 : Fl[0] ^= (Fl[2] ^= Fq[4])
 
-vpcmpeqw %ymm0, %ymm15, %ymm15
+vpcmpeqd %ymm0, %ymm15, %ymm15
 vpor %ymm15, %ymm13, %ymm13
 vpxor %ymm11, %ymm2, %ymm2
 vpxor %ymm2, %ymm0, %ymm0
@@ -667,7 +668,7 @@ vpxor %ymm2, %ymm0, %ymm0
 
 ##### step  74 : Fl[0] ^= (Fl[1] ^= Fq[0])
 
-vpcmpeqw %ymm0, %ymm15, %ymm15
+vpcmpeqd %ymm0, %ymm15, %ymm15
 vpor %ymm15, %ymm13, %ymm13
 vpxor %ymm7, %ymm1, %ymm1
 vpxor %ymm1, %ymm0, %ymm0
@@ -675,7 +676,7 @@ vpxor %ymm1, %ymm0, %ymm0
 
 ##### step  75 : Fl[0] ^= (Fl[3] ^= Fq[5])
 
-vpcmpeqw %ymm0, %ymm15, %ymm15
+vpcmpeqd %ymm0, %ymm15, %ymm15
 vpor %ymm15, %ymm13, %ymm13
 vpxor %ymm12, %ymm3, %ymm3
 vpxor %ymm3, %ymm0, %ymm0
@@ -683,7 +684,7 @@ vpxor %ymm3, %ymm0, %ymm0
 
 ##### step  76 : Fl[0] ^= (Fl[1] ^= Fq[1])
 
-vpcmpeqw %ymm0, %ymm15, %ymm15
+vpcmpeqd %ymm0, %ymm15, %ymm15
 vpor %ymm15, %ymm13, %ymm13
 vpxor %ymm8, %ymm1, %ymm1
 vpxor %ymm1, %ymm0, %ymm0
@@ -691,7 +692,7 @@ vpxor %ymm1, %ymm0, %ymm0
 
 ##### step  77 : Fl[0] ^= (Fl[2] ^= Fq[2])
 
-vpcmpeqw %ymm0, %ymm15, %ymm15
+vpcmpeqd %ymm0, %ymm15, %ymm15
 vpor %ymm15, %ymm13, %ymm13
 vpxor %ymm9, %ymm2, %ymm2
 vpxor %ymm2, %ymm0, %ymm0
@@ -699,7 +700,7 @@ vpxor %ymm2, %ymm0, %ymm0
 
 ##### step  78 : Fl[0] ^= (Fl[1] ^= Fq[0])
 
-vpcmpeqw %ymm0, %ymm15, %ymm15
+vpcmpeqd %ymm0, %ymm15, %ymm15
 vpor %ymm15, %ymm13, %ymm13
 vpxor %ymm7, %ymm1, %ymm1
 vpxor %ymm1, %ymm0, %ymm0
@@ -707,7 +708,7 @@ vpxor %ymm1, %ymm0, %ymm0
 
 ##### step  79 : Fl[0] ^= (Fl[5] ^= Fq[19])
 
-vpcmpeqw %ymm0, %ymm15, %ymm15
+vpcmpeqd %ymm0, %ymm15, %ymm15
 vpor %ymm15, %ymm13, %ymm13
 vpxor 608(%rdi), %ymm5, %ymm5
 vpxor %ymm5, %ymm0, %ymm0
@@ -715,7 +716,7 @@ vpxor %ymm5, %ymm0, %ymm0
 
 ##### step  80 : Fl[0] ^= (Fl[1] ^= Fq[6])
 
-vpcmpeqw %ymm0, %ymm15, %ymm15
+vpcmpeqd %ymm0, %ymm15, %ymm15
 vpor %ymm15, %ymm13, %ymm13
 vpxor 192(%rdi), %ymm1, %ymm1
 vpxor %ymm1, %ymm0, %ymm0
@@ -723,7 +724,7 @@ vpxor %ymm1, %ymm0, %ymm0
 
 ##### step  81 : Fl[0] ^= (Fl[2] ^= Fq[7])
 
-vpcmpeqw %ymm0, %ymm15, %ymm15
+vpcmpeqd %ymm0, %ymm15, %ymm15
 vpor %ymm15, %ymm13, %ymm13
 vpxor 224(%rdi), %ymm2, %ymm2
 vpxor %ymm2, %ymm0, %ymm0
@@ -731,7 +732,7 @@ vpxor %ymm2, %ymm0, %ymm0
 
 ##### step  82 : Fl[0] ^= (Fl[1] ^= Fq[0])
 
-vpcmpeqw %ymm0, %ymm15, %ymm15
+vpcmpeqd %ymm0, %ymm15, %ymm15
 vpor %ymm15, %ymm13, %ymm13
 vpxor %ymm7, %ymm1, %ymm1
 vpxor %ymm1, %ymm0, %ymm0
@@ -739,7 +740,7 @@ vpxor %ymm1, %ymm0, %ymm0
 
 ##### step  83 : Fl[0] ^= (Fl[3] ^= Fq[8])
 
-vpcmpeqw %ymm0, %ymm15, %ymm15
+vpcmpeqd %ymm0, %ymm15, %ymm15
 vpor %ymm15, %ymm13, %ymm13
 vpxor 256(%rdi), %ymm3, %ymm3
 vpxor %ymm3, %ymm0, %ymm0
@@ -747,7 +748,7 @@ vpxor %ymm3, %ymm0, %ymm0
 
 ##### step  84 : Fl[0] ^= (Fl[1] ^= Fq[1])
 
-vpcmpeqw %ymm0, %ymm15, %ymm15
+vpcmpeqd %ymm0, %ymm15, %ymm15
 vpor %ymm15, %ymm13, %ymm13
 vpxor %ymm8, %ymm1, %ymm1
 vpxor %ymm1, %ymm0, %ymm0
@@ -755,7 +756,7 @@ vpxor %ymm1, %ymm0, %ymm0
 
 ##### step  85 : Fl[0] ^= (Fl[2] ^= Fq[2])
 
-vpcmpeqw %ymm0, %ymm15, %ymm15
+vpcmpeqd %ymm0, %ymm15, %ymm15
 vpor %ymm15, %ymm13, %ymm13
 vpxor %ymm9, %ymm2, %ymm2
 vpxor %ymm2, %ymm0, %ymm0
@@ -763,7 +764,7 @@ vpxor %ymm2, %ymm0, %ymm0
 
 ##### step  86 : Fl[0] ^= (Fl[1] ^= Fq[0])
 
-vpcmpeqw %ymm0, %ymm15, %ymm15
+vpcmpeqd %ymm0, %ymm15, %ymm15
 vpor %ymm15, %ymm13, %ymm13
 vpxor %ymm7, %ymm1, %ymm1
 vpxor %ymm1, %ymm0, %ymm0
@@ -771,7 +772,7 @@ vpxor %ymm1, %ymm0, %ymm0
 
 ##### step  87 : Fl[0] ^= (Fl[4] ^= Fq[9])
 
-vpcmpeqw %ymm0, %ymm15, %ymm15
+vpcmpeqd %ymm0, %ymm15, %ymm15
 vpor %ymm15, %ymm13, %ymm13
 vpxor 288(%rdi), %ymm4, %ymm4
 vpxor %ymm4, %ymm0, %ymm0
@@ -779,7 +780,7 @@ vpxor %ymm4, %ymm0, %ymm0
 
 ##### step  88 : Fl[0] ^= (Fl[1] ^= Fq[3])
 
-vpcmpeqw %ymm0, %ymm15, %ymm15
+vpcmpeqd %ymm0, %ymm15, %ymm15
 vpor %ymm15, %ymm13, %ymm13
 vpxor %ymm10, %ymm1, %ymm1
 vpxor %ymm1, %ymm0, %ymm0
@@ -787,7 +788,7 @@ vpxor %ymm1, %ymm0, %ymm0
 
 ##### step  89 : Fl[0] ^= (Fl[2] ^= Fq[4])
 
-vpcmpeqw %ymm0, %ymm15, %ymm15
+vpcmpeqd %ymm0, %ymm15, %ymm15
 vpor %ymm15, %ymm13, %ymm13
 vpxor %ymm11, %ymm2, %ymm2
 vpxor %ymm2, %ymm0, %ymm0
@@ -795,7 +796,7 @@ vpxor %ymm2, %ymm0, %ymm0
 
 ##### step  90 : Fl[0] ^= (Fl[1] ^= Fq[0])
 
-vpcmpeqw %ymm0, %ymm15, %ymm15
+vpcmpeqd %ymm0, %ymm15, %ymm15
 vpor %ymm15, %ymm13, %ymm13
 vpxor %ymm7, %ymm1, %ymm1
 vpxor %ymm1, %ymm0, %ymm0
@@ -803,7 +804,7 @@ vpxor %ymm1, %ymm0, %ymm0
 
 ##### step  91 : Fl[0] ^= (Fl[3] ^= Fq[5])
 
-vpcmpeqw %ymm0, %ymm15, %ymm15
+vpcmpeqd %ymm0, %ymm15, %ymm15
 vpor %ymm15, %ymm13, %ymm13
 vpxor %ymm12, %ymm3, %ymm3
 vpxor %ymm3, %ymm0, %ymm0
@@ -811,7 +812,7 @@ vpxor %ymm3, %ymm0, %ymm0
 
 ##### step  92 : Fl[0] ^= (Fl[1] ^= Fq[1])
 
-vpcmpeqw %ymm0, %ymm15, %ymm15
+vpcmpeqd %ymm0, %ymm15, %ymm15
 vpor %ymm15, %ymm13, %ymm13
 vpxor %ymm8, %ymm1, %ymm1
 vpxor %ymm1, %ymm0, %ymm0
@@ -819,7 +820,7 @@ vpxor %ymm1, %ymm0, %ymm0
 
 ##### step  93 : Fl[0] ^= (Fl[2] ^= Fq[2])
 
-vpcmpeqw %ymm0, %ymm15, %ymm15
+vpcmpeqd %ymm0, %ymm15, %ymm15
 vpor %ymm15, %ymm13, %ymm13
 vpxor %ymm9, %ymm2, %ymm2
 vpxor %ymm2, %ymm0, %ymm0
@@ -827,7 +828,7 @@ vpxor %ymm2, %ymm0, %ymm0
 
 ##### step  94 : Fl[0] ^= (Fl[1] ^= Fq[0])
 
-vpcmpeqw %ymm0, %ymm15, %ymm15
+vpcmpeqd %ymm0, %ymm15, %ymm15
 vpor %ymm15, %ymm13, %ymm13
 vpxor %ymm7, %ymm1, %ymm1
 vpxor %ymm1, %ymm0, %ymm0
@@ -835,7 +836,7 @@ vpxor %ymm1, %ymm0, %ymm0
 
 ##### step  95 : Fl[0] ^= (Fl[6] ^= Fq[20])
 
-vpcmpeqw %ymm0, %ymm15, %ymm15
+vpcmpeqd %ymm0, %ymm15, %ymm15
 vpor %ymm15, %ymm13, %ymm13
 vpxor 640(%rdi), %ymm6, %ymm6
 vpxor %ymm6, %ymm0, %ymm0
@@ -843,7 +844,7 @@ vpxor %ymm6, %ymm0, %ymm0
 
 ##### step  96 : Fl[0] ^= (Fl[1] ^= Fq[10])
 
-vpcmpeqw %ymm0, %ymm15, %ymm15
+vpcmpeqd %ymm0, %ymm15, %ymm15
 vpor %ymm15, %ymm13, %ymm13
 vpxor 320(%rdi), %ymm1, %ymm1
 vpxor %ymm1, %ymm0, %ymm0
@@ -851,7 +852,7 @@ vpxor %ymm1, %ymm0, %ymm0
 
 ##### step  97 : Fl[0] ^= (Fl[2] ^= Fq[11])
 
-vpcmpeqw %ymm0, %ymm15, %ymm15
+vpcmpeqd %ymm0, %ymm15, %ymm15
 vpor %ymm15, %ymm13, %ymm13
 vpxor 352(%rdi), %ymm2, %ymm2
 vpxor %ymm2, %ymm0, %ymm0
@@ -859,7 +860,7 @@ vpxor %ymm2, %ymm0, %ymm0
 
 ##### step  98 : Fl[0] ^= (Fl[1] ^= Fq[0])
 
-vpcmpeqw %ymm0, %ymm15, %ymm15
+vpcmpeqd %ymm0, %ymm15, %ymm15
 vpor %ymm15, %ymm13, %ymm13
 vpxor %ymm7, %ymm1, %ymm1
 vpxor %ymm1, %ymm0, %ymm0
@@ -867,7 +868,7 @@ vpxor %ymm1, %ymm0, %ymm0
 
 ##### step  99 : Fl[0] ^= (Fl[3] ^= Fq[12])
 
-vpcmpeqw %ymm0, %ymm15, %ymm15
+vpcmpeqd %ymm0, %ymm15, %ymm15
 vpor %ymm15, %ymm13, %ymm13
 vpxor 384(%rdi), %ymm3, %ymm3
 vpxor %ymm3, %ymm0, %ymm0
@@ -875,7 +876,7 @@ vpxor %ymm3, %ymm0, %ymm0
 
 ##### step 100 : Fl[0] ^= (Fl[1] ^= Fq[1])
 
-vpcmpeqw %ymm0, %ymm15, %ymm15
+vpcmpeqd %ymm0, %ymm15, %ymm15
 vpor %ymm15, %ymm13, %ymm13
 vpxor %ymm8, %ymm1, %ymm1
 vpxor %ymm1, %ymm0, %ymm0
@@ -883,7 +884,7 @@ vpxor %ymm1, %ymm0, %ymm0
 
 ##### step 101 : Fl[0] ^= (Fl[2] ^= Fq[2])
 
-vpcmpeqw %ymm0, %ymm15, %ymm15
+vpcmpeqd %ymm0, %ymm15, %ymm15
 vpor %ymm15, %ymm13, %ymm13
 vpxor %ymm9, %ymm2, %ymm2
 vpxor %ymm2, %ymm0, %ymm0
@@ -891,7 +892,7 @@ vpxor %ymm2, %ymm0, %ymm0
 
 ##### step 102 : Fl[0] ^= (Fl[1] ^= Fq[0])
 
-vpcmpeqw %ymm0, %ymm15, %ymm15
+vpcmpeqd %ymm0, %ymm15, %ymm15
 vpor %ymm15, %ymm13, %ymm13
 vpxor %ymm7, %ymm1, %ymm1
 vpxor %ymm1, %ymm0, %ymm0
@@ -899,7 +900,7 @@ vpxor %ymm1, %ymm0, %ymm0
 
 ##### step 103 : Fl[0] ^= (Fl[4] ^= Fq[13])
 
-vpcmpeqw %ymm0, %ymm15, %ymm15
+vpcmpeqd %ymm0, %ymm15, %ymm15
 vpor %ymm15, %ymm13, %ymm13
 vpxor 416(%rdi), %ymm4, %ymm4
 vpxor %ymm4, %ymm0, %ymm0
@@ -907,7 +908,7 @@ vpxor %ymm4, %ymm0, %ymm0
 
 ##### step 104 : Fl[0] ^= (Fl[1] ^= Fq[3])
 
-vpcmpeqw %ymm0, %ymm15, %ymm15
+vpcmpeqd %ymm0, %ymm15, %ymm15
 vpor %ymm15, %ymm13, %ymm13
 vpxor %ymm10, %ymm1, %ymm1
 vpxor %ymm1, %ymm0, %ymm0
@@ -915,7 +916,7 @@ vpxor %ymm1, %ymm0, %ymm0
 
 ##### step 105 : Fl[0] ^= (Fl[2] ^= Fq[4])
 
-vpcmpeqw %ymm0, %ymm15, %ymm15
+vpcmpeqd %ymm0, %ymm15, %ymm15
 vpor %ymm15, %ymm13, %ymm13
 vpxor %ymm11, %ymm2, %ymm2
 vpxor %ymm2, %ymm0, %ymm0
@@ -923,7 +924,7 @@ vpxor %ymm2, %ymm0, %ymm0
 
 ##### step 106 : Fl[0] ^= (Fl[1] ^= Fq[0])
 
-vpcmpeqw %ymm0, %ymm15, %ymm15
+vpcmpeqd %ymm0, %ymm15, %ymm15
 vpor %ymm15, %ymm13, %ymm13
 vpxor %ymm7, %ymm1, %ymm1
 vpxor %ymm1, %ymm0, %ymm0
@@ -931,7 +932,7 @@ vpxor %ymm1, %ymm0, %ymm0
 
 ##### step 107 : Fl[0] ^= (Fl[3] ^= Fq[5])
 
-vpcmpeqw %ymm0, %ymm15, %ymm15
+vpcmpeqd %ymm0, %ymm15, %ymm15
 vpor %ymm15, %ymm13, %ymm13
 vpxor %ymm12, %ymm3, %ymm3
 vpxor %ymm3, %ymm0, %ymm0
@@ -939,7 +940,7 @@ vpxor %ymm3, %ymm0, %ymm0
 
 ##### step 108 : Fl[0] ^= (Fl[1] ^= Fq[1])
 
-vpcmpeqw %ymm0, %ymm15, %ymm15
+vpcmpeqd %ymm0, %ymm15, %ymm15
 vpor %ymm15, %ymm13, %ymm13
 vpxor %ymm8, %ymm1, %ymm1
 vpxor %ymm1, %ymm0, %ymm0
@@ -947,7 +948,7 @@ vpxor %ymm1, %ymm0, %ymm0
 
 ##### step 109 : Fl[0] ^= (Fl[2] ^= Fq[2])
 
-vpcmpeqw %ymm0, %ymm15, %ymm15
+vpcmpeqd %ymm0, %ymm15, %ymm15
 vpor %ymm15, %ymm13, %ymm13
 vpxor %ymm9, %ymm2, %ymm2
 vpxor %ymm2, %ymm0, %ymm0
@@ -955,7 +956,7 @@ vpxor %ymm2, %ymm0, %ymm0
 
 ##### step 110 : Fl[0] ^= (Fl[1] ^= Fq[0])
 
-vpcmpeqw %ymm0, %ymm15, %ymm15
+vpcmpeqd %ymm0, %ymm15, %ymm15
 vpor %ymm15, %ymm13, %ymm13
 vpxor %ymm7, %ymm1, %ymm1
 vpxor %ymm1, %ymm0, %ymm0
@@ -963,7 +964,7 @@ vpxor %ymm1, %ymm0, %ymm0
 
 ##### step 111 : Fl[0] ^= (Fl[5] ^= Fq[14])
 
-vpcmpeqw %ymm0, %ymm15, %ymm15
+vpcmpeqd %ymm0, %ymm15, %ymm15
 vpor %ymm15, %ymm13, %ymm13
 vpxor 448(%rdi), %ymm5, %ymm5
 vpxor %ymm5, %ymm0, %ymm0
@@ -971,7 +972,7 @@ vpxor %ymm5, %ymm0, %ymm0
 
 ##### step 112 : Fl[0] ^= (Fl[1] ^= Fq[6])
 
-vpcmpeqw %ymm0, %ymm15, %ymm15
+vpcmpeqd %ymm0, %ymm15, %ymm15
 vpor %ymm15, %ymm13, %ymm13
 vpxor 192(%rdi), %ymm1, %ymm1
 vpxor %ymm1, %ymm0, %ymm0
@@ -979,7 +980,7 @@ vpxor %ymm1, %ymm0, %ymm0
 
 ##### step 113 : Fl[0] ^= (Fl[2] ^= Fq[7])
 
-vpcmpeqw %ymm0, %ymm15, %ymm15
+vpcmpeqd %ymm0, %ymm15, %ymm15
 vpor %ymm15, %ymm13, %ymm13
 vpxor 224(%rdi), %ymm2, %ymm2
 vpxor %ymm2, %ymm0, %ymm0
@@ -987,7 +988,7 @@ vpxor %ymm2, %ymm0, %ymm0
 
 ##### step 114 : Fl[0] ^= (Fl[1] ^= Fq[0])
 
-vpcmpeqw %ymm0, %ymm15, %ymm15
+vpcmpeqd %ymm0, %ymm15, %ymm15
 vpor %ymm15, %ymm13, %ymm13
 vpxor %ymm7, %ymm1, %ymm1
 vpxor %ymm1, %ymm0, %ymm0
@@ -995,7 +996,7 @@ vpxor %ymm1, %ymm0, %ymm0
 
 ##### step 115 : Fl[0] ^= (Fl[3] ^= Fq[8])
 
-vpcmpeqw %ymm0, %ymm15, %ymm15
+vpcmpeqd %ymm0, %ymm15, %ymm15
 vpor %ymm15, %ymm13, %ymm13
 vpxor 256(%rdi), %ymm3, %ymm3
 vpxor %ymm3, %ymm0, %ymm0
@@ -1003,7 +1004,7 @@ vpxor %ymm3, %ymm0, %ymm0
 
 ##### step 116 : Fl[0] ^= (Fl[1] ^= Fq[1])
 
-vpcmpeqw %ymm0, %ymm15, %ymm15
+vpcmpeqd %ymm0, %ymm15, %ymm15
 vpor %ymm15, %ymm13, %ymm13
 vpxor %ymm8, %ymm1, %ymm1
 vpxor %ymm1, %ymm0, %ymm0
@@ -1011,7 +1012,7 @@ vpxor %ymm1, %ymm0, %ymm0
 
 ##### step 117 : Fl[0] ^= (Fl[2] ^= Fq[2])
 
-vpcmpeqw %ymm0, %ymm15, %ymm15
+vpcmpeqd %ymm0, %ymm15, %ymm15
 vpor %ymm15, %ymm13, %ymm13
 vpxor %ymm9, %ymm2, %ymm2
 vpxor %ymm2, %ymm0, %ymm0
@@ -1019,7 +1020,7 @@ vpxor %ymm2, %ymm0, %ymm0
 
 ##### step 118 : Fl[0] ^= (Fl[1] ^= Fq[0])
 
-vpcmpeqw %ymm0, %ymm15, %ymm15
+vpcmpeqd %ymm0, %ymm15, %ymm15
 vpor %ymm15, %ymm13, %ymm13
 vpxor %ymm7, %ymm1, %ymm1
 vpxor %ymm1, %ymm0, %ymm0
@@ -1027,7 +1028,7 @@ vpxor %ymm1, %ymm0, %ymm0
 
 ##### step 119 : Fl[0] ^= (Fl[4] ^= Fq[9])
 
-vpcmpeqw %ymm0, %ymm15, %ymm15
+vpcmpeqd %ymm0, %ymm15, %ymm15
 vpor %ymm15, %ymm13, %ymm13
 vpxor 288(%rdi), %ymm4, %ymm4
 vpxor %ymm4, %ymm0, %ymm0
@@ -1035,7 +1036,7 @@ vpxor %ymm4, %ymm0, %ymm0
 
 ##### step 120 : Fl[0] ^= (Fl[1] ^= Fq[3])
 
-vpcmpeqw %ymm0, %ymm15, %ymm15
+vpcmpeqd %ymm0, %ymm15, %ymm15
 vpor %ymm15, %ymm13, %ymm13
 vpxor %ymm10, %ymm1, %ymm1
 vpxor %ymm1, %ymm0, %ymm0
@@ -1043,7 +1044,7 @@ vpxor %ymm1, %ymm0, %ymm0
 
 ##### step 121 : Fl[0] ^= (Fl[2] ^= Fq[4])
 
-vpcmpeqw %ymm0, %ymm15, %ymm15
+vpcmpeqd %ymm0, %ymm15, %ymm15
 vpor %ymm15, %ymm13, %ymm13
 vpxor %ymm11, %ymm2, %ymm2
 vpxor %ymm2, %ymm0, %ymm0
@@ -1051,7 +1052,7 @@ vpxor %ymm2, %ymm0, %ymm0
 
 ##### step 122 : Fl[0] ^= (Fl[1] ^= Fq[0])
 
-vpcmpeqw %ymm0, %ymm15, %ymm15
+vpcmpeqd %ymm0, %ymm15, %ymm15
 vpor %ymm15, %ymm13, %ymm13
 vpxor %ymm7, %ymm1, %ymm1
 vpxor %ymm1, %ymm0, %ymm0
@@ -1059,7 +1060,7 @@ vpxor %ymm1, %ymm0, %ymm0
 
 ##### step 123 : Fl[0] ^= (Fl[3] ^= Fq[5])
 
-vpcmpeqw %ymm0, %ymm15, %ymm15
+vpcmpeqd %ymm0, %ymm15, %ymm15
 vpor %ymm15, %ymm13, %ymm13
 vpxor %ymm12, %ymm3, %ymm3
 vpxor %ymm3, %ymm0, %ymm0
@@ -1067,7 +1068,7 @@ vpxor %ymm3, %ymm0, %ymm0
 
 ##### step 124 : Fl[0] ^= (Fl[1] ^= Fq[1])
 
-vpcmpeqw %ymm0, %ymm15, %ymm15
+vpcmpeqd %ymm0, %ymm15, %ymm15
 vpor %ymm15, %ymm13, %ymm13
 vpxor %ymm8, %ymm1, %ymm1
 vpxor %ymm1, %ymm0, %ymm0
@@ -1075,7 +1076,7 @@ vpxor %ymm1, %ymm0, %ymm0
 
 ##### step 125 : Fl[0] ^= (Fl[2] ^= Fq[2])
 
-vpcmpeqw %ymm0, %ymm15, %ymm15
+vpcmpeqd %ymm0, %ymm15, %ymm15
 vpor %ymm15, %ymm13, %ymm13
 vpxor %ymm9, %ymm2, %ymm2
 vpxor %ymm2, %ymm0, %ymm0
@@ -1083,7 +1084,7 @@ vpxor %ymm2, %ymm0, %ymm0
 
 ##### step 126 : Fl[0] ^= (Fl[1] ^= Fq[0])
 
-vpcmpeqw %ymm0, %ymm15, %ymm15
+vpcmpeqd %ymm0, %ymm15, %ymm15
 vpor %ymm15, %ymm13, %ymm13
 vpxor %ymm7, %ymm1, %ymm1
 vpxor %ymm1, %ymm0, %ymm0
@@ -1091,7 +1092,7 @@ vpxor %ymm1, %ymm0, %ymm0
 
 ##### step 127 : Fl[0] ^= (Fl[8] ^= Fq[alpha + 7])
 
-vpcmpeqw %ymm0, %ymm15, %ymm15
+vpcmpeqd %ymm0, %ymm15, %ymm15
 vpor %ymm15, %ymm13, %ymm13
 vmovdqa 256(%rsi), %ymm14
 vpxor 224(%rdi, %rdx), %ymm14, %ymm14
@@ -1101,7 +1102,7 @@ vpxor %ymm14, %ymm0, %ymm0
 
 ##### step 128 : Fl[0] ^= (Fl[1] ^= Fq[21])
 
-vpcmpeqw %ymm0, %ymm15, %ymm15
+vpcmpeqd %ymm0, %ymm15, %ymm15
 vpor %ymm15, %ymm13, %ymm13
 vpxor 672(%rdi), %ymm1, %ymm1
 vpxor %ymm1, %ymm0, %ymm0
@@ -1109,7 +1110,7 @@ vpxor %ymm1, %ymm0, %ymm0
 
 ##### step 129 : Fl[0] ^= (Fl[2] ^= Fq[22])
 
-vpcmpeqw %ymm0, %ymm15, %ymm15
+vpcmpeqd %ymm0, %ymm15, %ymm15
 vpor %ymm15, %ymm13, %ymm13
 vpxor 704(%rdi), %ymm2, %ymm2
 vpxor %ymm2, %ymm0, %ymm0
@@ -1117,7 +1118,7 @@ vpxor %ymm2, %ymm0, %ymm0
 
 ##### step 130 : Fl[0] ^= (Fl[1] ^= Fq[0])
 
-vpcmpeqw %ymm0, %ymm15, %ymm15
+vpcmpeqd %ymm0, %ymm15, %ymm15
 vpor %ymm15, %ymm13, %ymm13
 vpxor %ymm7, %ymm1, %ymm1
 vpxor %ymm1, %ymm0, %ymm0
@@ -1125,7 +1126,7 @@ vpxor %ymm1, %ymm0, %ymm0
 
 ##### step 131 : Fl[0] ^= (Fl[3] ^= Fq[23])
 
-vpcmpeqw %ymm0, %ymm15, %ymm15
+vpcmpeqd %ymm0, %ymm15, %ymm15
 vpor %ymm15, %ymm13, %ymm13
 vpxor 736(%rdi), %ymm3, %ymm3
 vpxor %ymm3, %ymm0, %ymm0
@@ -1133,7 +1134,7 @@ vpxor %ymm3, %ymm0, %ymm0
 
 ##### step 132 : Fl[0] ^= (Fl[1] ^= Fq[1])
 
-vpcmpeqw %ymm0, %ymm15, %ymm15
+vpcmpeqd %ymm0, %ymm15, %ymm15
 vpor %ymm15, %ymm13, %ymm13
 vpxor %ymm8, %ymm1, %ymm1
 vpxor %ymm1, %ymm0, %ymm0
@@ -1141,7 +1142,7 @@ vpxor %ymm1, %ymm0, %ymm0
 
 ##### step 133 : Fl[0] ^= (Fl[2] ^= Fq[2])
 
-vpcmpeqw %ymm0, %ymm15, %ymm15
+vpcmpeqd %ymm0, %ymm15, %ymm15
 vpor %ymm15, %ymm13, %ymm13
 vpxor %ymm9, %ymm2, %ymm2
 vpxor %ymm2, %ymm0, %ymm0
@@ -1149,7 +1150,7 @@ vpxor %ymm2, %ymm0, %ymm0
 
 ##### step 134 : Fl[0] ^= (Fl[1] ^= Fq[0])
 
-vpcmpeqw %ymm0, %ymm15, %ymm15
+vpcmpeqd %ymm0, %ymm15, %ymm15
 vpor %ymm15, %ymm13, %ymm13
 vpxor %ymm7, %ymm1, %ymm1
 vpxor %ymm1, %ymm0, %ymm0
@@ -1157,7 +1158,7 @@ vpxor %ymm1, %ymm0, %ymm0
 
 ##### step 135 : Fl[0] ^= (Fl[4] ^= Fq[24])
 
-vpcmpeqw %ymm0, %ymm15, %ymm15
+vpcmpeqd %ymm0, %ymm15, %ymm15
 vpor %ymm15, %ymm13, %ymm13
 vpxor 768(%rdi), %ymm4, %ymm4
 vpxor %ymm4, %ymm0, %ymm0
@@ -1165,7 +1166,7 @@ vpxor %ymm4, %ymm0, %ymm0
 
 ##### step 136 : Fl[0] ^= (Fl[1] ^= Fq[3])
 
-vpcmpeqw %ymm0, %ymm15, %ymm15
+vpcmpeqd %ymm0, %ymm15, %ymm15
 vpor %ymm15, %ymm13, %ymm13
 vpxor %ymm10, %ymm1, %ymm1
 vpxor %ymm1, %ymm0, %ymm0
@@ -1173,7 +1174,7 @@ vpxor %ymm1, %ymm0, %ymm0
 
 ##### step 137 : Fl[0] ^= (Fl[2] ^= Fq[4])
 
-vpcmpeqw %ymm0, %ymm15, %ymm15
+vpcmpeqd %ymm0, %ymm15, %ymm15
 vpor %ymm15, %ymm13, %ymm13
 vpxor %ymm11, %ymm2, %ymm2
 vpxor %ymm2, %ymm0, %ymm0
@@ -1181,7 +1182,7 @@ vpxor %ymm2, %ymm0, %ymm0
 
 ##### step 138 : Fl[0] ^= (Fl[1] ^= Fq[0])
 
-vpcmpeqw %ymm0, %ymm15, %ymm15
+vpcmpeqd %ymm0, %ymm15, %ymm15
 vpor %ymm15, %ymm13, %ymm13
 vpxor %ymm7, %ymm1, %ymm1
 vpxor %ymm1, %ymm0, %ymm0
@@ -1189,7 +1190,7 @@ vpxor %ymm1, %ymm0, %ymm0
 
 ##### step 139 : Fl[0] ^= (Fl[3] ^= Fq[5])
 
-vpcmpeqw %ymm0, %ymm15, %ymm15
+vpcmpeqd %ymm0, %ymm15, %ymm15
 vpor %ymm15, %ymm13, %ymm13
 vpxor %ymm12, %ymm3, %ymm3
 vpxor %ymm3, %ymm0, %ymm0
@@ -1197,7 +1198,7 @@ vpxor %ymm3, %ymm0, %ymm0
 
 ##### step 140 : Fl[0] ^= (Fl[1] ^= Fq[1])
 
-vpcmpeqw %ymm0, %ymm15, %ymm15
+vpcmpeqd %ymm0, %ymm15, %ymm15
 vpor %ymm15, %ymm13, %ymm13
 vpxor %ymm8, %ymm1, %ymm1
 vpxor %ymm1, %ymm0, %ymm0
@@ -1205,7 +1206,7 @@ vpxor %ymm1, %ymm0, %ymm0
 
 ##### step 141 : Fl[0] ^= (Fl[2] ^= Fq[2])
 
-vpcmpeqw %ymm0, %ymm15, %ymm15
+vpcmpeqd %ymm0, %ymm15, %ymm15
 vpor %ymm15, %ymm13, %ymm13
 vpxor %ymm9, %ymm2, %ymm2
 vpxor %ymm2, %ymm0, %ymm0
@@ -1213,7 +1214,7 @@ vpxor %ymm2, %ymm0, %ymm0
 
 ##### step 142 : Fl[0] ^= (Fl[1] ^= Fq[0])
 
-vpcmpeqw %ymm0, %ymm15, %ymm15
+vpcmpeqd %ymm0, %ymm15, %ymm15
 vpor %ymm15, %ymm13, %ymm13
 vpxor %ymm7, %ymm1, %ymm1
 vpxor %ymm1, %ymm0, %ymm0
@@ -1221,7 +1222,7 @@ vpxor %ymm1, %ymm0, %ymm0
 
 ##### step 143 : Fl[0] ^= (Fl[5] ^= Fq[25])
 
-vpcmpeqw %ymm0, %ymm15, %ymm15
+vpcmpeqd %ymm0, %ymm15, %ymm15
 vpor %ymm15, %ymm13, %ymm13
 vpxor 800(%rdi), %ymm5, %ymm5
 vpxor %ymm5, %ymm0, %ymm0
@@ -1229,7 +1230,7 @@ vpxor %ymm5, %ymm0, %ymm0
 
 ##### step 144 : Fl[0] ^= (Fl[1] ^= Fq[6])
 
-vpcmpeqw %ymm0, %ymm15, %ymm15
+vpcmpeqd %ymm0, %ymm15, %ymm15
 vpor %ymm15, %ymm13, %ymm13
 vpxor 192(%rdi), %ymm1, %ymm1
 vpxor %ymm1, %ymm0, %ymm0
@@ -1237,7 +1238,7 @@ vpxor %ymm1, %ymm0, %ymm0
 
 ##### step 145 : Fl[0] ^= (Fl[2] ^= Fq[7])
 
-vpcmpeqw %ymm0, %ymm15, %ymm15
+vpcmpeqd %ymm0, %ymm15, %ymm15
 vpor %ymm15, %ymm13, %ymm13
 vpxor 224(%rdi), %ymm2, %ymm2
 vpxor %ymm2, %ymm0, %ymm0
@@ -1245,7 +1246,7 @@ vpxor %ymm2, %ymm0, %ymm0
 
 ##### step 146 : Fl[0] ^= (Fl[1] ^= Fq[0])
 
-vpcmpeqw %ymm0, %ymm15, %ymm15
+vpcmpeqd %ymm0, %ymm15, %ymm15
 vpor %ymm15, %ymm13, %ymm13
 vpxor %ymm7, %ymm1, %ymm1
 vpxor %ymm1, %ymm0, %ymm0
@@ -1253,7 +1254,7 @@ vpxor %ymm1, %ymm0, %ymm0
 
 ##### step 147 : Fl[0] ^= (Fl[3] ^= Fq[8])
 
-vpcmpeqw %ymm0, %ymm15, %ymm15
+vpcmpeqd %ymm0, %ymm15, %ymm15
 vpor %ymm15, %ymm13, %ymm13
 vpxor 256(%rdi), %ymm3, %ymm3
 vpxor %ymm3, %ymm0, %ymm0
@@ -1261,7 +1262,7 @@ vpxor %ymm3, %ymm0, %ymm0
 
 ##### step 148 : Fl[0] ^= (Fl[1] ^= Fq[1])
 
-vpcmpeqw %ymm0, %ymm15, %ymm15
+vpcmpeqd %ymm0, %ymm15, %ymm15
 vpor %ymm15, %ymm13, %ymm13
 vpxor %ymm8, %ymm1, %ymm1
 vpxor %ymm1, %ymm0, %ymm0
@@ -1269,7 +1270,7 @@ vpxor %ymm1, %ymm0, %ymm0
 
 ##### step 149 : Fl[0] ^= (Fl[2] ^= Fq[2])
 
-vpcmpeqw %ymm0, %ymm15, %ymm15
+vpcmpeqd %ymm0, %ymm15, %ymm15
 vpor %ymm15, %ymm13, %ymm13
 vpxor %ymm9, %ymm2, %ymm2
 vpxor %ymm2, %ymm0, %ymm0
@@ -1277,7 +1278,7 @@ vpxor %ymm2, %ymm0, %ymm0
 
 ##### step 150 : Fl[0] ^= (Fl[1] ^= Fq[0])
 
-vpcmpeqw %ymm0, %ymm15, %ymm15
+vpcmpeqd %ymm0, %ymm15, %ymm15
 vpor %ymm15, %ymm13, %ymm13
 vpxor %ymm7, %ymm1, %ymm1
 vpxor %ymm1, %ymm0, %ymm0
@@ -1285,7 +1286,7 @@ vpxor %ymm1, %ymm0, %ymm0
 
 ##### step 151 : Fl[0] ^= (Fl[4] ^= Fq[9])
 
-vpcmpeqw %ymm0, %ymm15, %ymm15
+vpcmpeqd %ymm0, %ymm15, %ymm15
 vpor %ymm15, %ymm13, %ymm13
 vpxor 288(%rdi), %ymm4, %ymm4
 vpxor %ymm4, %ymm0, %ymm0
@@ -1293,7 +1294,7 @@ vpxor %ymm4, %ymm0, %ymm0
 
 ##### step 152 : Fl[0] ^= (Fl[1] ^= Fq[3])
 
-vpcmpeqw %ymm0, %ymm15, %ymm15
+vpcmpeqd %ymm0, %ymm15, %ymm15
 vpor %ymm15, %ymm13, %ymm13
 vpxor %ymm10, %ymm1, %ymm1
 vpxor %ymm1, %ymm0, %ymm0
@@ -1301,7 +1302,7 @@ vpxor %ymm1, %ymm0, %ymm0
 
 ##### step 153 : Fl[0] ^= (Fl[2] ^= Fq[4])
 
-vpcmpeqw %ymm0, %ymm15, %ymm15
+vpcmpeqd %ymm0, %ymm15, %ymm15
 vpor %ymm15, %ymm13, %ymm13
 vpxor %ymm11, %ymm2, %ymm2
 vpxor %ymm2, %ymm0, %ymm0
@@ -1309,7 +1310,7 @@ vpxor %ymm2, %ymm0, %ymm0
 
 ##### step 154 : Fl[0] ^= (Fl[1] ^= Fq[0])
 
-vpcmpeqw %ymm0, %ymm15, %ymm15
+vpcmpeqd %ymm0, %ymm15, %ymm15
 vpor %ymm15, %ymm13, %ymm13
 vpxor %ymm7, %ymm1, %ymm1
 vpxor %ymm1, %ymm0, %ymm0
@@ -1317,7 +1318,7 @@ vpxor %ymm1, %ymm0, %ymm0
 
 ##### step 155 : Fl[0] ^= (Fl[3] ^= Fq[5])
 
-vpcmpeqw %ymm0, %ymm15, %ymm15
+vpcmpeqd %ymm0, %ymm15, %ymm15
 vpor %ymm15, %ymm13, %ymm13
 vpxor %ymm12, %ymm3, %ymm3
 vpxor %ymm3, %ymm0, %ymm0
@@ -1325,7 +1326,7 @@ vpxor %ymm3, %ymm0, %ymm0
 
 ##### step 156 : Fl[0] ^= (Fl[1] ^= Fq[1])
 
-vpcmpeqw %ymm0, %ymm15, %ymm15
+vpcmpeqd %ymm0, %ymm15, %ymm15
 vpor %ymm15, %ymm13, %ymm13
 vpxor %ymm8, %ymm1, %ymm1
 vpxor %ymm1, %ymm0, %ymm0
@@ -1333,7 +1334,7 @@ vpxor %ymm1, %ymm0, %ymm0
 
 ##### step 157 : Fl[0] ^= (Fl[2] ^= Fq[2])
 
-vpcmpeqw %ymm0, %ymm15, %ymm15
+vpcmpeqd %ymm0, %ymm15, %ymm15
 vpor %ymm15, %ymm13, %ymm13
 vpxor %ymm9, %ymm2, %ymm2
 vpxor %ymm2, %ymm0, %ymm0
@@ -1341,7 +1342,7 @@ vpxor %ymm2, %ymm0, %ymm0
 
 ##### step 158 : Fl[0] ^= (Fl[1] ^= Fq[0])
 
-vpcmpeqw %ymm0, %ymm15, %ymm15
+vpcmpeqd %ymm0, %ymm15, %ymm15
 vpor %ymm15, %ymm13, %ymm13
 vpxor %ymm7, %ymm1, %ymm1
 vpxor %ymm1, %ymm0, %ymm0
@@ -1349,7 +1350,7 @@ vpxor %ymm1, %ymm0, %ymm0
 
 ##### step 159 : Fl[0] ^= (Fl[6] ^= Fq[26])
 
-vpcmpeqw %ymm0, %ymm15, %ymm15
+vpcmpeqd %ymm0, %ymm15, %ymm15
 vpor %ymm15, %ymm13, %ymm13
 vpxor 832(%rdi), %ymm6, %ymm6
 vpxor %ymm6, %ymm0, %ymm0
@@ -1357,7 +1358,7 @@ vpxor %ymm6, %ymm0, %ymm0
 
 ##### step 160 : Fl[0] ^= (Fl[1] ^= Fq[10])
 
-vpcmpeqw %ymm0, %ymm15, %ymm15
+vpcmpeqd %ymm0, %ymm15, %ymm15
 vpor %ymm15, %ymm13, %ymm13
 vpxor 320(%rdi), %ymm1, %ymm1
 vpxor %ymm1, %ymm0, %ymm0
@@ -1365,7 +1366,7 @@ vpxor %ymm1, %ymm0, %ymm0
 
 ##### step 161 : Fl[0] ^= (Fl[2] ^= Fq[11])
 
-vpcmpeqw %ymm0, %ymm15, %ymm15
+vpcmpeqd %ymm0, %ymm15, %ymm15
 vpor %ymm15, %ymm13, %ymm13
 vpxor 352(%rdi), %ymm2, %ymm2
 vpxor %ymm2, %ymm0, %ymm0
@@ -1373,7 +1374,7 @@ vpxor %ymm2, %ymm0, %ymm0
 
 ##### step 162 : Fl[0] ^= (Fl[1] ^= Fq[0])
 
-vpcmpeqw %ymm0, %ymm15, %ymm15
+vpcmpeqd %ymm0, %ymm15, %ymm15
 vpor %ymm15, %ymm13, %ymm13
 vpxor %ymm7, %ymm1, %ymm1
 vpxor %ymm1, %ymm0, %ymm0
@@ -1381,7 +1382,7 @@ vpxor %ymm1, %ymm0, %ymm0
 
 ##### step 163 : Fl[0] ^= (Fl[3] ^= Fq[12])
 
-vpcmpeqw %ymm0, %ymm15, %ymm15
+vpcmpeqd %ymm0, %ymm15, %ymm15
 vpor %ymm15, %ymm13, %ymm13
 vpxor 384(%rdi), %ymm3, %ymm3
 vpxor %ymm3, %ymm0, %ymm0
@@ -1389,7 +1390,7 @@ vpxor %ymm3, %ymm0, %ymm0
 
 ##### step 164 : Fl[0] ^= (Fl[1] ^= Fq[1])
 
-vpcmpeqw %ymm0, %ymm15, %ymm15
+vpcmpeqd %ymm0, %ymm15, %ymm15
 vpor %ymm15, %ymm13, %ymm13
 vpxor %ymm8, %ymm1, %ymm1
 vpxor %ymm1, %ymm0, %ymm0
@@ -1397,7 +1398,7 @@ vpxor %ymm1, %ymm0, %ymm0
 
 ##### step 165 : Fl[0] ^= (Fl[2] ^= Fq[2])
 
-vpcmpeqw %ymm0, %ymm15, %ymm15
+vpcmpeqd %ymm0, %ymm15, %ymm15
 vpor %ymm15, %ymm13, %ymm13
 vpxor %ymm9, %ymm2, %ymm2
 vpxor %ymm2, %ymm0, %ymm0
@@ -1405,7 +1406,7 @@ vpxor %ymm2, %ymm0, %ymm0
 
 ##### step 166 : Fl[0] ^= (Fl[1] ^= Fq[0])
 
-vpcmpeqw %ymm0, %ymm15, %ymm15
+vpcmpeqd %ymm0, %ymm15, %ymm15
 vpor %ymm15, %ymm13, %ymm13
 vpxor %ymm7, %ymm1, %ymm1
 vpxor %ymm1, %ymm0, %ymm0
@@ -1413,7 +1414,7 @@ vpxor %ymm1, %ymm0, %ymm0
 
 ##### step 167 : Fl[0] ^= (Fl[4] ^= Fq[13])
 
-vpcmpeqw %ymm0, %ymm15, %ymm15
+vpcmpeqd %ymm0, %ymm15, %ymm15
 vpor %ymm15, %ymm13, %ymm13
 vpxor 416(%rdi), %ymm4, %ymm4
 vpxor %ymm4, %ymm0, %ymm0
@@ -1421,7 +1422,7 @@ vpxor %ymm4, %ymm0, %ymm0
 
 ##### step 168 : Fl[0] ^= (Fl[1] ^= Fq[3])
 
-vpcmpeqw %ymm0, %ymm15, %ymm15
+vpcmpeqd %ymm0, %ymm15, %ymm15
 vpor %ymm15, %ymm13, %ymm13
 vpxor %ymm10, %ymm1, %ymm1
 vpxor %ymm1, %ymm0, %ymm0
@@ -1429,7 +1430,7 @@ vpxor %ymm1, %ymm0, %ymm0
 
 ##### step 169 : Fl[0] ^= (Fl[2] ^= Fq[4])
 
-vpcmpeqw %ymm0, %ymm15, %ymm15
+vpcmpeqd %ymm0, %ymm15, %ymm15
 vpor %ymm15, %ymm13, %ymm13
 vpxor %ymm11, %ymm2, %ymm2
 vpxor %ymm2, %ymm0, %ymm0
@@ -1437,7 +1438,7 @@ vpxor %ymm2, %ymm0, %ymm0
 
 ##### step 170 : Fl[0] ^= (Fl[1] ^= Fq[0])
 
-vpcmpeqw %ymm0, %ymm15, %ymm15
+vpcmpeqd %ymm0, %ymm15, %ymm15
 vpor %ymm15, %ymm13, %ymm13
 vpxor %ymm7, %ymm1, %ymm1
 vpxor %ymm1, %ymm0, %ymm0
@@ -1445,7 +1446,7 @@ vpxor %ymm1, %ymm0, %ymm0
 
 ##### step 171 : Fl[0] ^= (Fl[3] ^= Fq[5])
 
-vpcmpeqw %ymm0, %ymm15, %ymm15
+vpcmpeqd %ymm0, %ymm15, %ymm15
 vpor %ymm15, %ymm13, %ymm13
 vpxor %ymm12, %ymm3, %ymm3
 vpxor %ymm3, %ymm0, %ymm0
@@ -1453,7 +1454,7 @@ vpxor %ymm3, %ymm0, %ymm0
 
 ##### step 172 : Fl[0] ^= (Fl[1] ^= Fq[1])
 
-vpcmpeqw %ymm0, %ymm15, %ymm15
+vpcmpeqd %ymm0, %ymm15, %ymm15
 vpor %ymm15, %ymm13, %ymm13
 vpxor %ymm8, %ymm1, %ymm1
 vpxor %ymm1, %ymm0, %ymm0
@@ -1461,7 +1462,7 @@ vpxor %ymm1, %ymm0, %ymm0
 
 ##### step 173 : Fl[0] ^= (Fl[2] ^= Fq[2])
 
-vpcmpeqw %ymm0, %ymm15, %ymm15
+vpcmpeqd %ymm0, %ymm15, %ymm15
 vpor %ymm15, %ymm13, %ymm13
 vpxor %ymm9, %ymm2, %ymm2
 vpxor %ymm2, %ymm0, %ymm0
@@ -1469,7 +1470,7 @@ vpxor %ymm2, %ymm0, %ymm0
 
 ##### step 174 : Fl[0] ^= (Fl[1] ^= Fq[0])
 
-vpcmpeqw %ymm0, %ymm15, %ymm15
+vpcmpeqd %ymm0, %ymm15, %ymm15
 vpor %ymm15, %ymm13, %ymm13
 vpxor %ymm7, %ymm1, %ymm1
 vpxor %ymm1, %ymm0, %ymm0
@@ -1477,7 +1478,7 @@ vpxor %ymm1, %ymm0, %ymm0
 
 ##### step 175 : Fl[0] ^= (Fl[5] ^= Fq[14])
 
-vpcmpeqw %ymm0, %ymm15, %ymm15
+vpcmpeqd %ymm0, %ymm15, %ymm15
 vpor %ymm15, %ymm13, %ymm13
 vpxor 448(%rdi), %ymm5, %ymm5
 vpxor %ymm5, %ymm0, %ymm0
@@ -1485,7 +1486,7 @@ vpxor %ymm5, %ymm0, %ymm0
 
 ##### step 176 : Fl[0] ^= (Fl[1] ^= Fq[6])
 
-vpcmpeqw %ymm0, %ymm15, %ymm15
+vpcmpeqd %ymm0, %ymm15, %ymm15
 vpor %ymm15, %ymm13, %ymm13
 vpxor 192(%rdi), %ymm1, %ymm1
 vpxor %ymm1, %ymm0, %ymm0
@@ -1493,7 +1494,7 @@ vpxor %ymm1, %ymm0, %ymm0
 
 ##### step 177 : Fl[0] ^= (Fl[2] ^= Fq[7])
 
-vpcmpeqw %ymm0, %ymm15, %ymm15
+vpcmpeqd %ymm0, %ymm15, %ymm15
 vpor %ymm15, %ymm13, %ymm13
 vpxor 224(%rdi), %ymm2, %ymm2
 vpxor %ymm2, %ymm0, %ymm0
@@ -1501,7 +1502,7 @@ vpxor %ymm2, %ymm0, %ymm0
 
 ##### step 178 : Fl[0] ^= (Fl[1] ^= Fq[0])
 
-vpcmpeqw %ymm0, %ymm15, %ymm15
+vpcmpeqd %ymm0, %ymm15, %ymm15
 vpor %ymm15, %ymm13, %ymm13
 vpxor %ymm7, %ymm1, %ymm1
 vpxor %ymm1, %ymm0, %ymm0
@@ -1509,7 +1510,7 @@ vpxor %ymm1, %ymm0, %ymm0
 
 ##### step 179 : Fl[0] ^= (Fl[3] ^= Fq[8])
 
-vpcmpeqw %ymm0, %ymm15, %ymm15
+vpcmpeqd %ymm0, %ymm15, %ymm15
 vpor %ymm15, %ymm13, %ymm13
 vpxor 256(%rdi), %ymm3, %ymm3
 vpxor %ymm3, %ymm0, %ymm0
@@ -1517,7 +1518,7 @@ vpxor %ymm3, %ymm0, %ymm0
 
 ##### step 180 : Fl[0] ^= (Fl[1] ^= Fq[1])
 
-vpcmpeqw %ymm0, %ymm15, %ymm15
+vpcmpeqd %ymm0, %ymm15, %ymm15
 vpor %ymm15, %ymm13, %ymm13
 vpxor %ymm8, %ymm1, %ymm1
 vpxor %ymm1, %ymm0, %ymm0
@@ -1525,7 +1526,7 @@ vpxor %ymm1, %ymm0, %ymm0
 
 ##### step 181 : Fl[0] ^= (Fl[2] ^= Fq[2])
 
-vpcmpeqw %ymm0, %ymm15, %ymm15
+vpcmpeqd %ymm0, %ymm15, %ymm15
 vpor %ymm15, %ymm13, %ymm13
 vpxor %ymm9, %ymm2, %ymm2
 vpxor %ymm2, %ymm0, %ymm0
@@ -1533,7 +1534,7 @@ vpxor %ymm2, %ymm0, %ymm0
 
 ##### step 182 : Fl[0] ^= (Fl[1] ^= Fq[0])
 
-vpcmpeqw %ymm0, %ymm15, %ymm15
+vpcmpeqd %ymm0, %ymm15, %ymm15
 vpor %ymm15, %ymm13, %ymm13
 vpxor %ymm7, %ymm1, %ymm1
 vpxor %ymm1, %ymm0, %ymm0
@@ -1541,7 +1542,7 @@ vpxor %ymm1, %ymm0, %ymm0
 
 ##### step 183 : Fl[0] ^= (Fl[4] ^= Fq[9])
 
-vpcmpeqw %ymm0, %ymm15, %ymm15
+vpcmpeqd %ymm0, %ymm15, %ymm15
 vpor %ymm15, %ymm13, %ymm13
 vpxor 288(%rdi), %ymm4, %ymm4
 vpxor %ymm4, %ymm0, %ymm0
@@ -1549,7 +1550,7 @@ vpxor %ymm4, %ymm0, %ymm0
 
 ##### step 184 : Fl[0] ^= (Fl[1] ^= Fq[3])
 
-vpcmpeqw %ymm0, %ymm15, %ymm15
+vpcmpeqd %ymm0, %ymm15, %ymm15
 vpor %ymm15, %ymm13, %ymm13
 vpxor %ymm10, %ymm1, %ymm1
 vpxor %ymm1, %ymm0, %ymm0
@@ -1557,7 +1558,7 @@ vpxor %ymm1, %ymm0, %ymm0
 
 ##### step 185 : Fl[0] ^= (Fl[2] ^= Fq[4])
 
-vpcmpeqw %ymm0, %ymm15, %ymm15
+vpcmpeqd %ymm0, %ymm15, %ymm15
 vpor %ymm15, %ymm13, %ymm13
 vpxor %ymm11, %ymm2, %ymm2
 vpxor %ymm2, %ymm0, %ymm0
@@ -1565,7 +1566,7 @@ vpxor %ymm2, %ymm0, %ymm0
 
 ##### step 186 : Fl[0] ^= (Fl[1] ^= Fq[0])
 
-vpcmpeqw %ymm0, %ymm15, %ymm15
+vpcmpeqd %ymm0, %ymm15, %ymm15
 vpor %ymm15, %ymm13, %ymm13
 vpxor %ymm7, %ymm1, %ymm1
 vpxor %ymm1, %ymm0, %ymm0
@@ -1573,7 +1574,7 @@ vpxor %ymm1, %ymm0, %ymm0
 
 ##### step 187 : Fl[0] ^= (Fl[3] ^= Fq[5])
 
-vpcmpeqw %ymm0, %ymm15, %ymm15
+vpcmpeqd %ymm0, %ymm15, %ymm15
 vpor %ymm15, %ymm13, %ymm13
 vpxor %ymm12, %ymm3, %ymm3
 vpxor %ymm3, %ymm0, %ymm0
@@ -1581,7 +1582,7 @@ vpxor %ymm3, %ymm0, %ymm0
 
 ##### step 188 : Fl[0] ^= (Fl[1] ^= Fq[1])
 
-vpcmpeqw %ymm0, %ymm15, %ymm15
+vpcmpeqd %ymm0, %ymm15, %ymm15
 vpor %ymm15, %ymm13, %ymm13
 vpxor %ymm8, %ymm1, %ymm1
 vpxor %ymm1, %ymm0, %ymm0
@@ -1589,7 +1590,7 @@ vpxor %ymm1, %ymm0, %ymm0
 
 ##### step 189 : Fl[0] ^= (Fl[2] ^= Fq[2])
 
-vpcmpeqw %ymm0, %ymm15, %ymm15
+vpcmpeqd %ymm0, %ymm15, %ymm15
 vpor %ymm15, %ymm13, %ymm13
 vpxor %ymm9, %ymm2, %ymm2
 vpxor %ymm2, %ymm0, %ymm0
@@ -1597,7 +1598,7 @@ vpxor %ymm2, %ymm0, %ymm0
 
 ##### step 190 : Fl[0] ^= (Fl[1] ^= Fq[0])
 
-vpcmpeqw %ymm0, %ymm15, %ymm15
+vpcmpeqd %ymm0, %ymm15, %ymm15
 vpor %ymm15, %ymm13, %ymm13
 vpxor %ymm7, %ymm1, %ymm1
 vpxor %ymm1, %ymm0, %ymm0
@@ -1605,7 +1606,7 @@ vpxor %ymm1, %ymm0, %ymm0
 
 ##### step 191 : Fl[0] ^= (Fl[7] ^= Fq[27])
 
-vpcmpeqw %ymm0, %ymm15, %ymm15
+vpcmpeqd %ymm0, %ymm15, %ymm15
 vpor %ymm15, %ymm13, %ymm13
 vmovdqa 224(%rsi), %ymm14
 vpxor 864(%rdi), %ymm14, %ymm14
@@ -1615,7 +1616,7 @@ vpxor %ymm14, %ymm0, %ymm0
 
 ##### step 192 : Fl[0] ^= (Fl[1] ^= Fq[15])
 
-vpcmpeqw %ymm0, %ymm15, %ymm15
+vpcmpeqd %ymm0, %ymm15, %ymm15
 vpor %ymm15, %ymm13, %ymm13
 vpxor 480(%rdi), %ymm1, %ymm1
 vpxor %ymm1, %ymm0, %ymm0
@@ -1623,7 +1624,7 @@ vpxor %ymm1, %ymm0, %ymm0
 
 ##### step 193 : Fl[0] ^= (Fl[2] ^= Fq[16])
 
-vpcmpeqw %ymm0, %ymm15, %ymm15
+vpcmpeqd %ymm0, %ymm15, %ymm15
 vpor %ymm15, %ymm13, %ymm13
 vpxor 512(%rdi), %ymm2, %ymm2
 vpxor %ymm2, %ymm0, %ymm0
@@ -1631,7 +1632,7 @@ vpxor %ymm2, %ymm0, %ymm0
 
 ##### step 194 : Fl[0] ^= (Fl[1] ^= Fq[0])
 
-vpcmpeqw %ymm0, %ymm15, %ymm15
+vpcmpeqd %ymm0, %ymm15, %ymm15
 vpor %ymm15, %ymm13, %ymm13
 vpxor %ymm7, %ymm1, %ymm1
 vpxor %ymm1, %ymm0, %ymm0
@@ -1639,7 +1640,7 @@ vpxor %ymm1, %ymm0, %ymm0
 
 ##### step 195 : Fl[0] ^= (Fl[3] ^= Fq[17])
 
-vpcmpeqw %ymm0, %ymm15, %ymm15
+vpcmpeqd %ymm0, %ymm15, %ymm15
 vpor %ymm15, %ymm13, %ymm13
 vpxor 544(%rdi), %ymm3, %ymm3
 vpxor %ymm3, %ymm0, %ymm0
@@ -1647,7 +1648,7 @@ vpxor %ymm3, %ymm0, %ymm0
 
 ##### step 196 : Fl[0] ^= (Fl[1] ^= Fq[1])
 
-vpcmpeqw %ymm0, %ymm15, %ymm15
+vpcmpeqd %ymm0, %ymm15, %ymm15
 vpor %ymm15, %ymm13, %ymm13
 vpxor %ymm8, %ymm1, %ymm1
 vpxor %ymm1, %ymm0, %ymm0
@@ -1655,7 +1656,7 @@ vpxor %ymm1, %ymm0, %ymm0
 
 ##### step 197 : Fl[0] ^= (Fl[2] ^= Fq[2])
 
-vpcmpeqw %ymm0, %ymm15, %ymm15
+vpcmpeqd %ymm0, %ymm15, %ymm15
 vpor %ymm15, %ymm13, %ymm13
 vpxor %ymm9, %ymm2, %ymm2
 vpxor %ymm2, %ymm0, %ymm0
@@ -1663,7 +1664,7 @@ vpxor %ymm2, %ymm0, %ymm0
 
 ##### step 198 : Fl[0] ^= (Fl[1] ^= Fq[0])
 
-vpcmpeqw %ymm0, %ymm15, %ymm15
+vpcmpeqd %ymm0, %ymm15, %ymm15
 vpor %ymm15, %ymm13, %ymm13
 vpxor %ymm7, %ymm1, %ymm1
 vpxor %ymm1, %ymm0, %ymm0
@@ -1671,7 +1672,7 @@ vpxor %ymm1, %ymm0, %ymm0
 
 ##### step 199 : Fl[0] ^= (Fl[4] ^= Fq[18])
 
-vpcmpeqw %ymm0, %ymm15, %ymm15
+vpcmpeqd %ymm0, %ymm15, %ymm15
 vpor %ymm15, %ymm13, %ymm13
 vpxor 576(%rdi), %ymm4, %ymm4
 vpxor %ymm4, %ymm0, %ymm0
@@ -1679,7 +1680,7 @@ vpxor %ymm4, %ymm0, %ymm0
 
 ##### step 200 : Fl[0] ^= (Fl[1] ^= Fq[3])
 
-vpcmpeqw %ymm0, %ymm15, %ymm15
+vpcmpeqd %ymm0, %ymm15, %ymm15
 vpor %ymm15, %ymm13, %ymm13
 vpxor %ymm10, %ymm1, %ymm1
 vpxor %ymm1, %ymm0, %ymm0
@@ -1687,7 +1688,7 @@ vpxor %ymm1, %ymm0, %ymm0
 
 ##### step 201 : Fl[0] ^= (Fl[2] ^= Fq[4])
 
-vpcmpeqw %ymm0, %ymm15, %ymm15
+vpcmpeqd %ymm0, %ymm15, %ymm15
 vpor %ymm15, %ymm13, %ymm13
 vpxor %ymm11, %ymm2, %ymm2
 vpxor %ymm2, %ymm0, %ymm0
@@ -1695,7 +1696,7 @@ vpxor %ymm2, %ymm0, %ymm0
 
 ##### step 202 : Fl[0] ^= (Fl[1] ^= Fq[0])
 
-vpcmpeqw %ymm0, %ymm15, %ymm15
+vpcmpeqd %ymm0, %ymm15, %ymm15
 vpor %ymm15, %ymm13, %ymm13
 vpxor %ymm7, %ymm1, %ymm1
 vpxor %ymm1, %ymm0, %ymm0
@@ -1703,7 +1704,7 @@ vpxor %ymm1, %ymm0, %ymm0
 
 ##### step 203 : Fl[0] ^= (Fl[3] ^= Fq[5])
 
-vpcmpeqw %ymm0, %ymm15, %ymm15
+vpcmpeqd %ymm0, %ymm15, %ymm15
 vpor %ymm15, %ymm13, %ymm13
 vpxor %ymm12, %ymm3, %ymm3
 vpxor %ymm3, %ymm0, %ymm0
@@ -1711,7 +1712,7 @@ vpxor %ymm3, %ymm0, %ymm0
 
 ##### step 204 : Fl[0] ^= (Fl[1] ^= Fq[1])
 
-vpcmpeqw %ymm0, %ymm15, %ymm15
+vpcmpeqd %ymm0, %ymm15, %ymm15
 vpor %ymm15, %ymm13, %ymm13
 vpxor %ymm8, %ymm1, %ymm1
 vpxor %ymm1, %ymm0, %ymm0
@@ -1719,7 +1720,7 @@ vpxor %ymm1, %ymm0, %ymm0
 
 ##### step 205 : Fl[0] ^= (Fl[2] ^= Fq[2])
 
-vpcmpeqw %ymm0, %ymm15, %ymm15
+vpcmpeqd %ymm0, %ymm15, %ymm15
 vpor %ymm15, %ymm13, %ymm13
 vpxor %ymm9, %ymm2, %ymm2
 vpxor %ymm2, %ymm0, %ymm0
@@ -1727,7 +1728,7 @@ vpxor %ymm2, %ymm0, %ymm0
 
 ##### step 206 : Fl[0] ^= (Fl[1] ^= Fq[0])
 
-vpcmpeqw %ymm0, %ymm15, %ymm15
+vpcmpeqd %ymm0, %ymm15, %ymm15
 vpor %ymm15, %ymm13, %ymm13
 vpxor %ymm7, %ymm1, %ymm1
 vpxor %ymm1, %ymm0, %ymm0
@@ -1735,7 +1736,7 @@ vpxor %ymm1, %ymm0, %ymm0
 
 ##### step 207 : Fl[0] ^= (Fl[5] ^= Fq[19])
 
-vpcmpeqw %ymm0, %ymm15, %ymm15
+vpcmpeqd %ymm0, %ymm15, %ymm15
 vpor %ymm15, %ymm13, %ymm13
 vpxor 608(%rdi), %ymm5, %ymm5
 vpxor %ymm5, %ymm0, %ymm0
@@ -1743,7 +1744,7 @@ vpxor %ymm5, %ymm0, %ymm0
 
 ##### step 208 : Fl[0] ^= (Fl[1] ^= Fq[6])
 
-vpcmpeqw %ymm0, %ymm15, %ymm15
+vpcmpeqd %ymm0, %ymm15, %ymm15
 vpor %ymm15, %ymm13, %ymm13
 vpxor 192(%rdi), %ymm1, %ymm1
 vpxor %ymm1, %ymm0, %ymm0
@@ -1751,7 +1752,7 @@ vpxor %ymm1, %ymm0, %ymm0
 
 ##### step 209 : Fl[0] ^= (Fl[2] ^= Fq[7])
 
-vpcmpeqw %ymm0, %ymm15, %ymm15
+vpcmpeqd %ymm0, %ymm15, %ymm15
 vpor %ymm15, %ymm13, %ymm13
 vpxor 224(%rdi), %ymm2, %ymm2
 vpxor %ymm2, %ymm0, %ymm0
@@ -1759,7 +1760,7 @@ vpxor %ymm2, %ymm0, %ymm0
 
 ##### step 210 : Fl[0] ^= (Fl[1] ^= Fq[0])
 
-vpcmpeqw %ymm0, %ymm15, %ymm15
+vpcmpeqd %ymm0, %ymm15, %ymm15
 vpor %ymm15, %ymm13, %ymm13
 vpxor %ymm7, %ymm1, %ymm1
 vpxor %ymm1, %ymm0, %ymm0
@@ -1767,7 +1768,7 @@ vpxor %ymm1, %ymm0, %ymm0
 
 ##### step 211 : Fl[0] ^= (Fl[3] ^= Fq[8])
 
-vpcmpeqw %ymm0, %ymm15, %ymm15
+vpcmpeqd %ymm0, %ymm15, %ymm15
 vpor %ymm15, %ymm13, %ymm13
 vpxor 256(%rdi), %ymm3, %ymm3
 vpxor %ymm3, %ymm0, %ymm0
@@ -1775,7 +1776,7 @@ vpxor %ymm3, %ymm0, %ymm0
 
 ##### step 212 : Fl[0] ^= (Fl[1] ^= Fq[1])
 
-vpcmpeqw %ymm0, %ymm15, %ymm15
+vpcmpeqd %ymm0, %ymm15, %ymm15
 vpor %ymm15, %ymm13, %ymm13
 vpxor %ymm8, %ymm1, %ymm1
 vpxor %ymm1, %ymm0, %ymm0
@@ -1783,7 +1784,7 @@ vpxor %ymm1, %ymm0, %ymm0
 
 ##### step 213 : Fl[0] ^= (Fl[2] ^= Fq[2])
 
-vpcmpeqw %ymm0, %ymm15, %ymm15
+vpcmpeqd %ymm0, %ymm15, %ymm15
 vpor %ymm15, %ymm13, %ymm13
 vpxor %ymm9, %ymm2, %ymm2
 vpxor %ymm2, %ymm0, %ymm0
@@ -1791,7 +1792,7 @@ vpxor %ymm2, %ymm0, %ymm0
 
 ##### step 214 : Fl[0] ^= (Fl[1] ^= Fq[0])
 
-vpcmpeqw %ymm0, %ymm15, %ymm15
+vpcmpeqd %ymm0, %ymm15, %ymm15
 vpor %ymm15, %ymm13, %ymm13
 vpxor %ymm7, %ymm1, %ymm1
 vpxor %ymm1, %ymm0, %ymm0
@@ -1799,7 +1800,7 @@ vpxor %ymm1, %ymm0, %ymm0
 
 ##### step 215 : Fl[0] ^= (Fl[4] ^= Fq[9])
 
-vpcmpeqw %ymm0, %ymm15, %ymm15
+vpcmpeqd %ymm0, %ymm15, %ymm15
 vpor %ymm15, %ymm13, %ymm13
 vpxor 288(%rdi), %ymm4, %ymm4
 vpxor %ymm4, %ymm0, %ymm0
@@ -1807,7 +1808,7 @@ vpxor %ymm4, %ymm0, %ymm0
 
 ##### step 216 : Fl[0] ^= (Fl[1] ^= Fq[3])
 
-vpcmpeqw %ymm0, %ymm15, %ymm15
+vpcmpeqd %ymm0, %ymm15, %ymm15
 vpor %ymm15, %ymm13, %ymm13
 vpxor %ymm10, %ymm1, %ymm1
 vpxor %ymm1, %ymm0, %ymm0
@@ -1815,7 +1816,7 @@ vpxor %ymm1, %ymm0, %ymm0
 
 ##### step 217 : Fl[0] ^= (Fl[2] ^= Fq[4])
 
-vpcmpeqw %ymm0, %ymm15, %ymm15
+vpcmpeqd %ymm0, %ymm15, %ymm15
 vpor %ymm15, %ymm13, %ymm13
 vpxor %ymm11, %ymm2, %ymm2
 vpxor %ymm2, %ymm0, %ymm0
@@ -1823,7 +1824,7 @@ vpxor %ymm2, %ymm0, %ymm0
 
 ##### step 218 : Fl[0] ^= (Fl[1] ^= Fq[0])
 
-vpcmpeqw %ymm0, %ymm15, %ymm15
+vpcmpeqd %ymm0, %ymm15, %ymm15
 vpor %ymm15, %ymm13, %ymm13
 vpxor %ymm7, %ymm1, %ymm1
 vpxor %ymm1, %ymm0, %ymm0
@@ -1831,7 +1832,7 @@ vpxor %ymm1, %ymm0, %ymm0
 
 ##### step 219 : Fl[0] ^= (Fl[3] ^= Fq[5])
 
-vpcmpeqw %ymm0, %ymm15, %ymm15
+vpcmpeqd %ymm0, %ymm15, %ymm15
 vpor %ymm15, %ymm13, %ymm13
 vpxor %ymm12, %ymm3, %ymm3
 vpxor %ymm3, %ymm0, %ymm0
@@ -1839,7 +1840,7 @@ vpxor %ymm3, %ymm0, %ymm0
 
 ##### step 220 : Fl[0] ^= (Fl[1] ^= Fq[1])
 
-vpcmpeqw %ymm0, %ymm15, %ymm15
+vpcmpeqd %ymm0, %ymm15, %ymm15
 vpor %ymm15, %ymm13, %ymm13
 vpxor %ymm8, %ymm1, %ymm1
 vpxor %ymm1, %ymm0, %ymm0
@@ -1847,7 +1848,7 @@ vpxor %ymm1, %ymm0, %ymm0
 
 ##### step 221 : Fl[0] ^= (Fl[2] ^= Fq[2])
 
-vpcmpeqw %ymm0, %ymm15, %ymm15
+vpcmpeqd %ymm0, %ymm15, %ymm15
 vpor %ymm15, %ymm13, %ymm13
 vpxor %ymm9, %ymm2, %ymm2
 vpxor %ymm2, %ymm0, %ymm0
@@ -1855,7 +1856,7 @@ vpxor %ymm2, %ymm0, %ymm0
 
 ##### step 222 : Fl[0] ^= (Fl[1] ^= Fq[0])
 
-vpcmpeqw %ymm0, %ymm15, %ymm15
+vpcmpeqd %ymm0, %ymm15, %ymm15
 vpor %ymm15, %ymm13, %ymm13
 vpxor %ymm7, %ymm1, %ymm1
 vpxor %ymm1, %ymm0, %ymm0
@@ -1863,7 +1864,7 @@ vpxor %ymm1, %ymm0, %ymm0
 
 ##### step 223 : Fl[0] ^= (Fl[6] ^= Fq[20])
 
-vpcmpeqw %ymm0, %ymm15, %ymm15
+vpcmpeqd %ymm0, %ymm15, %ymm15
 vpor %ymm15, %ymm13, %ymm13
 vpxor 640(%rdi), %ymm6, %ymm6
 vpxor %ymm6, %ymm0, %ymm0
@@ -1871,7 +1872,7 @@ vpxor %ymm6, %ymm0, %ymm0
 
 ##### step 224 : Fl[0] ^= (Fl[1] ^= Fq[10])
 
-vpcmpeqw %ymm0, %ymm15, %ymm15
+vpcmpeqd %ymm0, %ymm15, %ymm15
 vpor %ymm15, %ymm13, %ymm13
 vpxor 320(%rdi), %ymm1, %ymm1
 vpxor %ymm1, %ymm0, %ymm0
@@ -1879,7 +1880,7 @@ vpxor %ymm1, %ymm0, %ymm0
 
 ##### step 225 : Fl[0] ^= (Fl[2] ^= Fq[11])
 
-vpcmpeqw %ymm0, %ymm15, %ymm15
+vpcmpeqd %ymm0, %ymm15, %ymm15
 vpor %ymm15, %ymm13, %ymm13
 vpxor 352(%rdi), %ymm2, %ymm2
 vpxor %ymm2, %ymm0, %ymm0
@@ -1887,7 +1888,7 @@ vpxor %ymm2, %ymm0, %ymm0
 
 ##### step 226 : Fl[0] ^= (Fl[1] ^= Fq[0])
 
-vpcmpeqw %ymm0, %ymm15, %ymm15
+vpcmpeqd %ymm0, %ymm15, %ymm15
 vpor %ymm15, %ymm13, %ymm13
 vpxor %ymm7, %ymm1, %ymm1
 vpxor %ymm1, %ymm0, %ymm0
@@ -1895,7 +1896,7 @@ vpxor %ymm1, %ymm0, %ymm0
 
 ##### step 227 : Fl[0] ^= (Fl[3] ^= Fq[12])
 
-vpcmpeqw %ymm0, %ymm15, %ymm15
+vpcmpeqd %ymm0, %ymm15, %ymm15
 vpor %ymm15, %ymm13, %ymm13
 vpxor 384(%rdi), %ymm3, %ymm3
 vpxor %ymm3, %ymm0, %ymm0
@@ -1903,7 +1904,7 @@ vpxor %ymm3, %ymm0, %ymm0
 
 ##### step 228 : Fl[0] ^= (Fl[1] ^= Fq[1])
 
-vpcmpeqw %ymm0, %ymm15, %ymm15
+vpcmpeqd %ymm0, %ymm15, %ymm15
 vpor %ymm15, %ymm13, %ymm13
 vpxor %ymm8, %ymm1, %ymm1
 vpxor %ymm1, %ymm0, %ymm0
@@ -1911,7 +1912,7 @@ vpxor %ymm1, %ymm0, %ymm0
 
 ##### step 229 : Fl[0] ^= (Fl[2] ^= Fq[2])
 
-vpcmpeqw %ymm0, %ymm15, %ymm15
+vpcmpeqd %ymm0, %ymm15, %ymm15
 vpor %ymm15, %ymm13, %ymm13
 vpxor %ymm9, %ymm2, %ymm2
 vpxor %ymm2, %ymm0, %ymm0
@@ -1919,7 +1920,7 @@ vpxor %ymm2, %ymm0, %ymm0
 
 ##### step 230 : Fl[0] ^= (Fl[1] ^= Fq[0])
 
-vpcmpeqw %ymm0, %ymm15, %ymm15
+vpcmpeqd %ymm0, %ymm15, %ymm15
 vpor %ymm15, %ymm13, %ymm13
 vpxor %ymm7, %ymm1, %ymm1
 vpxor %ymm1, %ymm0, %ymm0
@@ -1927,7 +1928,7 @@ vpxor %ymm1, %ymm0, %ymm0
 
 ##### step 231 : Fl[0] ^= (Fl[4] ^= Fq[13])
 
-vpcmpeqw %ymm0, %ymm15, %ymm15
+vpcmpeqd %ymm0, %ymm15, %ymm15
 vpor %ymm15, %ymm13, %ymm13
 vpxor 416(%rdi), %ymm4, %ymm4
 vpxor %ymm4, %ymm0, %ymm0
@@ -1935,7 +1936,7 @@ vpxor %ymm4, %ymm0, %ymm0
 
 ##### step 232 : Fl[0] ^= (Fl[1] ^= Fq[3])
 
-vpcmpeqw %ymm0, %ymm15, %ymm15
+vpcmpeqd %ymm0, %ymm15, %ymm15
 vpor %ymm15, %ymm13, %ymm13
 vpxor %ymm10, %ymm1, %ymm1
 vpxor %ymm1, %ymm0, %ymm0
@@ -1943,7 +1944,7 @@ vpxor %ymm1, %ymm0, %ymm0
 
 ##### step 233 : Fl[0] ^= (Fl[2] ^= Fq[4])
 
-vpcmpeqw %ymm0, %ymm15, %ymm15
+vpcmpeqd %ymm0, %ymm15, %ymm15
 vpor %ymm15, %ymm13, %ymm13
 vpxor %ymm11, %ymm2, %ymm2
 vpxor %ymm2, %ymm0, %ymm0
@@ -1951,7 +1952,7 @@ vpxor %ymm2, %ymm0, %ymm0
 
 ##### step 234 : Fl[0] ^= (Fl[1] ^= Fq[0])
 
-vpcmpeqw %ymm0, %ymm15, %ymm15
+vpcmpeqd %ymm0, %ymm15, %ymm15
 vpor %ymm15, %ymm13, %ymm13
 vpxor %ymm7, %ymm1, %ymm1
 vpxor %ymm1, %ymm0, %ymm0
@@ -1959,7 +1960,7 @@ vpxor %ymm1, %ymm0, %ymm0
 
 ##### step 235 : Fl[0] ^= (Fl[3] ^= Fq[5])
 
-vpcmpeqw %ymm0, %ymm15, %ymm15
+vpcmpeqd %ymm0, %ymm15, %ymm15
 vpor %ymm15, %ymm13, %ymm13
 vpxor %ymm12, %ymm3, %ymm3
 vpxor %ymm3, %ymm0, %ymm0
@@ -1967,7 +1968,7 @@ vpxor %ymm3, %ymm0, %ymm0
 
 ##### step 236 : Fl[0] ^= (Fl[1] ^= Fq[1])
 
-vpcmpeqw %ymm0, %ymm15, %ymm15
+vpcmpeqd %ymm0, %ymm15, %ymm15
 vpor %ymm15, %ymm13, %ymm13
 vpxor %ymm8, %ymm1, %ymm1
 vpxor %ymm1, %ymm0, %ymm0
@@ -1975,7 +1976,7 @@ vpxor %ymm1, %ymm0, %ymm0
 
 ##### step 237 : Fl[0] ^= (Fl[2] ^= Fq[2])
 
-vpcmpeqw %ymm0, %ymm15, %ymm15
+vpcmpeqd %ymm0, %ymm15, %ymm15
 vpor %ymm15, %ymm13, %ymm13
 vpxor %ymm9, %ymm2, %ymm2
 vpxor %ymm2, %ymm0, %ymm0
@@ -1983,7 +1984,7 @@ vpxor %ymm2, %ymm0, %ymm0
 
 ##### step 238 : Fl[0] ^= (Fl[1] ^= Fq[0])
 
-vpcmpeqw %ymm0, %ymm15, %ymm15
+vpcmpeqd %ymm0, %ymm15, %ymm15
 vpor %ymm15, %ymm13, %ymm13
 vpxor %ymm7, %ymm1, %ymm1
 vpxor %ymm1, %ymm0, %ymm0
@@ -1991,7 +1992,7 @@ vpxor %ymm1, %ymm0, %ymm0
 
 ##### step 239 : Fl[0] ^= (Fl[5] ^= Fq[14])
 
-vpcmpeqw %ymm0, %ymm15, %ymm15
+vpcmpeqd %ymm0, %ymm15, %ymm15
 vpor %ymm15, %ymm13, %ymm13
 vpxor 448(%rdi), %ymm5, %ymm5
 vpxor %ymm5, %ymm0, %ymm0
@@ -1999,7 +2000,7 @@ vpxor %ymm5, %ymm0, %ymm0
 
 ##### step 240 : Fl[0] ^= (Fl[1] ^= Fq[6])
 
-vpcmpeqw %ymm0, %ymm15, %ymm15
+vpcmpeqd %ymm0, %ymm15, %ymm15
 vpor %ymm15, %ymm13, %ymm13
 vpxor 192(%rdi), %ymm1, %ymm1
 vpxor %ymm1, %ymm0, %ymm0
@@ -2007,7 +2008,7 @@ vpxor %ymm1, %ymm0, %ymm0
 
 ##### step 241 : Fl[0] ^= (Fl[2] ^= Fq[7])
 
-vpcmpeqw %ymm0, %ymm15, %ymm15
+vpcmpeqd %ymm0, %ymm15, %ymm15
 vpor %ymm15, %ymm13, %ymm13
 vpxor 224(%rdi), %ymm2, %ymm2
 vpxor %ymm2, %ymm0, %ymm0
@@ -2015,7 +2016,7 @@ vpxor %ymm2, %ymm0, %ymm0
 
 ##### step 242 : Fl[0] ^= (Fl[1] ^= Fq[0])
 
-vpcmpeqw %ymm0, %ymm15, %ymm15
+vpcmpeqd %ymm0, %ymm15, %ymm15
 vpor %ymm15, %ymm13, %ymm13
 vpxor %ymm7, %ymm1, %ymm1
 vpxor %ymm1, %ymm0, %ymm0
@@ -2023,7 +2024,7 @@ vpxor %ymm1, %ymm0, %ymm0
 
 ##### step 243 : Fl[0] ^= (Fl[3] ^= Fq[8])
 
-vpcmpeqw %ymm0, %ymm15, %ymm15
+vpcmpeqd %ymm0, %ymm15, %ymm15
 vpor %ymm15, %ymm13, %ymm13
 vpxor 256(%rdi), %ymm3, %ymm3
 vpxor %ymm3, %ymm0, %ymm0
@@ -2031,7 +2032,7 @@ vpxor %ymm3, %ymm0, %ymm0
 
 ##### step 244 : Fl[0] ^= (Fl[1] ^= Fq[1])
 
-vpcmpeqw %ymm0, %ymm15, %ymm15
+vpcmpeqd %ymm0, %ymm15, %ymm15
 vpor %ymm15, %ymm13, %ymm13
 vpxor %ymm8, %ymm1, %ymm1
 vpxor %ymm1, %ymm0, %ymm0
@@ -2039,7 +2040,7 @@ vpxor %ymm1, %ymm0, %ymm0
 
 ##### step 245 : Fl[0] ^= (Fl[2] ^= Fq[2])
 
-vpcmpeqw %ymm0, %ymm15, %ymm15
+vpcmpeqd %ymm0, %ymm15, %ymm15
 vpor %ymm15, %ymm13, %ymm13
 vpxor %ymm9, %ymm2, %ymm2
 vpxor %ymm2, %ymm0, %ymm0
@@ -2047,7 +2048,7 @@ vpxor %ymm2, %ymm0, %ymm0
 
 ##### step 246 : Fl[0] ^= (Fl[1] ^= Fq[0])
 
-vpcmpeqw %ymm0, %ymm15, %ymm15
+vpcmpeqd %ymm0, %ymm15, %ymm15
 vpor %ymm15, %ymm13, %ymm13
 vpxor %ymm7, %ymm1, %ymm1
 vpxor %ymm1, %ymm0, %ymm0
@@ -2055,7 +2056,7 @@ vpxor %ymm1, %ymm0, %ymm0
 
 ##### step 247 : Fl[0] ^= (Fl[4] ^= Fq[9])
 
-vpcmpeqw %ymm0, %ymm15, %ymm15
+vpcmpeqd %ymm0, %ymm15, %ymm15
 vpor %ymm15, %ymm13, %ymm13
 vpxor 288(%rdi), %ymm4, %ymm4
 vpxor %ymm4, %ymm0, %ymm0
@@ -2063,7 +2064,7 @@ vpxor %ymm4, %ymm0, %ymm0
 
 ##### step 248 : Fl[0] ^= (Fl[1] ^= Fq[3])
 
-vpcmpeqw %ymm0, %ymm15, %ymm15
+vpcmpeqd %ymm0, %ymm15, %ymm15
 vpor %ymm15, %ymm13, %ymm13
 vpxor %ymm10, %ymm1, %ymm1
 vpxor %ymm1, %ymm0, %ymm0
@@ -2071,7 +2072,7 @@ vpxor %ymm1, %ymm0, %ymm0
 
 ##### step 249 : Fl[0] ^= (Fl[2] ^= Fq[4])
 
-vpcmpeqw %ymm0, %ymm15, %ymm15
+vpcmpeqd %ymm0, %ymm15, %ymm15
 vpor %ymm15, %ymm13, %ymm13
 vpxor %ymm11, %ymm2, %ymm2
 vpxor %ymm2, %ymm0, %ymm0
@@ -2079,7 +2080,7 @@ vpxor %ymm2, %ymm0, %ymm0
 
 ##### step 250 : Fl[0] ^= (Fl[1] ^= Fq[0])
 
-vpcmpeqw %ymm0, %ymm15, %ymm15
+vpcmpeqd %ymm0, %ymm15, %ymm15
 vpor %ymm15, %ymm13, %ymm13
 vpxor %ymm7, %ymm1, %ymm1
 vpxor %ymm1, %ymm0, %ymm0
@@ -2087,7 +2088,7 @@ vpxor %ymm1, %ymm0, %ymm0
 
 ##### step 251 : Fl[0] ^= (Fl[3] ^= Fq[5])
 
-vpcmpeqw %ymm0, %ymm15, %ymm15
+vpcmpeqd %ymm0, %ymm15, %ymm15
 vpor %ymm15, %ymm13, %ymm13
 vpxor %ymm12, %ymm3, %ymm3
 vpxor %ymm3, %ymm0, %ymm0
@@ -2095,7 +2096,7 @@ vpxor %ymm3, %ymm0, %ymm0
 
 ##### step 252 : Fl[0] ^= (Fl[1] ^= Fq[1])
 
-vpcmpeqw %ymm0, %ymm15, %ymm15
+vpcmpeqd %ymm0, %ymm15, %ymm15
 vpor %ymm15, %ymm13, %ymm13
 vpxor %ymm8, %ymm1, %ymm1
 vpxor %ymm1, %ymm0, %ymm0
@@ -2103,7 +2104,7 @@ vpxor %ymm1, %ymm0, %ymm0
 
 ##### step 253 : Fl[0] ^= (Fl[2] ^= Fq[2])
 
-vpcmpeqw %ymm0, %ymm15, %ymm15
+vpcmpeqd %ymm0, %ymm15, %ymm15
 vpor %ymm15, %ymm13, %ymm13
 vpxor %ymm9, %ymm2, %ymm2
 vpxor %ymm2, %ymm0, %ymm0
@@ -2111,7 +2112,7 @@ vpxor %ymm2, %ymm0, %ymm0
 
 ##### step 254 : Fl[0] ^= (Fl[1] ^= Fq[0])
 
-vpcmpeqw %ymm0, %ymm15, %ymm15
+vpcmpeqd %ymm0, %ymm15, %ymm15
 vpor %ymm15, %ymm13, %ymm13
 vpxor %ymm7, %ymm1, %ymm1
 vpxor %ymm1, %ymm0, %ymm0
@@ -2130,7 +2131,7 @@ vmovdqa %ymm6, 192(%rsi)     #Fl[6] <-- %ymm6
 
 ##### special last step 255 : Fl[0] ^= (Fl[beta] ^= Fq[gamma])
 
-vpcmpeqw %ymm0, %ymm15, %ymm15
+vpcmpeqd %ymm0, %ymm15, %ymm15
 vpor %ymm15, %ymm13, %ymm13
 vmovdqa (%rsi, %rcx), %ymm14
 vpxor (%rdi, %r8), %ymm14, %ymm14

@@ -77,7 +77,16 @@ static inline bool FLUSH_BUFFER(struct context_t *context, struct solution_t * t
 	return context->overflow;
 }				
 
-
+// static inline REWIND(int alpha, int k1, int gamma)
+// {
+// 	Fl[0] ^= gemv(n+1, D[k1], to_gray(i));
+// 	/* update the derivatives */
+// 	for (int i = 0; i < L; i++)
+// 		Fl[1 + i] ^= Fq[alpha + i];
+// 	for (int i = 0; i < L - 1; i++)
+// 		Fl[1 + i] ^= Fq[idxq(i, L-1)];
+// 	Fl[k1 + 1] ^= Fq[gamma];
+// }
 
 int feslite_avx2_enum_16x16(int n, int m, const u32 * Fq, const u32 * Fl, int count, u32 * buffer, int *size)
 {
@@ -105,7 +114,7 @@ int feslite_avx2_enum_16x16(int n, int m, const u32 * Fq, const u32 * Fl, int co
 	int k1 = context.ffs.k1 + L;
 	int k2 = context.ffs.k2 + L;
 
-	// int npositive = 0;
+	int npositive = 0;
 	u64 iterations = 1ul << (n - L);
 	for (u64 j = 0; j < iterations; j++) {
 		u64 alpha = idxq(0, k1);
@@ -118,15 +127,19 @@ int feslite_avx2_enum_16x16(int n, int m, const u32 * Fq, const u32 * Fl, int co
 		//if (mask) {
 		//	// printf("FOUD MASK = %08x for i = %016lx\n", mask, j << L);
 		//	npositive++;
+		//	// REWIND();
+		//	struct solution_t *top = feslite_avx2_asm_enum(context.Fq, context.Fl, 
+		// 					alpha, beta, gamma, context.local_buffer);
+		//	if (FLUSH_BUFFER(&context, top, j << L))
+		//		break;
 		//}
 		struct solution_t *top = feslite_avx2_asm_enum(context.Fq, context.Fl, 
 		 	alpha, beta, gamma, context.local_buffer);
-		//struct solution_t *top = context.local_buffer;
 		if (FLUSH_BUFFER(&context, top, j << L))
 			break;
 	}
 	for (int i = 0; i < LANES; i++)
 		FLUSH_CANDIDATES(&context, i);
-	// printf("FOUD %d positive for %ld iterations\n", npositive, iterations);
+	printf("FOUD %d positive for %ld iterations\n", npositive, iterations);
 	return FESLITE_OK;
 }
