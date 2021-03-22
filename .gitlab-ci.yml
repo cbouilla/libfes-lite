@@ -26,4 +26,4 @@ run_test:
     - cd build
     - cmake ..
     - make
-    - benchmarks/speed
+    - benchmark/speed
