@@ -184,7 +184,9 @@ int main(int argc, char **argv)
 
 	m = feslite_preferred_batch_size();	
 	printf("n = %d\n", n);
-	printf("Using %d lane(s)...\n", m);
+	int kernel = feslite_default_kernel();
+	const char *name = feslite_kernel_name(kernel);
+	printf("Using kernel %s, %d lane(s)...\n", name, m);
 	
 	srand48(1337);
 	
@@ -200,7 +202,7 @@ int main(int argc, char **argv)
 	printf("Planted: %016" PRIx64 "\n", x);
 
 
-	/* created the truncated 32 bits version */
+	/* create the truncated 32 bits version */
 	u32 Fl[65];
 	for (int i = 0; i < N; i++)
 		Fq[i] = Fq_start[i] & 0xffffffff;
