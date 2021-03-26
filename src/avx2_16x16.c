@@ -114,7 +114,7 @@ int feslite_avx2_enum_16x16(int n, int m, const u32 * Fq, const u32 * Fl, int co
 	int k1 = context.ffs.k1 + L;
 	int k2 = context.ffs.k2 + L;
 
-	int npositive = 0;
+	// int npositive = 0;
 	u64 iterations = 1ul << (n - L);
 	for (u64 j = 0; j < iterations; j++) {
 		u64 alpha = idxq(0, k1);
@@ -140,6 +140,6 @@ int feslite_avx2_enum_16x16(int n, int m, const u32 * Fq, const u32 * Fl, int co
 	}
 	for (int i = 0; i < LANES; i++)
 		FLUSH_CANDIDATES(&context, i);
-	printf("FOUD %d positive for %ld iterations\n", npositive, iterations);
+	// printf("FOUD %d positive for %ld iterations\n", npositive, iterations);
 	return FESLITE_OK;
 }

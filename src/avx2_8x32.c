@@ -136,7 +136,7 @@ int feslite_avx2_enum_8x32(int n, int m, const u32 * Fq, const u32 * Fl, int cou
 	int k2 = context.ffs.k2 + UNROLL;
 
 	u64 iterations = 1ul << (n - UNROLL);
-	int n_positive = 0;
+	// int n_positive = 0;
 	for (u64 j = 0; j < iterations; j++) {
 		u64 alpha = idxq(0, k1);
 		ffs_step(&context.ffs);	
@@ -150,7 +150,7 @@ int feslite_avx2_enum_8x32(int n, int m, const u32 * Fq, const u32 * Fl, int cou
 		u32 mask = feslite_avx2_asm_enum_batch(context.Fq, context.Fl, alpha, beta, gamma);
 		if (mask) {
 			// printf("FOUD MASK = %08x for i = %016lx\n", mask, i);
-			n_positive++;
+			// n_positive++;
 			REWIND(n, context.Fq, context.Fl, Fl, D, alpha, beta, gamma, i);
 
 			struct solution_t *top = feslite_avx2_asm_enum(context.Fq, context.Fl, 
@@ -165,6 +165,6 @@ int feslite_avx2_enum_8x32(int n, int m, const u32 * Fq, const u32 * Fl, int cou
 		 	break;
 #endif
 	}
-	printf("Found %d positive for %ld iterations\n", n_positive, iterations);
+	// printf("Found %d positive for %ld iterations\n", n_positive, iterations);
 	return FESLITE_OK;
 }
