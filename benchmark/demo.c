@@ -181,6 +181,10 @@ int main(int argc, char **argv)
 {
 	if (argc > 1)
 		n = atoi(argv[1]);
+	if (n < 32) {
+		fprintf(stderr, "n < 32 not fully supported yet\n");
+		exit(1);
+	}
 
 	m = feslite_preferred_batch_size();	
 	printf("n = %d\n", n);
@@ -215,7 +219,13 @@ int main(int argc, char **argv)
 	
 	#pragma omp parallel
 	#pragma omp single
-	specialize(n, Fl, 0);
+	{
+		specialize(n, Fl, 0);
+		if (current_bundle->i > 0) {
+			#pragma omp task
+			process_bundle(current_bundle);
+		}
+	}
 	
 	double stop_wt = omp_get_wtime();
 
