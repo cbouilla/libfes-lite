@@ -78,6 +78,7 @@ u64 Fl_start[65];
 #define MAX_BATCH_SIZE 64
 
 struct bundle_t {
+	int n;
 	int i;
 	u32 prefixes[MAX_BATCH_SIZE];
 	u32 Fl[];
@@ -87,12 +88,13 @@ int m;
 struct bundle_t *current_bundle;
 int in_flight, created, solved;
 
-void fresh_bundle()
+void fresh_bundle(int n)
 {
 	current_bundle = malloc(sizeof(struct bundle_t) + 33*m*sizeof(u32));
 	if (current_bundle == NULL)
 		err(1, "impossible to allocate new bundle");
 	current_bundle->i = 0;
+	current_bundle->n = n;
 
 	#pragma omp atomic
 	in_flight++;
@@ -104,13 +106,13 @@ void process_bundle(struct bundle_t *ready_bundle)
 	int count = 256;
 	u32 buffer[count * m];
 	int size[m];
-	feslite_solve(32, m, Fq, ready_bundle->Fl, count, buffer, size);
+	feslite_solve(ready_bundle->n, m, Fq, ready_bundle->Fl, count, buffer, size);
 
 	// check against remaining equations, print
 	for (int i = 0; i < m; i++)
 		for (int j = 0; j < size[i]; j++) {
 			u32 x = buffer[count*i + j];
-			u32 y = eval32(32, Fq, ready_bundle->Fl + i, m, x);
+			u32 y = eval32(ready_bundle->n, Fq, ready_bundle->Fl + i, m, x);
 			assert(y == 0);
 			u64 p = ready_bundle->prefixes[i];
 			u64 u = x ^ (p << 32);
@@ -136,13 +138,13 @@ void process_bundle(struct bundle_t *ready_bundle)
 }
 
 /* push a system to the current bundle */
-void push(const u32 * Fl, u32 prefix)
+void push(int n, const u32 * Fl, u32 prefix)
 {
 	created++;
 
 	/* copy to current bundle */
 	current_bundle->prefixes[current_bundle->i] = prefix;
-	for (int j = 0; j < 33; j++)
+	for (int j = 0; j < n + 1; j++)
 		current_bundle->Fl[m *j + current_bundle->i] = Fl[j];
 	current_bundle->i += 1;
 
@@ -150,7 +152,9 @@ void push(const u32 * Fl, u32 prefix)
 	if (current_bundle->i == m) {
 		/* prepare new bundle */
 		struct bundle_t *ready_bundle = current_bundle;
-		fresh_bundle();
+		fresh_bundle(n);
+
+		/* solve the complete bundle asynchronously */
 		#pragma omp task
 		process_bundle(ready_bundle);
 	}
@@ -158,8 +162,8 @@ void push(const u32 * Fl, u32 prefix)
 
 void specialize(int n, const u32 * Fl, u32 prefix)
 {
-	if (n == 32) {
-		push(Fl, prefix);
+	if (n <= 32) {
+		push(n, Fl, prefix);
 		return;
 	}
 
@@ -181,14 +185,14 @@ int main(int argc, char **argv)
 {
 	if (argc > 1)
 		n = atoi(argv[1]);
-	if (n < 32) {
-		fprintf(stderr, "n < 32 not fully supported yet\n");
-		exit(1);
-	}
 
-	m = feslite_preferred_batch_size();	
 	printf("n = %d\n", n);
 	int kernel = feslite_default_kernel();
+	int min_n = feslite_kernel_min_variables(kernel);
+	if (n < min_n)
+		errx(1, "Default kernel requires at least %d variables\n", min_n);
+	m = feslite_kernel_batch_size(kernel);
+
 	const char *name = feslite_kernel_name(kernel);
 	printf("Using kernel %s, %d lane(s)...\n", name, m);
 	
@@ -213,7 +217,7 @@ int main(int argc, char **argv)
 	for (int i = 0; i < n+1; i++)
 		Fl[i] = Fl_start[i] & 0xffffffff;
 	
-	fresh_bundle();
+	fresh_bundle(n <= 32 ? n : 32);
 
 	double start_wt = omp_get_wtime();
 	
