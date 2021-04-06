@@ -185,6 +185,7 @@ static void parser_setup(struct parser_state *s)
         s->current = '\n';
         struct var_list * dummy = malloc(sizeof(*dummy));
         dummy->name = NULL;
+        dummy->next = NULL;
         s->vars_head = dummy;
         s->vars_tail = dummy;
         advance(s);	
