@@ -9,7 +9,7 @@ if (OPENMP_FOUND)
 	target_link_libraries(speed_omp feslite m OpenMP::OpenMP_C)
 	#target_compile_options(speed_omp PRIVATE ${OpenMP_C_FLAGS})
 
-	add_executable(demo demo.c)
+	add_executable(demo demo.c parser.c)
 	target_link_libraries(demo feslite m OpenMP::OpenMP_C)
 endif()
 
