@@ -81,7 +81,7 @@ void test_kernel(int kernel, int k)
 	for (int i = 0; i < size[0]; i++) {
 		if (0 != feslite_naive_evaluation(n, Fq, Fl, m, buffer[i])) {
 			printf("not ok %d - [%s] reported incorrect solution %08x in lane 0\n", 
-				++ntest, name, buffer[count*k + i]);
+				++ntest, name, buffer[i]);
 			return;
 		}
 		printf(" - F[0][%08x] = 0\n", buffer[i]);
