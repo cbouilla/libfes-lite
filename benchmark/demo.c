@@ -96,6 +96,18 @@ void fresh_bundle()
 	in_flight++;
 }
 
+void print_solution(u64 x)
+{
+        printf("\nsolution found : (");
+        for (int i = 0; i < n; i++) {
+                printf("%01" PRId64, x & 1);
+                x >>= 1;
+                if (i != n-1)
+                        printf(", ");
+        }
+        printf(")\n");
+}
+
 void process_bundle(struct bundle_t *ready_bundle)
 {
 	/* solve ready bundle */
@@ -117,7 +129,7 @@ void process_bundle(struct bundle_t *ready_bundle)
 			u64 u = x ^ (p << (n - h));
 			u64 v = eval64(n, Fq_start, Fl_start, u);
 			if (v == 0)
-				printf("\nfound %016" PRIx64 "\n", u);
+				print_solution(u);
 		}
 	}
 
@@ -144,7 +156,7 @@ void push(const u32 * Fl, u32 prefix)
 
 	/* copy to current bundle */
 	current_bundle->prefixes[current_bundle->i] = prefix;
-	for (int j = 0; j < n + 1; j++) {
+	for (int j = 0; j < n - h + 1; j++) {
 		current_bundle->Fl[m *j + current_bundle->i] = Fl[j];
 		// printf("Fl[%2d] = %08x\n", j, Fl[j]);
 	}
@@ -259,7 +271,7 @@ void store_polynomial(void *opaque, int line)
 
 void finalize(void *opaque)
 {
-        printf("Read %d polynomials in %d variables\n", n, n_poly);
+        printf("Read %d polynomials in %d variables\n", n_poly, n);
 }
 
 /*********************************************** go ******************************************/
@@ -317,7 +329,8 @@ int main(int argc, char **argv)
 
 	double seconds = stop_wt - start_wt;
 	double rate = n - log2(seconds);
-	printf("\t---> %.2f s\n", seconds);
+	printf("\n");
+	printf("\t---> Finished in %.2f s\n", seconds);
 	printf("\t---> 2^%.2f candidate/s\n", rate);
 	return EXIT_SUCCESS;
 }
