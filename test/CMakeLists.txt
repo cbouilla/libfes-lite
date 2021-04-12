@@ -60,5 +60,24 @@ fes_kernel_test(consistency consistency.c)
 fes_kernel_test(many_solutions many_solutions.c)
 fes_kernel_test(special_solutions special_solutions.c)
 
+##############################################################################
+
+set(SYSTEMS 
+    linear_zero
+    linear_ones
+    linear_alternating
+    random_32_quad
+    structured_32
+    structured_34
+    structured_38
+    structured_40
+)
+
+foreach(system ${SYSTEMS})
+    add_test (NAME demo-${system}
+        COMMAND ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/test_solver_tool.py ../benchmark/demo ${PROJECT_SOURCE_DIR}/benchmark/examples/${system}.in
+    )
+endforeach()
+
 # create "make check"
 add_custom_target(check COMMAND ${CMAKE_CTEST_COMMAND} DEPENDS ${FES_TESTS})

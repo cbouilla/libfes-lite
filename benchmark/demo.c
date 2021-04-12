@@ -213,8 +213,8 @@ void process_bundle(struct bundle_t *ready_bundle)
 	in_flight--;
 	#pragma omp critical
 	{
-		printf("\rcreated: %d\t Solved: %d\t In-flight: %d    ", created, solved, in_flight);
-		fflush(stdout);
+		fprintf(stderr, "\rcreated: %d\t Solved: %d\t In-flight: %d    ", created, solved, in_flight);
+		fflush(stderr);
 	}
 }
 
