@@ -22,15 +22,15 @@ int main()
 	int m = feslite_preferred_batch_size();
 
 	/* initalize m random related systems */	
-	u32 Fq[496];
-	u32 Fl[33 * m];
-	for (int i = 0; i < 496; i++)
+	u32 Fq[561];
+	u32 Fl[34 * m];
+	for (int i = 0; i < 561; i++)
 		Fq[i] = lrand48() & ((1ll << k) - 1);
-	for (int i = 0; i < 33 * m; i++)
+	for (int i = 0; i < 34 * m; i++)
 		Fl[i] = lrand48() & ((1ll << k) - 1);
 
 	/* solve */
-	u32 solutions[256 * m];
+	u32 solutions[256 * m];   /* solution buffer of size 256 */
 	int size[m];
 	uint64_t start = Now();
 	feslite_solve(n, m, Fq, Fl, 256, solutions, size);

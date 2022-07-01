@@ -23,8 +23,8 @@ void test_kernel(int kernel)
 	printf("# testing kernel [%s], batch_size=%d\n", name, m);
 
 		
-	u32 Fl[34 * m];
-	for (int i = 0; i < 34*m; i++)
+	u32 Fl[33 * m];
+	for (int i = 0; i < 33*m; i++)
 		Fl[i] = 0;
 	u32 x[m];
 	

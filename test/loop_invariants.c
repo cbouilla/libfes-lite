@@ -2,7 +2,7 @@
 #include <assert.h>
 
 /* 
- * check that we are capable of recomputing the full enumeration  * state from 
+ * check that we are capable of recomputing the full enumeration state from 
  * scratch at any point. 
  */		
 

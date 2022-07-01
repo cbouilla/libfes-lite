@@ -27,19 +27,23 @@ typedef uint64_t u64;
  *  - size   : [OUT] the number of solutions of each system, size m
  *
  * n must be less than or equal to 32.
- * Fq has size n * (n + 1) / 2. This is upper-bounded by 529 in all cases.
- * Fl has size (n + 2) * m
- * Fl[(n+1)*m:(n+2)*m] must be zero.
+ * Fq has size n * (n + 1) / 2. This is upper-bounded by 496 in all cases.
+ * Fl has size (n + 1) * m.
  *
  * The number of solutions of the i-th system is written in size[i]
  * The solutions of the i-th system can be found in buffer at index i*m.
  *
  * The enumeration stops if it fills one of the solution buffers.
+ * (this implies that if a solution buffer is full, then solutions may have been
+ * missed, both in the same or in other lanes).
+ *
  * return value: FESLITE_OK or an error code.
  */
 int feslite_solve(int n, int m, const u32 * Fq, const u32 * Fl, int count, u32 * buffer, int * size);
 
-/* For tuning : return the optimal number of related subsystems to give to feslite_solve */
+/*
+ * For tuning : return the optimal number of related subsystems to give to feslite_solve()
+ */
 int feslite_preferred_batch_size();
 
 /* for experts, probing the state of the library is possible */

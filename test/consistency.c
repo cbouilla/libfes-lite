@@ -11,7 +11,7 @@ int n = 24;
 int k = 21;
 unsigned long random_seed = 1;
 u32 Fq[496];
-u32 Fl[34];
+u32 Fl[33];
 int ntest = 0;
 u32 buffer[256];
 int size;
@@ -76,7 +76,6 @@ int main(int argc, char **argv)
 		Fq[i] = myrand() & mask;
 	for (int i = 0; i < n+1; i++)
 		Fl[i] = myrand() & mask;
-	Fl[n + 1] = 0;
 
 	printf("# using kernel [%s] to get a first set of solutions\n", feslite_kernel_name(0));
 	if (!feslite_kernel_is_available(0)) {

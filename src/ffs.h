@@ -5,7 +5,11 @@
 /* 
  * Constant-time algorithm to compute the position of the first and second bits
  * set in successive values of an (n+2)-bit counter initialized at (1 << (n+1)). 
- * Uses O(n^2) memory. 
+ * Uses O(n^2) memory.
+ *
+ * This uses the algorithm described in "Efficient Generation of the Binary 
+ * Reflected Gray Code and Its Applications" by James R. Bitner, Gideon Ehrlich, 
+ * Edward M. Reingold (Communications of the ACM, Volume 19, 1976).
  *
  * ffs_reset(&ffs, n)    sets the counter to "zero" (and initializes the data structure).
  * ffs_step(&ffs)        increments the counter     (and updates the data structure).
@@ -13,12 +17,18 @@
  * At all times, k1 and k2 contains the position of the first and second bits 
  * set in the counter.
  *
- * Just after reset, k1 == n+1 and k2 == -1.
+ * just after reset, k1 == n+1 and k2 == -1 / counter value = (1 << (n+1)).
+ * 
+ * If the counter is incremented (1 << n) times, its Hamming weight is always
+ * at least two (after the first incrementation), so that the two indices (k1, k2)
+ * are always well-defined.
  *
- * with n = 0, the successive values of (k1, k2) are :
+ * When the n low-order bits have Hamming weight 1, then k2 == n+1.
+ *
+ * with n = 4, the successive values of (k1, k2) are :
  *
  * i = 32 + 0		5, -1 
- * i = 32 + 1     	0,  5
+ * i = 32 + 1     	0,  5        #
  * i = 32 + 2     	1,  5
  * i = 32 + 3     	0,  1
  * i = 32 + 4     	2,  5

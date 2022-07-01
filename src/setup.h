@@ -57,7 +57,7 @@ static inline void setup32(int n, int L, const u32 *Fq, const u32 *Fl, u32 *Fq_,
 	/* Fq[i,n+1] = Fq[i-1, i] */
 	for (int i = 1; i < n; i++) 
 		Fq_[idxq(i, n+1)] = Fq[idxq(i-1, i)];
-	Fq_[idxq(n, n+1)] = 0;
+	Fq_[idxq(n, n+1)] = 0;  // arbitrary
 	
 	/* Copy Fl */
 	for (int i = 0; i < (n + 1)*L; i++)

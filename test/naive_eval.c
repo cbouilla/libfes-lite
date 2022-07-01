@@ -11,12 +11,13 @@
 void test_n32()
 {
 	u32 Fq[496];
-	u32 Fl[33];
+	u32 Fl[34];
 	for (int i = 0; i < 496; i++)
 		Fq[i] = myrand();
 	for (int i = 0; i < 33; i++)
 		Fl[i] = myrand();
-	
+	Fl[33] = 0;
+
 	u32 x = myrand(); /* designated solution, 32 variables */
 	Fl[0] = 0;
 	Fl[0] = feslite_naive_evaluation(32, Fq, Fl, 1, x);
@@ -32,12 +33,12 @@ void test_n32()
 void test_n27()
 {
 	u32 Fq[496];
-	u32 Fl[33];
+	u32 Fl[29];
 	for (int i = 0; i < 496; i++)
 		Fq[i] = myrand();
-	for (int i = 0; i < 33; i++)
+	for (int i = 0; i < 28; i++)
 		Fl[i] = myrand();
-	
+
 	u32 x = myrand() & ((1 << 27) - 1); /* designated solution, 27 variables */
 	Fl[0] = 0;
 	Fl[0] = feslite_naive_evaluation(27, Fq, Fl, 1, x);
