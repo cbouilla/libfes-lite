@@ -3,6 +3,7 @@
 #include <stdbool.h>
 #include <assert.h>
 #include <string.h>
+#include <math.h>
 
 #include "fes.h"
 
@@ -14,10 +15,10 @@
 
 const struct enum_kernel_t ENUM_KERNEL[] = {
 	{"generic_mini", 15.7, 1, 1, NULL, feslite_generic_minimal},
-	{"generic_1x32", 3.14, 4, 1, NULL, feslite_generic_enum_1x32},
-	{"generic_2x16", 2.87, 4, 2, NULL, feslite_generic_enum_2x16},
-	{"generic_2x32", 3.22, 4, 2, NULL, feslite_generic_enum_2x32},
-	{"generic_4x16", 5.57, 4, 4, NULL, feslite_generic_enum_4x16},
+    {"generic_1x32", 3.14, 4, 1, NULL, feslite_generic_enum_1x32},
+    {"generic_2x16", 2.87, 4, 2, NULL, feslite_generic_enum_2x16},
+    {"generic_2x32", 3.22, 4, 2, NULL, feslite_generic_enum_2x32},
+    {"generic_4x16", 5.57, 4, 4, NULL, feslite_generic_enum_4x16},
 #ifdef __SSE2__
  	/* all running intel CPUs should have SSE2 by now... */
  	{"sse2_4x32", 2.18, 8, 4, feslite_sse2_available, feslite_sse2_enum_4x32},
@@ -97,14 +98,12 @@ int feslite_preferred_batch_size()
 	return feslite_kernel_batch_size(feslite_default_kernel());
 }
 
-
-int feslite_solve(int n, int m, const u32 * Fq, const u32 * Fl, int count, u32 * buffer, int *size)
+int feslite_choose_kernel(int n, int m)
 {
-#if 0
 	int candidate = -1;
 	double latency = INFINITY;
-	for (int i = feslite_num_kernels() - 1; i >= 0 ; i--) {
-		if (ENUM_KERNEL[i].min_variables >= n && feslite_kernel_is_available(i)) {
+	for (int i = 0; i < feslite_num_kernels(); i++) {
+		if (ENUM_KERNEL[i].min_variables >= n && feslite_kernel_is_available(i)) {
 			double n_iter = ceil(m / ENUM_KERNEL[i].batch_size);
 			double candidate_lat = ENUM_KERNEL[i].latency * n_iter;
 			if (candidate_lat < latency) {
@@ -115,27 +114,51 @@ int feslite_solve(int n, int m, const u32 * Fq, const u32 * Fl, int count, u32 *
 	}
 	if (candidate < 0)
 		return FESLITE_EBUG;
+	return candidate;	
+}
+
+int feslite_solve(int n, int m, const u32 * Fq, const u32 * Fl, int count, u32 * buffer, int *size)
+{
+	/* verify input parameters */
+	if (count <= 0 || n <= 0 || n > 32)
+		return FESLITE_EINVAL;
+
+	int kernel = feslite_choose_kernel(n, m);
+	if (kernel < 0)
+		return kernel;  /* error code */
 
 	/* use the chosen kernel with the right batch size */
-	int batch_size = ENUM_KERNEL[i].batch_size;
+	int batch_size = ENUM_KERNEL[kernel].batch_size;
 	while (m >= batch_size) {
-		int rc = feslite_kernel_solve(candidate, n, m, Fq, Fl, count, buffer, size);
+		int rc = feslite_kernel_solve(kernel, n, m, Fq, Fl, count, buffer, size);
 		if (rc != FESLITE_OK)
 			return rc;
 		buffer += batch_size * count;
 		size += batch_size;
-		Fl += batch_size;
+		Fl += batch_size * (n + 1);
 		m -= batch_size;
 	}
 
 	if (m > 0) {
-		/* one last pass with an incomplete batch */
-		u32 Fl_[33 * batch_size];
-		for (int i = 0; i < n + 1; i++)
-			for (int j = 0; j < batch_size; j++)
-				Fl_[i * batch_size + j] = (j < m) ? Fl[]
-
+		/* One last pass with an incomplete batch. 
+		   We must avoid the potential problem that unused lanes may overflow 
+		   their solution buffer and stop the enumeration of "active" ones. 
+		   To circumvent this, we **clone** the last active lane. */
+		u32 Fl_[(n + 1) * batch_size];
+		u32 buffer_[count * batch_size];
+		int size_[batch_size];
+		for (int i = 0; i < m; i++)
+			for (int j = 0; j < n + 1; j++)
+				Fl_[i * (n + 1) + j] = Fl[i * (n + 1) + j];
+		for (int i = m; i < batch_size; i++)
+			for (int j = 0; j < n + 1; j++)
+				Fl_[i * (n + 1) + j] = Fl[j];		
+		feslite_kernel_solve(kernel, n, m, Fq, Fl_, count, buffer_, size_);
+		/* copy solutions to actual input */
+		for (int i = 0; i < m * count; i++)
+			buffer[i] = buffer_[i];
+		for (int i = 0; i < m; i++)
+			size[i] = size_[i];
 	}
-#endif
-	return feslite_kernel_solve(feslite_default_kernel(), n, m, Fq, Fl, count, buffer, size);
+	return FESLITE_OK;
 }

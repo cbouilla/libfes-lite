@@ -46,13 +46,23 @@ int feslite_solve(int n, int m, const u32 * Fq, const u32 * Fl, int count, u32 *
  */
 int feslite_preferred_batch_size();
 
-/* for experts, probing the state of the library is possible */
+/*
+ * For experts, probing the state of the library is possible.
+ */
 int feslite_num_kernels();
 int feslite_kernel_is_available(int i);
 char const * feslite_kernel_name(int i);
 int feslite_kernel_batch_size(int i);
 int feslite_kernel_min_variables(int i);
+
+/*
+ * The library has a preferred kernel.
+ * When in doubt, use the default :-).  But the problem must have enough 
+ * variables.  There is also a simple mechanism to choose the best kernel while
+ * respecting constraints on the number of variables.
+ */
 int feslite_default_kernel();
+int feslite_choose_kernel(int n, int m);
 
 /* convenience function; returns FESLITE_EINVAL when given a bogus name) */
 int feslite_kernel_find_by_name(const char *name);
