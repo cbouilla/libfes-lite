@@ -1,10 +1,15 @@
-# libfes-lite v1.0 (a.k.a. "10-years edition", a.k.a. "COVID edition")
+# libfes-lite v1.1 (a.k.a. "12-years edition", a.k.a. "Omicron BA.5 edition")
 
 Lighter, leaner, meaner and faster.
 
 libfes-lite is a library for solving systems of quadratic boolean equations by
 exhaustive search. It runs in time exponential in the number of variables, but
 the constant is very low.
+
+Some care has been put into checking that libfes-lite produces corrects
+results, and there is a somewhat extensive test suite. However, it comes
+WITHOUT WARRANTY OF ANY KIND, and in particular, without the garantee that it
+finds correct solutions in all cases.
 
 
 ## Build instructions
@@ -19,16 +24,22 @@ Building requires cmake. Building out-of-source is recommended
 
 ## Demo and benchmarks
 
-The `benchmark/` folder contains code that exercices the library.
+The `benchmark/` folder contains code that exercices the library. If you just
+want to solve quadratic boolean systems, then use: 
 
-- benchmark/correct_use.c : demonstrates how to use the library
-- benchmark/speed.c       : benchmarks all available kernels
-- benchmark/demo.c        : full-blown program that solves a larger system of quadratic equations using all available cores
-
+- benchmark/demo.c        : full-blown program that solves a larger system of
+                            quadratic equations using all available cores
 Example:
 ```
 # ./demo < examples/random_40_quad.in
 ```
+
+
+If you want to understand how the whole thing works, and/or benchmark stuff, take a look at :
+
+- benchmark/correct_use.c : demonstrates how to use the library
+- benchmark/speed.c       : benchmarks all available kernels
+
 
 ## Input format
 
