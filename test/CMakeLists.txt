@@ -59,6 +59,7 @@ fes_kernel_test(designated_solution designated_solution.c)
 fes_kernel_test(consistency consistency.c)
 fes_kernel_test(many_solutions many_solutions.c)
 fes_kernel_test(special_solutions special_solutions.c)
+fes_kernel_test(small small.c)
 
 ##############################################################################
 

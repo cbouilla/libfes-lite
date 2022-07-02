@@ -14,6 +14,7 @@
 
 
 const struct enum_kernel_t ENUM_KERNEL[] = {
+/*   name, latency, min n, lanes, availability, code */
 	{"generic_mini", 15.7, 1, 1, NULL, feslite_generic_minimal},
     {"generic_1x32", 3.14, 4, 1, NULL, feslite_generic_enum_1x32},
     {"generic_2x16", 2.87, 4, 2, NULL, feslite_generic_enum_2x16},
@@ -103,7 +104,7 @@ int feslite_choose_kernel(int n, int m)
 	int candidate = -1;
 	double latency = INFINITY;
 	for (int i = 0; i < feslite_num_kernels(); i++) {
-		if (ENUM_KERNEL[i].min_variables >= n && feslite_kernel_is_available(i)) {
+		if (ENUM_KERNEL[i].min_variables <= n && feslite_kernel_is_available(i)) {
 			double n_iter = ceil(m / ENUM_KERNEL[i].batch_size);
 			double candidate_lat = ENUM_KERNEL[i].latency * n_iter;
 			if (candidate_lat < latency) {
@@ -127,38 +128,52 @@ int feslite_solve(int n, int m, const u32 * Fq, const u32 * Fl, int count, u32 *
 	if (kernel < 0)
 		return kernel;  /* error code */
 
-	/* use the chosen kernel with the right batch size */
-	int batch_size = ENUM_KERNEL[kernel].batch_size;
-	while (m >= batch_size) {
-		int rc = feslite_kernel_solve(kernel, n, m, Fq, Fl, count, buffer, size);
+	/* fast lane if the caller was smart */
+	int batch_size = feslite_kernel_batch_size(kernel);
+	if (m == batch_size)
+		return feslite_kernel_solve(kernel, n, batch_size, Fq, Fl, count, buffer, size);
+
+	/* The batch size does not match */
+	int mm = m;
+	while (mm >= batch_size) {
+		u32 Fl_[(n + 1) * batch_size];
+		for (int j = 0; j < n + 1; j++)
+			for (int i = 0; i < batch_size; i++)
+				Fl_[j * batch_size + i] = Fl[j * m + i];
+		int rc = feslite_kernel_solve(kernel, n, batch_size, Fq, Fl_, count, buffer, size);
 		if (rc != FESLITE_OK)
 			return rc;
 		buffer += batch_size * count;
 		size += batch_size;
-		Fl += batch_size * (n + 1);
-		m -= batch_size;
+		Fl += batch_size;
+		mm -= batch_size;
 	}
 
-	if (m > 0) {
+	if (mm > 0) {
 		/* One last pass with an incomplete batch. 
 		   We must avoid the potential problem that unused lanes may overflow 
 		   their solution buffer and stop the enumeration of "active" ones. 
-		   To circumvent this, we **clone** the last active lane. */
+		   To circumvent this, we **clone** one active lane. */
 		u32 Fl_[(n + 1) * batch_size];
 		u32 buffer_[count * batch_size];
 		int size_[batch_size];
-		for (int i = 0; i < m; i++)
-			for (int j = 0; j < n + 1; j++)
-				Fl_[i * (n + 1) + j] = Fl[i * (n + 1) + j];
-		for (int i = m; i < batch_size; i++)
-			for (int j = 0; j < n + 1; j++)
-				Fl_[i * (n + 1) + j] = Fl[j];		
-		feslite_kernel_solve(kernel, n, m, Fq, Fl_, count, buffer_, size_);
+		for (int j = 0; j < n + 1; j++) {
+			for (int i = 0; i < mm; i++)
+				Fl_[j * batch_size + i] = Fl[j * m + i];
+			for (int i = mm; i < batch_size; i++)
+				Fl_[j * batch_size + i] = Fl[j * m];
+		}
+		int rc = feslite_kernel_solve(kernel, n, batch_size, Fq, Fl_, count, buffer_, size_);
+		if (rc != FESLITE_OK)
+			return rc;
+
 		/* copy solutions to actual input */
-		for (int i = 0; i < m * count; i++)
+		for (int i = 0; i < mm * count; i++)
 			buffer[i] = buffer_[i];
-		for (int i = 0; i < m; i++)
+		for (int i = 0; i < mm; i++) {
+			assert(size_[i] <= count);
 			size[i] = size_[i];
+		}
 	}
 	return FESLITE_OK;
 }

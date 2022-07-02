@@ -14,7 +14,7 @@
    naively against the remaining polynomials.
 
    If the first 32 polynomials have many solutions, then it would be faster to
-   perform a random linear combination of all the polynomials priori to 
+   perform a random linear combination of all the polynomials prior to the 
    enumeration.
 
    If the first 32 polynomials have more than 65536 solutions, then some 
